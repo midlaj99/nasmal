@@ -1,0 +1,91 @@
+[
+  {
+    "id": "aya-universe",
+    "title": "AYA Universe",
+    "destination": "Dubai",
+    "image": "/sharjah.jpg",
+    "price": "99",
+    "rating": "4.5",
+    "reviewsCount": 12,
+    "tags": ["Mobile Tickets", "Instant Confirmation", "Family Friendly"],
+    "images": [
+      "/hero-bg.jpg",
+      "/sharjah.jpg",
+      "/hero-bg.jpg"
+    ],
+    "description": "Don't miss Dubai's viral immersive sensation! AYA is an out-of-this-world experience that transports guests to a beautiful and mysterious star in a distant galaxy. Wander through 12 gorgeous worlds that reveal infinite star fields, reverse waterfalls, glittering gardens, and rare cosmic spectacles.\n\nExplore, connect, and create with friends and family on an unforgettable journey and discover AYA's secrets for yourself!",
+    "highlights": [
+      "Each of AYA’s 12 worlds explores a different cosmic spectacle of impossible beauty.",
+      "Spark life across the universe in the Source.",
+      "Dance with light across infinite dimensions in Harmonia.",
+      "Float and travel through the hearts of stars in Drift.",
+      "Witness a cosmic storm in a glittering garden in Flora."
+    ],
+    "quickFacts": [
+      "2 hour average visit. Stay as long as you want!",
+      "12 Immersive Worlds across 40,000 square feet",
+      "Infinite dreams, secrets, and memories."
+    ],
+    "inclusions": [
+      "Entry to AYA Universe",
+      "Parking"
+    ]
+  },
+  {
+    "id": "miracle-garden",
+    "title": "Dubai Miracle Garden",
+    "destination": "Dubai",
+    "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&q=80",
+    "price": "85",
+    "rating": "5.0",
+    "reviewsCount": 340,
+    "tags": ["Bestseller", "Family Friendly", "Nature"],
+    "images": [
+      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=1200&q=80",
+      "/sharjah.jpg",
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80"
+    ],
+    "description": "Visit the world's largest natural flower garden. A world of floral wonder awaits at Dubai Miracle Garden.",
+    "highlights": ["Millions of blooming flowers", "Stunning floral sculptures", "Instagram-worthy spots"],
+    "quickFacts": ["Seasonal attraction", "Outdoor experience"],
+    "inclusions": ["General Admission Ticket"]
+  },
+  {
+    "id": "ferrari-world",
+    "title": "Ferrari World Ticket",
+    "destination": "Abu Dhabi",
+    "image": "https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80",
+    "price": "295",
+    "rating": "4.8",
+    "reviewsCount": 2100,
+    "tags": ["Theme Park", "Thrill", "Family Friendly"],
+    "images": [
+      "https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1200&q=80",
+      "https://images.unsplash.com/photo-1548013146-72479768bada?w=600&q=80",
+      "/hero-bg.jpg"
+    ],
+    "description": "Experience the thrill of the world's first Ferrari-branded theme park. Home to the fastest roller coaster in the world.",
+    "highlights": ["Formula Rossa - the fastest roller coaster", "Family-friendly rides", "Ferrari driving experience"],
+    "quickFacts": ["Located on Yas Island", "Indoor theme park"],
+    "inclusions": ["All-day access to Ferrari World"]
+  },
+  {
+    "id": "sharjah-aquarium",
+    "title": "Sharjah Aquarium",
+    "destination": "Sharjah",
+    "image": "/sharjah.jpg",
+    "price": "25",
+    "rating": "4.5",
+    "reviewsCount": 300,
+    "tags": ["Educational", "Family Friendly", "Indoor"],
+    "images": [
+      "/sharjah.jpg",
+      "/sharjah.jpg",
+      "/hero-bg.jpg"
+    ],
+    "description": "Discover the hidden world of the deep sea with its amazing creatures. Enjoy a close look at the local fishes and learn about Sharjah's historic coasts and ports.",
+    "highlights": ["Explore 20 different tanks", "See over 150 species", "Learn about marine life conservation"],
+    "quickFacts": ["Family-friendly environment", "Educational tour"],
+    "inclusions": ["Aquarium Entry Ticket"]
+  }
+]

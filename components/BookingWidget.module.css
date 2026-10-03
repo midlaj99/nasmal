@@ -1,0 +1,61 @@
+.bookingCard {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: 1px solid #eee;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.option {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background-color: #fafafa;
+}
+
+.optionTitle {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.optionDesc {
+  font-size: 14px;
+  color: #666;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.optionPrice {
+  font-weight: bold;
+  color: var(--primary-color, #e00b3e);
+  font-size: 18px;
+  margin-top: 12px;
+}
+
+.bookButton {
+  width: 100%;
+  background-color: var(--primary-color, #e00b3e);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.bookButton:hover {
+  opacity: 0.9;
+}

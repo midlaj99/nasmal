@@ -1,0 +1,162 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.dateSelection {
+  margin-bottom: 24px;
+}
+
+.dateSelection label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.ticketSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticketRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.ticketRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ticketRow h4 {
+  margin: 0 0 4px 0;
+}
+
+.priceDetail {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.counter button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.counter button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.counter span {
+  font-weight: bold;
+  width: 20px;
+  text-align: center;
+}
+
+.modalFooter {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.totalSection p {
+  margin: 0 0 4px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.totalSection h3 {
+  margin: 0;
+  color: var(--primary-color, #e00b3e);
+}
+
+.checkoutBtn {
+  background: var(--primary-color, #e00b3e);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.checkoutBtn:hover {
+  opacity: 0.9;
+}

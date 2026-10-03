@@ -1,0 +1,106 @@
+.carouselWrapper {
+  overflow: hidden;
+  width: 100%;
+  padding: 20px 0;
+  margin: 0 -10px; /* Offset the padding of the items so the edges align with the container */
+  position: relative;
+}
+
+.carouselTrack {
+  display: flex;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.carouselItem {
+  flex: 1;
+  padding: 0 10px; /* Creates the gap between items */
+}
+
+.offerCard {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.offerImage {
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.offerCard:hover .offerImage {
+  transform: scale(1.05);
+}
+
+.offerOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.3s ease;
+}
+
+.offerCard:hover .offerOverlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.offerTitle {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  transform: translateY(15px);
+  transition: transform 0.3s ease;
+}
+
+.offerCard:hover .offerTitle {
+  transform: translateY(0);
+}
+
+.bookNowBtn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.offerCard:hover .bookNowBtn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dots Navigation */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.activeDot {
+  background-color: var(--primary-color);
+  transform: scale(1.2);
+}

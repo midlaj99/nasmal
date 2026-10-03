@@ -1,0 +1,20 @@
+[
+  {
+    "id": "dubai",
+    "title": "Dubai",
+    "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80",
+    "toursCount": 154
+  },
+  {
+    "id": "abu-dhabi",
+    "title": "Abu Dhabi",
+    "image": "https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80",
+    "toursCount": 86
+  },
+  {
+    "id": "sharjah",
+    "title": "Sharjah",
+    "image": "/sharjah.jpg",
+    "toursCount": 42
+  }
+]

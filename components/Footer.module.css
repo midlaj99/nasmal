@@ -1,0 +1,141 @@
+.footer {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  padding-top: 80px;
+  font-size: 15px;
+  margin-top: 40px;
+}
+
+.footerTop {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 64px;
+  padding-bottom: 60px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.logoWrapper {
+  margin-bottom: 24px;
+  display: inline-block;
+}
+
+.logo {
+  object-fit: contain;
+  /* CSS magic: Invert the black and white logo, then screen it to drop the black background. Results in a perfect white transparent logo! */
+  filter: invert(1);
+  mix-blend-mode: screen;
+  transform: scale(1.4);
+  transform-origin: left center;
+}
+
+.description {
+  margin-bottom: 32px;
+  line-height: 1.7;
+  color: #9ca3af;
+}
+
+.title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.linkList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.link {
+  color: #d1d5db;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--primary-color);
+}
+
+.contactItem {
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.contactItem strong {
+  display: block;
+  color: white;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.contactItem p {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.footerBottom {
+  background-color: #111827;
+  padding: 24px 0;
+  border-top: 1px solid #374151;
+}
+
+.bottomContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.copyright {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.legalLinks {
+  display: flex;
+  gap: 32px;
+}
+
+.legalLink {
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-size: 14px;
+}
+
+.legalLink:hover {
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .footerTop {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footerTop {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  
+  .bottomContainer {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .legalLinks {
+    justify-content: center;
+  }
+}

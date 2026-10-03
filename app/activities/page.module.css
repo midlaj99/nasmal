@@ -1,0 +1,11 @@
+.main {
+  min-height: 100vh;
+  padding: 40px 0;
+  background-color: #fff;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 24px;
+}
