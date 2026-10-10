@@ -11,6 +11,7 @@ interface Package {
   price: string;
   rating: string;
   reviewsCount: number;
+  suitableFor?: string[];
 }
 
 interface ActivitiesFilterProps {
@@ -28,7 +29,21 @@ const TABS = [
 ];
 
 export default function ActivitiesFilter({ packages, destinationName }: ActivitiesFilterProps) {
-  const [activeTab, setActiveTab] = useState('couple');
+  const [activeTab, setActiveTab] = useState<string | null>('couple');
+
+  const filteredPackages = packages.filter(pkg => {
+    if (!activeTab) return true;
+    const tabObj = TABS.find(t => t.id === activeTab);
+    if (!tabObj) return true;
+    
+    if (pkg.suitableFor && pkg.suitableFor.length > 0) {
+      return pkg.suitableFor.some(s => 
+        s.toLowerCase() === tabObj.label.toLowerCase() || 
+        s.toLowerCase() === tabObj.id.toLowerCase()
+      );
+    }
+    return true;
+  });
 
   return (
     <div className={styles.container}>
@@ -104,7 +119,7 @@ export default function ActivitiesFilter({ packages, destinationName }: Activiti
       {/* Main Area */}
       <div className={styles.mainArea}>
         <div className={styles.header}>
-          <h2 className={styles.title}>{packages.length} activities for you</h2>
+          <h2 className={styles.title}>{filteredPackages.length} activities for you</h2>
           <p className={styles.subtitle}>Traveller & Activity types Select one or more</p>
           
           <div className={styles.tabsScroll}>
@@ -112,7 +127,7 @@ export default function ActivitiesFilter({ packages, destinationName }: Activiti
               <div 
                 key={tab.id}
                 className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTab(activeTab === tab.id ? null : tab.id)}
               >
                 <div className={styles.tabIcon}>{tab.icon}</div>
                 <span className={styles.tabLabel}>{tab.label}</span>
@@ -122,9 +137,14 @@ export default function ActivitiesFilter({ packages, destinationName }: Activiti
         </div>
 
         <div className={styles.grid}>
-          {packages.map(pkg => (
+          {filteredPackages.map(pkg => (
             <PackageCard key={pkg.id} {...pkg} />
           ))}
+          {filteredPackages.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#64748b' }}>
+              No activities found matching this category.
+            </div>
+          )}
         </div>
       </div>
     </div>

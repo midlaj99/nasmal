@@ -21,3 +21,23 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const { deletePackage } = await import('@/lib/db');
+    const success = await deletePackage(resolvedParams.id);
+    
+    if (!success) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ message: 'Package deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting package:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

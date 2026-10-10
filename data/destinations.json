@@ -16,5 +16,17 @@
     "title": "Sharjah",
     "image": "/sharjah.jpg",
     "toursCount": 42
+  },
+  {
+    "title": "ras al",
+    "image": "/uploads/1791653691180-894855268-SaveClip.App_649229127_17976455624990026_6472350124360581920_n.jpg",
+    "id": "ras-al",
+    "toursCount": 0
+  },
+  {
+    "title": "ras al khima",
+    "image": "/uploads/1791657787352-727716084-WhatsApp_Image_2026-10-10_at_8.21.38_PM.jpeg",
+    "id": "ras-al-khima",
+    "toursCount": 0
   }
 ]

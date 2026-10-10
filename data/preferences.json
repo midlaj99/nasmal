@@ -1,0 +1,38 @@
+[
+  {
+    "id": "attractions",
+    "label": "Attractions",
+    "icon": "🏛️"
+  },
+  {
+    "id": "families",
+    "label": "Families With Kids",
+    "icon": "👨‍👩‍👧‍👦"
+  },
+  {
+    "id": "couple",
+    "label": "Couple",
+    "icon": "💑"
+  },
+  {
+    "id": "food",
+    "label": "Food Drinks",
+    "icon": "🍹"
+  },
+  {
+    "id": "culture",
+    "label": "Culture & Heritage",
+    "icon": "🕌"
+  },
+  {
+    "id": "nature",
+    "label": "Nature & Wildlife",
+    "icon": "🌲"
+  },
+  {
+    "label": "SOLO",
+    "icon": "😊",
+    "id": "solo",
+    "isCustom": true
+  }
+]

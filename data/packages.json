@@ -7,7 +7,16 @@
     "price": "99",
     "rating": "4.5",
     "reviewsCount": 12,
-    "tags": ["Mobile Tickets", "Instant Confirmation", "Family Friendly"],
+    "tags": [
+      "Mobile Tickets",
+      "Instant Confirmation",
+      "Family Friendly"
+    ],
+    "suitableFor": [
+      "Attractions",
+      "Families With Kids",
+      "Couple"
+    ],
     "images": [
       "/hero-bg.jpg",
       "/sharjah.jpg",
@@ -39,16 +48,34 @@
     "price": "85",
     "rating": "5.0",
     "reviewsCount": 340,
-    "tags": ["Bestseller", "Family Friendly", "Nature"],
+    "tags": [
+      "Bestseller",
+      "Family Friendly",
+      "Nature"
+    ],
+    "suitableFor": [
+      "Attractions",
+      "Couple",
+      "Nature & Wildlife"
+    ],
     "images": [
       "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=1200&q=80",
       "/sharjah.jpg",
       "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80"
     ],
     "description": "Visit the world's largest natural flower garden. A world of floral wonder awaits at Dubai Miracle Garden.",
-    "highlights": ["Millions of blooming flowers", "Stunning floral sculptures", "Instagram-worthy spots"],
-    "quickFacts": ["Seasonal attraction", "Outdoor experience"],
-    "inclusions": ["General Admission Ticket"]
+    "highlights": [
+      "Millions of blooming flowers",
+      "Stunning floral sculptures",
+      "Instagram-worthy spots"
+    ],
+    "quickFacts": [
+      "Seasonal attraction",
+      "Outdoor experience"
+    ],
+    "inclusions": [
+      "General Admission Ticket"
+    ]
   },
   {
     "id": "ferrari-world",
@@ -58,16 +85,35 @@
     "price": "295",
     "rating": "4.8",
     "reviewsCount": 2100,
-    "tags": ["Theme Park", "Thrill", "Family Friendly"],
+    "tags": [
+      "Theme Park",
+      "Thrill",
+      "Family Friendly"
+    ],
+    "suitableFor": [
+      "Attractions",
+      "Families With Kids"
+    ],
     "images": [
       "https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1200&q=80",
       "https://images.unsplash.com/photo-1548013146-72479768bada?w=600&q=80",
       "/hero-bg.jpg"
     ],
     "description": "Experience the thrill of the world's first Ferrari-branded theme park. Home to the fastest roller coaster in the world.",
-    "highlights": ["Formula Rossa - the fastest roller coaster", "Family-friendly rides", "Ferrari driving experience"],
-    "quickFacts": ["Located on Yas Island", "Indoor theme park"],
-    "inclusions": ["All-day access to Ferrari World"]
+    "highlights": [
+      "Formula Rossa - the fastest roller coaster",
+      "Family-friendly rides",
+      "Ferrari driving experience"
+    ],
+    "quickFacts": [
+      "Located on Yas Island",
+      "Indoor theme park"
+    ],
+    "inclusions": [
+      "All-day access to Ferrari World"
+    ],
+    "isBestDeal": true,
+    "originalPrice": "8520"
   },
   {
     "id": "sharjah-aquarium",
@@ -77,15 +123,32 @@
     "price": "25",
     "rating": "4.5",
     "reviewsCount": 300,
-    "tags": ["Educational", "Family Friendly", "Indoor"],
+    "tags": [
+      "Educational",
+      "Family Friendly",
+      "Indoor"
+    ],
+    "suitableFor": [
+      "Families With Kids",
+      "Culture & Heritage"
+    ],
     "images": [
       "/sharjah.jpg",
       "/sharjah.jpg",
       "/hero-bg.jpg"
     ],
     "description": "Discover the hidden world of the deep sea with its amazing creatures. Enjoy a close look at the local fishes and learn about Sharjah's historic coasts and ports.",
-    "highlights": ["Explore 20 different tanks", "See over 150 species", "Learn about marine life conservation"],
-    "quickFacts": ["Family-friendly environment", "Educational tour"],
-    "inclusions": ["Aquarium Entry Ticket"]
+    "highlights": [
+      "Explore 20 different tanks",
+      "See over 150 species",
+      "Learn about marine life conservation"
+    ],
+    "quickFacts": [
+      "Family-friendly environment",
+      "Educational tour"
+    ],
+    "inclusions": [
+      "Aquarium Entry Ticket"
+    ]
   }
 ]
