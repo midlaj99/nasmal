@@ -56,19 +56,29 @@ export default function CheckoutPage() {
         totalPrice: bookingData.totalPrice
       };
 
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)
       });
 
-      // 2. Construct WhatsApp message
-      const message = `*New Booking Request*%0A
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to submit order');
+      }
+
+      // 2. Construct WhatsApp message with correct number 9633663256
+      const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9633663256';
+      const cleanDigits = rawWa.replace(/[^0-9]/g, '');
+      const targetWa = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+
+      const message = `*New Booking Request*
 *Customer Details:*
 Name: ${formData.firstName} ${formData.lastName}
 Email: ${formData.email}
 Phone: ${formData.countryCode}${formData.phone}
-Requests: ${formData.specialRequests || 'None'}%0A
+Requests: ${formData.specialRequests || 'None'}
+
 *Booking Details:*
 Package: ${bookingData.packageTitle}
 Date: ${bookingData.visitDate}
@@ -76,11 +86,13 @@ Adults: ${bookingData.adultsCount}
 Children: ${bookingData.childrenCount}
 Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
 
+      const encodedMessage = encodeURIComponent(message);
+
       // 3. Redirect to WhatsApp
-      window.location.href = `https://wa.me/9717907343387?text=${message}`;
-    } catch (error) {
+      window.location.href = `https://wa.me/${targetWa}?text=${encodedMessage}`;
+    } catch (error: any) {
       console.error('Error saving order', error);
-      alert('There was a problem processing your order. Please try again.');
+      alert(error.message || 'There was a problem processing your order. Please try again.');
       setLoading(false);
     }
   };

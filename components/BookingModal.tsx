@@ -10,7 +10,8 @@ interface BookingModalProps {
   packageTitle: string;
   packageImage: string;
   pricePerAdult: number;
-  pricePerChild: number;
+  pricePerChild?: number;
+  childAgeLimit?: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -21,6 +22,7 @@ export default function BookingModal({
   packageImage,
   pricePerAdult,
   pricePerChild,
+  childAgeLimit,
   isOpen,
   onClose
 }: BookingModalProps) {
@@ -32,7 +34,9 @@ export default function BookingModal({
 
   if (!isOpen) return null;
 
-  const totalPrice = (adults * pricePerAdult) + (children * pricePerChild);
+  // Only enable child ticket if child price was explicitly configured from admin
+  const hasChildOption = typeof pricePerChild === 'number' && !isNaN(pricePerChild) && pricePerChild > 0;
+  const totalPrice = (adults * pricePerAdult) + (hasChildOption ? children * pricePerChild : 0);
 
   const handleCheckout = () => {
     setBookingData({
@@ -40,9 +44,9 @@ export default function BookingModal({
       packageTitle,
       packageImage,
       pricePerAdult,
-      pricePerChild,
+      pricePerChild: hasChildOption ? pricePerChild : 0,
       adultsCount: adults,
-      childrenCount: children,
+      childrenCount: hasChildOption ? children : 0,
       visitDate: visitDate || new Date().toISOString().split('T')[0], // fallback to today if not selected
       totalPrice
     });
@@ -81,17 +85,19 @@ export default function BookingModal({
               </div>
             </div>
 
-            <div className={styles.ticketRow}>
-              <div>
-                <h4>Child (3-12 yrs)</h4>
-                <p className={styles.priceDetail}>AED {pricePerChild}</p>
+            {hasChildOption && (
+              <div className={styles.ticketRow}>
+                <div>
+                  <h4>Child {childAgeLimit ? `(${childAgeLimit})` : ''}</h4>
+                  <p className={styles.priceDetail}>AED {pricePerChild}</p>
+                </div>
+                <div className={styles.counter}>
+                  <button onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}>-</button>
+                  <span>{children}</span>
+                  <button onClick={() => setChildren(children + 1)}>+</button>
+                </div>
               </div>
-              <div className={styles.counter}>
-                <button onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}>-</button>
-                <span>{children}</span>
-                <button onClick={() => setChildren(children + 1)}>+</button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

@@ -1,40 +1,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import PackageCard from '@/components/PackageCard';
-import ActivitiesFilter from '@/components/ActivitiesFilter';
 import styles from './page.module.css';
-import { getPackagesByDestination } from '@/lib/db';
+import { getPackagesByDestination, getDestinationById } from '@/lib/db';
+import { notFound } from 'next/navigation';
 
-// Mock data for the destination
-const getDestinationData = (slug: string) => {
-  const decodedSlug = decodeURIComponent(slug);
-  const name = decodedSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  
-  let image = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80';
-  if (slug === 'abu-dhabi') {
-    image = 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1600&q=80';
-  } else if (slug === 'sharjah') {
-    image = '/sharjah.jpg';
-  }
-
-  const categories = [
-    'Attractions', 'Families With Kids', 'Couple', 'Food Drinks', 
-    'Culture & Heritage', 'Nature & Wildlife', 'Day Trips', 'Explore All'
-  ];
-
-  const highlights = [
-    { type: "What's new", title: "Big Bus Day Pass With Inside Burj Al Arab", link: "#", image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=600&q=80" },
-    { type: "Promotion", title: "Dubai Miracle Garden", link: "#", image: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=600&q=80" },
-    { type: "Nasmal's pick", title: "AYA Universe", link: "/packages/aya-universe", image: "/hero-bg.jpg" }
-  ];
-
-  return { name, image, categories, highlights };
-};
+export const dynamic = 'force-dynamic';
 
 export default async function DestinationPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const { name, image, categories, highlights } = getDestinationData(resolvedParams.slug);
-  const packages = await getPackagesByDestination(resolvedParams.slug);
+  const slug = resolvedParams.slug;
+  const decodedSlug = decodeURIComponent(slug);
+  
+  // Fetch real destination from database
+  const destination = await getDestinationById(decodedSlug);
+  const name = destination?.title || decodedSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const image = destination?.image || 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80';
+
+  const packages = await getPackagesByDestination(name);
 
   return (
     <main>
@@ -53,23 +36,6 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
           <p className={styles.subtitle}>Discover the best tours, activities, and attractions in {name}.</p>
         </div>
       </div>
-
-      <section className={styles.section} style={{ paddingTop: '40px', paddingBottom: '40px' }}>
-        <div className="container">
-          <div className={styles.highlightsGrid}>
-            {highlights.map((item, idx) => (
-              <a href={item.link} key={idx} className={styles.highlightCard}>
-                <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className={styles.highlightImage} />
-                <div className={styles.highlightOverlay}></div>
-                <div className={styles.highlightContent}>
-                  <span className={styles.highlightType}>{item.type}</span>
-                  <h3 className={styles.highlightTitle}>{item.title}</h3>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className={styles.section} style={{ backgroundColor: '#f9f9f9', padding: '60px 0' }}>
         <div className="container">
@@ -111,14 +77,20 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h2 className="section-title" style={{ margin: 0 }}>All Activities In {name}</h2>
-            <Link href={`/activities?location=${resolvedParams.slug}`} style={{ background: 'var(--primary-color)', color: 'white', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold' }}>View All with Filters</Link>
+            <Link href={`/activities?location=${slug}`} style={{ background: '#e00b3e', color: 'white', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold' }}>View All with Filters</Link>
           </div>
           
-          <div className={styles.grid}>
-            {packages.map(pkg => (
-              <PackageCard key={pkg.id} {...pkg} />
-            ))}
-          </div>
+          {packages.length > 0 ? (
+            <div className={styles.grid}>
+              {packages.map(pkg => (
+                <PackageCard key={pkg.id} {...pkg} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+              <p>No activities added for {name} yet. Check back soon!</p>
+            </div>
+          )}
         </div>
       </section>
     </main>

@@ -1,8 +1,22 @@
 import { NextResponse } from 'next/server';
 import { getPreferences, addPreference } from '@/lib/db';
+import { sanitizeString } from '@/lib/validation';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { requireAdminAuth } from '@/lib/auth';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`get_prefs_${ip}`, { windowMs: 60000, max: 120 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
+    }
+
     const preferences = await getPreferences();
     return NextResponse.json(preferences);
   } catch (error) {
@@ -13,15 +27,30 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`post_prefs_${ip}`, { windowMs: 60000, max: 40 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
+    }
+
+    const auth = await requireAdminAuth(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized. Admin login required.' }, { status: 401 });
+    }
+
     const body = await request.json();
-    
-    if (!body.label || typeof body.label !== 'string') {
+
+    const label = sanitizeString(body.label);
+    if (!label) {
       return NextResponse.json({ error: 'Title/Label is required' }, { status: 400 });
     }
-    
-    const icon = body.icon && typeof body.icon === 'string' ? body.icon.trim() : '🏷️';
-    const label = body.label.trim();
-    
+
+    const rawIcon = typeof body.icon === 'string' ? body.icon.trim() : '';
+    const icon = rawIcon ? sanitizeString(rawIcon) : '🏷️';
+
     const newPref = await addPreference({ label, icon });
     return NextResponse.json(newPref, { status: 201 });
   } catch (error) {

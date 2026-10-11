@@ -1,3 +1,4 @@
+import { getDb } from './mongodb';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -19,7 +20,11 @@ export interface Package {
   isPopular?: boolean;
   isBestDeal?: boolean;
   originalPrice?: string;
+  childPrice?: string;
+  childAgeLimit?: string;
   suitableFor?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PreferenceOption {
@@ -43,6 +48,7 @@ export interface Destination {
   title: string;
   image: string;
   toursCount: number;
+  createdAt?: string;
 }
 
 export interface Order {
@@ -61,221 +67,558 @@ export interface Order {
   createdAt: string;
 }
 
-const packagesFilePath = path.join(process.cwd(), 'data', 'packages.json');
-const destinationsFilePath = path.join(process.cwd(), 'data', 'destinations.json');
-const ordersFilePath = path.join(process.cwd(), 'data', 'orders.json');
-const preferencesFilePath = path.join(process.cwd(), 'data', 'preferences.json');
+export interface WishlistItem {
+  userId: string;
+  packageId: string;
+  createdAt: string;
+}
 
-// Initialize the file if it doesn't exist
-async function ensureDbExists() {
-  try {
-    await fs.access(packagesFilePath);
-  } catch (error) {
-    await fs.mkdir(path.dirname(packagesFilePath), { recursive: true });
-    await fs.writeFile(packagesFilePath, JSON.stringify([]));
-  }
+const DEFAULT_DESTINATIONS: Destination[] = [
+  {
+    id: 'dubai',
+    title: 'Dubai',
+    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
+    toursCount: 154,
+  },
+  {
+    id: 'abu-dhabi',
+    title: 'Abu Dhabi',
+    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
+    toursCount: 86,
+  },
+  {
+    id: 'sharjah',
+    title: 'Sharjah',
+    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
+    toursCount: 42,
+  },
+];
 
-  try {
-    await fs.access(destinationsFilePath);
-  } catch (error) {
-    await fs.writeFile(destinationsFilePath, JSON.stringify([]));
-  }
+let isInitialized = false;
 
+/**
+ * Initializes database indexes and seed data if collections are empty
+ */
+async function initializeDatabase() {
+  if (isInitialized) return;
   try {
-    await fs.access(ordersFilePath);
-  } catch (error) {
-    await fs.writeFile(ordersFilePath, JSON.stringify([]));
-  }
+    const db = await getDb();
 
-  try {
-    await fs.access(preferencesFilePath);
-  } catch (error) {
-    await fs.writeFile(preferencesFilePath, JSON.stringify(DEFAULT_PREFERENCES, null, 2));
+    // Ensure indexes for blazing fast query performance
+    await Promise.allSettled([
+      db.collection('packages').createIndex({ id: 1 }, { unique: true }),
+      db.collection('packages').createIndex({ destination: 1 }),
+      db.collection('packages').createIndex({ isPopular: 1 }),
+      db.collection('packages').createIndex({ isBestDeal: 1 }),
+      db.collection('destinations').createIndex({ id: 1 }, { unique: true }),
+      db.collection('orders').createIndex({ id: 1 }, { unique: true }),
+      db.collection('orders').createIndex({ createdAt: -1 }),
+      db.collection('preferences').createIndex({ id: 1 }, { unique: true }),
+      db.collection('wishlist').createIndex({ userId: 1, packageId: 1 }, { unique: true }),
+    ]);
+
+    // Seed destinations if empty
+    const destCount = await db.collection('destinations').countDocuments();
+    if (destCount === 0) {
+      // Check if data/destinations.json exists to migrate existing ones
+      try {
+        const legacyFile = path.join(process.cwd(), 'data', 'destinations.json');
+        const raw = await fs.readFile(legacyFile, 'utf8');
+        const legacyDests = JSON.parse(raw);
+        if (Array.isArray(legacyDests) && legacyDests.length > 0) {
+          await db.collection('destinations').insertMany(legacyDests);
+        } else {
+          await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
+        }
+      } catch {
+        await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
+      }
+    }
+
+    // Seed preferences if empty
+    const prefCount = await db.collection('preferences').countDocuments();
+    if (prefCount === 0) {
+      try {
+        const legacyPrefFile = path.join(process.cwd(), 'data', 'preferences.json');
+        const raw = await fs.readFile(legacyPrefFile, 'utf8');
+        const legacyPrefs = JSON.parse(raw);
+        if (Array.isArray(legacyPrefs) && legacyPrefs.length > 0) {
+          await db.collection('preferences').insertMany(legacyPrefs);
+        } else {
+          await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
+        }
+      } catch {
+        await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
+      }
+    }
+
+    isInitialized = true;
+  } catch (err) {
+    console.error('Database initialization warning:', err);
   }
 }
+
+// -------------------------------------------------------------
+// PACKAGES (CRUD)
+// -------------------------------------------------------------
 
 export async function getPackages(): Promise<Package[]> {
-  await ensureDbExists();
-  const fileData = await fs.readFile(packagesFilePath, 'utf8');
-  try {
-    return JSON.parse(fileData) as Package[];
-  } catch (error) {
-    return [];
-  }
-}
+  await initializeDatabase();
+  const db = await getDb();
 
-export async function getDestinations(): Promise<Destination[]> {
-  await ensureDbExists();
-  const fileData = await fs.readFile(destinationsFilePath, 'utf8');
-  try {
-    return JSON.parse(fileData) as Destination[];
-  } catch (error) {
-    return [];
-  }
-}
+  // Get active destination titles
+  const activeDests = await db
+    .collection('destinations')
+    .find({}, { projection: { _id: 0, title: 1 } })
+    .toArray();
+  const activeTitles = activeDests.map((d: any) => String(d.title || '').toLowerCase().trim()).filter(Boolean);
 
-export async function getOrders(): Promise<Order[]> {
-  await ensureDbExists();
-  const fileData = await fs.readFile(ordersFilePath, 'utf8');
-  try {
-    return JSON.parse(fileData) as Order[];
-  } catch (error) {
-    return [];
-  }
-}
+  const docs = await db
+    .collection('packages')
+    .find({}, { projection: { _id: 0 } })
+    .sort({ createdAt: -1 })
+    .toArray();
 
-export async function getPackagesByDestination(destination: string): Promise<Package[]> {
-  const allPackages = await getPackages();
-  return allPackages.filter(pkg => 
-    pkg.destination.toLowerCase() === destination.toLowerCase()
-  );
+  if (activeTitles.length > 0) {
+    // Check for orphaned packages whose destinations no longer exist
+    const orphanedIds: string[] = [];
+    const validPackages: Package[] = [];
+
+    for (const pkg of docs as any[]) {
+      const destName = String(pkg.destination || '').toLowerCase().trim();
+      if (activeTitles.includes(destName)) {
+        validPackages.push(pkg);
+      } else {
+        orphanedIds.push(pkg.id);
+      }
+    }
+
+    // Auto-purge orphaned packages from DB so deleted destinations never linger
+    if (orphanedIds.length > 0) {
+      await db.collection('packages').deleteMany({ id: { $in: orphanedIds } });
+    }
+
+    return validPackages;
+  }
+
+  return docs as unknown as Package[];
 }
 
 export async function getPackageById(id: string): Promise<Package | null> {
-  const allPackages = await getPackages();
-  return allPackages.find(pkg => pkg.id === id) || null;
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+  const doc = await db.collection('packages').findOne({ id: safeId }, { projection: { _id: 0 } });
+  return (doc as unknown as Package) || null;
+}
+
+export async function getPackagesByDestination(destination: string): Promise<Package[]> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeDest = String(destination).trim().toLowerCase();
+  const docs = await db
+    .collection('packages')
+    .find(
+      { destination: { $regex: new RegExp(`^${safeDest}$`, 'i') } },
+      { projection: { _id: 0 } }
+    )
+    .sort({ createdAt: -1 })
+    .toArray();
+  return docs as unknown as Package[];
 }
 
 export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Package> {
-  const allPackages = await getPackages();
-  
-  // Generate a URL-friendly ID from the title
-  const id = newPackage.title
+  await initializeDatabase();
+  const db = await getDb();
+
+  // Generate clean slug ID from title
+  let id = newPackage.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-  
-  const pkgWithId = { ...newPackage, id };
-  
-  // Check if ID already exists, append random string if so
-  if (allPackages.some(pkg => pkg.id === id)) {
-    pkgWithId.id = `${id}-${Math.floor(Math.random() * 1000)}`;
+
+  if (!id) {
+    id = `pkg-${Date.now()}`;
   }
-  
-  allPackages.push(pkgWithId);
-  await fs.writeFile(packagesFilePath, JSON.stringify(allPackages, null, 2));
-  
-  return pkgWithId;
+
+  // Ensure unique ID
+  const existing = await db.collection('packages').findOne({ id });
+  if (existing) {
+    id = `${id}-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  const pkgWithId: Package = {
+    ...newPackage,
+    id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.collection('packages').insertOne(pkgWithId as any);
+
+  // Update toursCount on matching destination
+  try {
+    await db.collection('destinations').updateOne(
+      { title: { $regex: new RegExp(`^${newPackage.destination}$`, 'i') } },
+      { $inc: { toursCount: 1 } }
+    );
+  } catch (e) {
+    console.error('Failed to update destination count:', e);
+  }
+
+  // Return clean package without MongoDB _id
+  const { _id, ...cleanPkg } = pkgWithId as any;
+  return cleanPkg as Package;
 }
 
 export async function updatePackage(id: string, updates: Partial<Package>): Promise<Package | null> {
-  const allPackages = await getPackages();
-  const index = allPackages.findIndex(p => p.id === id);
-  
-  if (index === -1) {
-    return null;
-  }
-  
-  const updatedPackage = { ...allPackages[index], ...updates };
-  allPackages[index] = updatedPackage;
-  
-  await fs.writeFile(packagesFilePath, JSON.stringify(allPackages, null, 2));
-  return updatedPackage;
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  const updateDoc = {
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const res = await db.collection('packages').findOneAndUpdate(
+    { id: safeId },
+    { $set: updateDoc },
+    { returnDocument: 'after', projection: { _id: 0 } }
+  );
+
+  return (res as unknown as Package) || null;
 }
 
 export async function deletePackage(id: string): Promise<boolean> {
-  const allPackages = await getPackages();
-  const index = allPackages.findIndex(p => p.id === id);
-  if (index === -1) return false;
-  allPackages.splice(index, 1);
-  await fs.writeFile(packagesFilePath, JSON.stringify(allPackages, null, 2));
-  return true;
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  // Find package first to decrement destination count
+  const existing = await db.collection('packages').findOne({ id: safeId });
+  const result = await db.collection('packages').deleteOne({ id: safeId });
+
+  if (result.deletedCount > 0 && existing?.destination) {
+    try {
+      await db.collection('destinations').updateOne(
+        { title: { $regex: new RegExp(`^${existing.destination}$`, 'i') } },
+        { $inc: { toursCount: -1 } }
+      );
+    } catch (e) {
+      console.error('Failed to decrement tours count:', e);
+    }
+    // Also remove from wishlists
+    await db.collection('wishlist').deleteMany({ packageId: safeId });
+    return true;
+  }
+
+  return result.deletedCount > 0;
 }
 
-export async function addDestination(newDest: Omit<Destination, 'id' | 'toursCount'>): Promise<Destination> {
-  const allDestinations = await getDestinations();
-  
-  const id = newDest.title
+// -------------------------------------------------------------
+// DESTINATIONS (CRUD)
+// -------------------------------------------------------------
+
+export async function getDestinations(): Promise<Destination[]> {
+  await initializeDatabase();
+  const db = await getDb();
+  const docs = await db
+    .collection('destinations')
+    .find({}, { projection: { _id: 0 } })
+    .toArray();
+  return docs as unknown as Destination[];
+}
+
+export async function getDestinationById(id: string): Promise<Destination | null> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim().toLowerCase();
+  const doc = await db.collection('destinations').findOne(
+    { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeId}$`, 'i') } }] },
+    { projection: { _id: 0 } }
+  );
+  return (doc as unknown as Destination) || null;
+}
+
+export async function addDestination(
+  newDest: Omit<Destination, 'id' | 'toursCount'>
+): Promise<Destination> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  let id = newDest.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-    
-  const destWithId = { ...newDest, id, toursCount: 0 };
-  
-  allDestinations.push(destWithId);
-  await fs.writeFile(destinationsFilePath, JSON.stringify(allDestinations, null, 2));
-  
-  return destWithId;
+
+  if (!id) id = `dest-${Date.now()}`;
+
+  const existing = await db.collection('destinations').findOne({ id });
+  if (existing) {
+    id = `${id}-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  // Count current packages for this destination
+  const currentCount = await db.collection('packages').countDocuments({
+    destination: { $regex: new RegExp(`^${newDest.title}$`, 'i') },
+  });
+
+  const destWithId: Destination = {
+    ...newDest,
+    id,
+    toursCount: currentCount,
+    createdAt: new Date().toISOString(),
+  };
+
+  await db.collection('destinations').insertOne(destWithId as any);
+
+  const { _id, ...cleanDest } = destWithId as any;
+  return cleanDest as Destination;
 }
 
-export async function updateDestination(id: string, updates: Partial<Destination>): Promise<Destination | null> {
-  const allDestinations = await getDestinations();
-  const index = allDestinations.findIndex(d => d.id === id);
-  if (index === -1) return null;
-  const updatedDest = { ...allDestinations[index], ...updates };
-  allDestinations[index] = updatedDest;
-  await fs.writeFile(destinationsFilePath, JSON.stringify(allDestinations, null, 2));
-  return updatedDest;
+export async function updateDestination(
+  id: string,
+  updates: Partial<Destination>
+): Promise<Destination | null> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  const res = await db.collection('destinations').findOneAndUpdate(
+    { id: safeId },
+    { $set: updates },
+    { returnDocument: 'after', projection: { _id: 0 } }
+  );
+
+  return (res as unknown as Destination) || null;
 }
 
 export async function deleteDestination(id: string): Promise<boolean> {
-  const allDestinations = await getDestinations();
-  const index = allDestinations.findIndex(d => d.id === id);
-  if (index === -1) return false;
-  allDestinations.splice(index, 1);
-  await fs.writeFile(destinationsFilePath, JSON.stringify(allDestinations, null, 2));
-  return true;
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  // Find destination first to get title
+  const dest = await db.collection('destinations').findOne({ id: safeId });
+  const result = await db.collection('destinations').deleteOne({ id: safeId });
+
+  if (result.deletedCount > 0 && dest?.title) {
+    // Cascade delete packages belonging to this deleted destination
+    await db.collection('packages').deleteMany({
+      destination: { $regex: new RegExp(`^${dest.title}$`, 'i') }
+    });
+  }
+
+  return result.deletedCount > 0;
 }
 
-export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'status'>): Promise<Order> {
-  const allOrders = await getOrders();
-  
-  const id = `ord-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
-  
+// -------------------------------------------------------------
+// ORDERS (CRUD)
+// -------------------------------------------------------------
+
+export async function getOrders(): Promise<Order[]> {
+  await initializeDatabase();
+  const db = await getDb();
+  const docs = await db
+    .collection('orders')
+    .find({}, { projection: { _id: 0 } })
+    .sort({ createdAt: -1 })
+    .toArray();
+  return docs as unknown as Order[];
+}
+
+export async function createOrder(
+  orderData: Omit<Order, 'id' | 'createdAt' | 'status'>
+): Promise<Order> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  const id = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+
   const newOrder: Order = {
     ...orderData,
     id,
     status: 'Pending',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
-  
-  allOrders.push(newOrder);
-  await fs.writeFile(ordersFilePath, JSON.stringify(allOrders, null, 2));
-  
-  return newOrder;
+
+  await db.collection('orders').insertOne(newOrder as any);
+
+  const { _id, ...cleanOrder } = newOrder as any;
+  return cleanOrder as Order;
 }
 
-export async function updateOrderStatus(id: string, status: Order['status']): Promise<Order | null> {
-  const allOrders = await getOrders();
-  const index = allOrders.findIndex(o => o.id === id);
-  
-  if (index === -1) {
-    return null;
-  }
-  
-  allOrders[index].status = status;
-  await fs.writeFile(ordersFilePath, JSON.stringify(allOrders, null, 2));
-  
-  return allOrders[index];
+export async function updateOrderStatus(
+  id: string,
+  status: Order['status']
+): Promise<Order | null> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  const res = await db.collection('orders').findOneAndUpdate(
+    { id: safeId },
+    { $set: { status } },
+    { returnDocument: 'after', projection: { _id: 0 } }
+  );
+
+  return (res as unknown as Order) || null;
 }
+
+export async function deleteOrder(id: string): Promise<boolean> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+  const res = await db.collection('orders').deleteOne({ id: safeId });
+  return res.deletedCount > 0;
+}
+
+// -------------------------------------------------------------
+// PREFERENCES
+// -------------------------------------------------------------
 
 export async function getPreferences(): Promise<PreferenceOption[]> {
-  await ensureDbExists();
-  const fileData = await fs.readFile(preferencesFilePath, 'utf8');
-  try {
-    const list = JSON.parse(fileData) as PreferenceOption[];
-    return list.length > 0 ? list : DEFAULT_PREFERENCES;
-  } catch (error) {
-    return DEFAULT_PREFERENCES;
-  }
+  await initializeDatabase();
+  const db = await getDb();
+  const docs = await db
+    .collection('preferences')
+    .find({}, { projection: { _id: 0 } })
+    .toArray();
+  return (docs as unknown as PreferenceOption[]) || DEFAULT_PREFERENCES;
 }
 
-export async function addPreference(newPref: Omit<PreferenceOption, 'id'>): Promise<PreferenceOption> {
-  const allPrefs = await getPreferences();
-  
+export async function addPreference(
+  newPref: Omit<PreferenceOption, 'id'>
+): Promise<PreferenceOption> {
+  await initializeDatabase();
+  const db = await getDb();
+
   const id = newPref.label
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-    
-  const existing = allPrefs.find(p => p.id === id || p.label.toLowerCase() === newPref.label.toLowerCase());
+
+  const existing = await db.collection('preferences').findOne({
+    $or: [{ id }, { label: { $regex: new RegExp(`^${newPref.label}$`, 'i') } }],
+  });
+
   if (existing) {
-    return existing;
+    const { _id, ...cleanExisting } = existing as any;
+    return cleanExisting as PreferenceOption;
   }
-  
+
   const prefWithId: PreferenceOption = { ...newPref, id, isCustom: true };
-  allPrefs.push(prefWithId);
-  await fs.writeFile(preferencesFilePath, JSON.stringify(allPrefs, null, 2));
-  
-  return prefWithId;
+  await db.collection('preferences').insertOne(prefWithId as any);
+
+  const { _id, ...cleanPref } = prefWithId as any;
+  return cleanPref as PreferenceOption;
+}
+
+// -------------------------------------------------------------
+// WISHLIST (Database Stored)
+// -------------------------------------------------------------
+
+export async function getWishlist(userId: string): Promise<Package[]> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeUser = String(userId).trim();
+
+  const items = await db
+    .collection('wishlist')
+    .find({ userId: safeUser })
+    .sort({ createdAt: -1 })
+    .toArray();
+
+  const packageIds = items.map(item => item.packageId);
+  if (packageIds.length === 0) return [];
+
+  const packages = await db
+    .collection('packages')
+    .find({ id: { $in: packageIds } }, { projection: { _id: 0 } })
+    .toArray();
+
+  return packages as unknown as Package[];
+}
+
+export async function addToWishlist(userId: string, packageId: string): Promise<boolean> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeUser = String(userId).trim();
+  const safePkg = String(packageId).trim();
+
+  try {
+    await db.collection('wishlist').updateOne(
+      { userId: safeUser, packageId: safePkg },
+      { $setOnInsert: { userId: safeUser, packageId: safePkg, createdAt: new Date().toISOString() } },
+      { upsert: true }
+    );
+    return true;
+  } catch (err) {
+    console.error('Error adding to wishlist:', err);
+    return false;
+  }
+}
+
+export async function removeFromWishlist(userId: string, packageId: string): Promise<boolean> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeUser = String(userId).trim();
+  const safePkg = String(packageId).trim();
+
+  const res = await db.collection('wishlist').deleteOne({ userId: safeUser, packageId: safePkg });
+  return res.deletedCount > 0;
+}
+
+export async function isWishlisted(userId: string, packageId: string): Promise<boolean> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeUser = String(userId).trim();
+  const safePkg = String(packageId).trim();
+
+  const count = await db.collection('wishlist').countDocuments({ userId: safeUser, packageId: safePkg });
+  return count > 0;
+}
+
+// -------------------------------------------------------------
+// DATABASE STORED MEDIA / IMAGES
+// -------------------------------------------------------------
+
+export async function saveImageToDb(
+  buffer: Buffer,
+  contentType = 'image/jpeg',
+  filename = 'image.jpg'
+): Promise<string> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  const id = `img-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const base64 = buffer.toString('base64');
+
+  await db.collection('images').insertOne({
+    id,
+    data: base64,
+    contentType,
+    filename,
+    size: buffer.length,
+    createdAt: new Date().toISOString(),
+  });
+
+  return `/api/images/${id}`;
+}
+
+export async function getImageFromDb(
+  id: string
+): Promise<{ data: Buffer; contentType: string } | null> {
+  await initializeDatabase();
+  const db = await getDb();
+  const safeId = String(id).trim();
+
+  const doc = await db.collection('images').findOne({ id: safeId });
+  if (!doc || !doc.data) return null;
+
+  return {
+    data: Buffer.from(doc.data, 'base64'),
+    contentType: doc.contentType || 'image/jpeg',
+  };
 }

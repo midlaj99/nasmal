@@ -22,6 +22,19 @@ const DEFAULT_PREFERENCES: PreferenceOption[] = [
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'allPackages' | 'packages' | 'allDestinations' | 'destinations' | 'bestDeals' | 'orders'>('overview');
 
+  // Authentication states
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking, true/false
+  const [authView, setAuthView] = useState<'login' | 'forgot_email' | 'forgot_otp' | 'forgot_reset'>('login');
+  const [authUsername, setAuthUsername] = useState('nasmaltourism@admin');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authOtp, setAuthOtp] = useState('');
+  const [authNewPassword, setAuthNewPassword] = useState('');
+  const [authConfirmPassword, setAuthConfirmPassword] = useState('');
+  const [authResetToken, setAuthResetToken] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -48,6 +61,11 @@ export default function AdminPage() {
   const [packageImageFile, setPackageImageFile] = useState<File | null>(null);
   const [destImageType, setDestImageType] = useState<'url' | 'file'>('url');
   const [destImageFile, setDestImageFile] = useState<File | null>(null);
+  const [editDestImageType, setEditDestImageType] = useState<'url' | 'file'>('url');
+  const [editDestImageFile, setEditDestImageFile] = useState<File | null>(null);
+
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [galleryUploadError, setGalleryUploadError] = useState('');
 
   const uploadImage = async (file: File) => {
     const formData = new FormData();
@@ -56,12 +74,359 @@ export default function AdminPage() {
       method: 'POST',
       body: formData
     });
-    if (!res.ok) throw new Error('File upload failed');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'File upload failed');
+    }
     const data = await res.json();
     return data.url;
   };
 
+  const handleMultipleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingGallery(true);
+    setGalleryUploadError('');
+
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to upload gallery images to Cloudinary');
+      }
+
+      const data = await res.json();
+      const newUrls: string[] = data.urls || (data.url ? [data.url] : []);
+
+      if (newUrls.length > 0) {
+        setPackageData(prev => {
+          const currentList = prev.images
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean);
+          const combined = [...currentList, ...newUrls];
+          return {
+            ...prev,
+            images: combined.join('\n'),
+            image: prev.image || newUrls[0]
+          };
+        });
+      }
+    } catch (err: any) {
+      console.error('Gallery upload error:', err);
+      setGalleryUploadError(err.message || 'Error uploading gallery images');
+    } finally {
+      setIsUploadingGallery(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveGalleryImage = (indexToRemove: number) => {
+    setPackageData(prev => {
+      const currentList = prev.images
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+      const filtered = currentList.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        images: filtered.join('\n'),
+      };
+    });
+  };
+
+  // Edit package upload & gallery states
+  const [editPackageImageType, setEditPackageImageType] = useState<'url' | 'file'>('url');
+  const [editPackageImageFile, setEditPackageImageFile] = useState<File | null>(null);
+  const [isEditingGalleryUploading, setIsEditingGalleryUploading] = useState(false);
+  const [editGalleryUploadError, setEditGalleryUploadError] = useState('');
+  const [showEditAddPreference, setShowEditAddPreference] = useState(false);
+  const [newEditPrefTitle, setNewEditPrefTitle] = useState('');
+  const [newEditPrefIcon, setNewEditPrefIcon] = useState('');
+
+  const handleMultipleEditGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !editingPackage) return;
+
+    setIsEditingGalleryUploading(true);
+    setEditGalleryUploadError('');
+
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to upload gallery images');
+      }
+
+      const data = await res.json();
+      const newUrls: string[] = data.urls || (data.url ? [data.url] : []);
+
+      if (newUrls.length > 0) {
+        setEditingPackage((prev: any) => {
+          if (!prev) return prev;
+          const currentList = (typeof prev.images === 'string' ? prev.images : '')
+            .split('\n')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+          const combined = [...currentList, ...newUrls];
+          return {
+            ...prev,
+            images: combined.join('\n'),
+            image: prev.image || newUrls[0]
+          };
+        });
+      }
+    } catch (err: any) {
+      console.error('Edit gallery upload error:', err);
+      setEditGalleryUploadError(err.message || 'Error uploading gallery images');
+    } finally {
+      setIsEditingGalleryUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveEditGalleryImage = (indexToRemove: number) => {
+    setEditingPackage((prev: any) => {
+      if (!prev) return prev;
+      const currentList = (typeof prev.images === 'string' ? prev.images : '')
+        .split('\n')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      const filtered = currentList.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        images: filtered.join('\n'),
+      };
+    });
+  };
+
+  const startEditPackage = (pkg: any) => {
+    setEditingPackage({
+      id: pkg.id,
+      title: pkg.title || '',
+      destination: pkg.destination || destinations[0]?.title || 'Dubai',
+      price: String(pkg.price ?? ''),
+      childPrice: String(pkg.childPrice ?? ''),
+      childAgeLimit: pkg.childAgeLimit ?? '',
+      rating: String(pkg.rating ?? '5.0'),
+      reviewsCount: String(pkg.reviewsCount ?? '0'),
+      image: pkg.image || '',
+      images: Array.isArray(pkg.images) ? pkg.images.join('\n') : (pkg.images || ''),
+      description: pkg.description || '',
+      highlights: Array.isArray(pkg.highlights) ? pkg.highlights.join('\n') : (pkg.highlights || ''),
+      quickFacts: Array.isArray(pkg.quickFacts) ? pkg.quickFacts.join('\n') : (pkg.quickFacts || ''),
+      inclusions: Array.isArray(pkg.inclusions) ? pkg.inclusions.join('\n') : (pkg.inclusions || ''),
+      tags: Array.isArray(pkg.tags) ? pkg.tags.join(', ') : (pkg.tags || ''),
+      suitableFor: Array.isArray(pkg.suitableFor) ? [...pkg.suitableFor] : [],
+      isPopular: !!pkg.isPopular,
+      isBestDeal: !!pkg.isBestDeal,
+      originalPrice: String(pkg.originalPrice ?? '')
+    });
+    setEditPackageImageType('url');
+    setEditPackageImageFile(null);
+    setEditGalleryUploadError('');
+    setShowEditAddPreference(false);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete order');
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Error deleting order');
+    }
+  };
+
+  // Check admin session on initial load
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/admin/me');
+        const data = await res.json();
+        if (res.ok && data.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: authUsername.trim(),
+          password: authPassword
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      setIsAuthenticated(true);
+      setAuthPassword('');
+      setAuthError('');
+    } catch (err: any) {
+      setAuthError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error', err);
+    } finally {
+      setIsAuthenticated(false);
+      setAuthView('login');
+      setAuthPassword('');
+      setAuthError('');
+      setAuthSuccess('You have been signed out successfully.');
+    }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: authUsername.trim() })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to dispatch security OTP');
+      }
+
+      setAuthSuccess(`A 6-digit security OTP code was sent to ${data.email || 'nasmaltourism@gmail.com'}`);
+      setAuthView('forgot_otp');
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to dispatch OTP');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/forgot-password/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: authUsername.trim(),
+          otp: authOtp.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid or expired OTP code');
+      }
+
+      setAuthResetToken(data.resetToken);
+      setAuthSuccess('Code verified successfully. Enter your new password.');
+      setAuthView('forgot_reset');
+    } catch (err: any) {
+      setAuthError(err.message || 'OTP verification failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authNewPassword.length < 6) {
+      setAuthError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (authNewPassword !== authConfirmPassword) {
+      setAuthError('Passwords do not match.');
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/forgot-password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resetToken: authResetToken,
+          newPassword: authNewPassword
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      setAuthSuccess('Password has been updated successfully! Please log in with your new password.');
+      setAuthView('login');
+      setAuthPassword('');
+      setAuthNewPassword('');
+      setAuthConfirmPassword('');
+      setAuthOtp('');
+      setAuthResetToken('');
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to reset password');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     fetch('/api/packages')
       .then(r => r.json())
       .then(data => setPackages(data))
@@ -93,12 +458,14 @@ export default function AdminPage() {
         }
       })
       .catch(console.error);
-  }, [success]);
+  }, [isAuthenticated, success]);
 
   const [packageData, setPackageData] = useState({
     title: '',
     destination: 'Dubai',
     price: '',
+    childPrice: '',
+    childAgeLimit: '',
     rating: '5.0',
     reviewsCount: '0',
     image: '',
@@ -216,12 +583,18 @@ export default function AdminPage() {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error('Failed to add package');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to add package');
+      }
+
+      const newPkg = await res.json();
+      setPackages(prev => [newPkg, ...prev]);
 
       setSuccess(true);
       setSelectedPreferences([]);
       setPackageData({
-        title: '', destination: 'Dubai', price: '', rating: '5.0', reviewsCount: '0',
+        title: '', destination: destinations[0]?.title || 'Dubai', price: '', childPrice: '', childAgeLimit: '', rating: '5.0', reviewsCount: '0',
         image: '', images: '', description: '', highlights: '', quickFacts: '',
         inclusions: '', tags: '', isPopular: false
       });
@@ -335,16 +708,57 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingPackage) return;
     setEditLoading(true);
+    setError('');
     try {
+      let finalImageUrl = editingPackage.image;
+      if (editPackageImageType === 'file' && editPackageImageFile) {
+        finalImageUrl = await uploadImage(editPackageImageFile);
+      }
+
+      const payload = {
+        title: editingPackage.title,
+        destination: editingPackage.destination,
+        price: editingPackage.price,
+        childPrice: editingPackage.childPrice ? String(editingPackage.childPrice).trim() : '',
+        childAgeLimit: editingPackage.childAgeLimit ? String(editingPackage.childAgeLimit).trim() : '',
+        image: finalImageUrl,
+        images: typeof editingPackage.images === 'string'
+          ? editingPackage.images.split('\n').map((s: string) => s.trim()).filter(Boolean)
+          : (editingPackage.images || []),
+        rating: editingPackage.rating,
+        reviewsCount: parseInt(editingPackage.reviewsCount) || 0,
+        description: editingPackage.description,
+        highlights: typeof editingPackage.highlights === 'string'
+          ? editingPackage.highlights.split('\n').map((s: string) => s.trim()).filter(Boolean)
+          : (editingPackage.highlights || []),
+        quickFacts: typeof editingPackage.quickFacts === 'string'
+          ? editingPackage.quickFacts.split('\n').map((s: string) => s.trim()).filter(Boolean)
+          : (editingPackage.quickFacts || []),
+        inclusions: typeof editingPackage.inclusions === 'string'
+          ? editingPackage.inclusions.split('\n').map((s: string) => s.trim()).filter(Boolean)
+          : (editingPackage.inclusions || []),
+        tags: typeof editingPackage.tags === 'string'
+          ? editingPackage.tags.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : (editingPackage.tags || []),
+        suitableFor: editingPackage.suitableFor || [],
+        isPopular: !!editingPackage.isPopular,
+        isBestDeal: !!editingPackage.isBestDeal,
+        originalPrice: editingPackage.originalPrice || '',
+      };
+
+      if (payload.image && payload.images.length === 0) {
+        payload.images.push(payload.image);
+      }
+
       const res = await fetch(`/api/packages/${editingPackage.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...editingPackage,
-          reviewsCount: parseInt(editingPackage.reviewsCount) || 0,
-        })
+        body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('Failed to update package');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to update package');
+      }
       const updated = await res.json();
       setPackages(prev => prev.map(p => p.id === updated.id ? updated : p));
       setEditingPackage(null);
@@ -357,11 +771,15 @@ export default function AdminPage() {
   };
 
   const handleDeleteDestination = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this destination?')) return;
+    if (!window.confirm('Are you sure you want to delete this destination? Any packages linked to it will also be removed.')) return;
     try {
       const res = await fetch(`/api/destinations/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete destination');
+      const targetDest = destinations.find(d => d.id === id);
       setDestinations(prev => prev.filter(d => d.id !== id));
+      if (targetDest) {
+        setPackages(prev => prev.filter(p => p.destination?.toLowerCase().trim() !== targetDest.title?.toLowerCase().trim()));
+      }
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Error deleting destination');
@@ -372,16 +790,26 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingDest) return;
     setEditLoading(true);
+    setError('');
     try {
+      let finalImageUrl = editingDest.image;
+      if (editDestImageType === 'file' && editDestImageFile) {
+        finalImageUrl = await uploadImage(editDestImageFile);
+      }
+
       const res = await fetch(`/api/destinations/${editingDest.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingDest)
+        body: JSON.stringify({
+          ...editingDest,
+          image: finalImageUrl
+        })
       });
       if (!res.ok) throw new Error('Failed to update destination');
       const updated = await res.json();
       setDestinations(prev => prev.map(d => d.id === updated.id ? updated : d));
       setEditingDest(null);
+      setEditDestImageFile(null);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Error updating destination');
@@ -389,6 +817,250 @@ export default function AdminPage() {
       setEditLoading(false);
     }
   };
+
+  // Loading state while checking active admin session
+  if (isAuthenticated === null) {
+    return (
+      <div className={styles.authOverlay}>
+        <div style={{ textAlign: 'center', color: '#64748b', fontSize: '1rem', fontWeight: 600 }}>
+          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔒</div>
+          Verifying security session...
+        </div>
+      </div>
+    );
+  }
+
+  // White Themed Administrative Authentication Portal
+  if (!isAuthenticated) {
+    return (
+      <div className={styles.authOverlay}>
+        <div className={styles.authCard}>
+          <div className={styles.authHeader}>
+            <div className={styles.authBadge}>
+              <span>🛡️</span> Security Gateway
+            </div>
+            <h1 className={styles.authTitle}>Nasmal Admin</h1>
+            <p className={styles.authSubtitle}>
+              {authView === 'login' && 'Please sign in to access the administrator console.'}
+              {authView === 'forgot_email' && 'Enter your admin username to receive a security OTP via email.'}
+              {authView === 'forgot_otp' && 'Enter the 6-digit OTP code sent to nasmaltourism@gmail.com.'}
+              {authView === 'forgot_reset' && 'Set a strong new password for your administrator account.'}
+            </p>
+          </div>
+
+          {authError && (
+            <div className={styles.authAlertError}>
+              <span>⚠️</span>
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {authSuccess && (
+            <div className={styles.authAlertSuccess}>
+              <span>✅</span>
+              <span>{authSuccess}</span>
+            </div>
+          )}
+
+          {/* VIEW 1: LOGIN FORM */}
+          {authView === 'login' && (
+            <form onSubmit={handleAdminLogin} className={styles.authForm}>
+              <div className={styles.authField}>
+                <label className={styles.authLabel}>Admin Username / Identifier</label>
+                <input
+                  type="text"
+                  required
+                  value={authUsername}
+                  onChange={(e) => setAuthUsername(e.target.value)}
+                  placeholder="nasmaltourism@admin"
+                  className={styles.authInput}
+                  autoComplete="username"
+                />
+              </div>
+
+              <div className={styles.authField}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className={styles.authLabel}>Password</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthError('');
+                      setAuthSuccess('');
+                      setAuthView('forgot_email');
+                    }}
+                    className={styles.authLink}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className={styles.authInput}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className={styles.authButton}
+              >
+                {authLoading ? 'Verifying Credentials...' : 'Sign In to Dashboard →'}
+              </button>
+            </form>
+          )}
+
+          {/* VIEW 2: FORGOT PASSWORD - REQUEST OTP */}
+          {authView === 'forgot_email' && (
+            <form onSubmit={handleSendOtp} className={styles.authForm}>
+              <div className={styles.authField}>
+                <label className={styles.authLabel}>Administrator Username</label>
+                <input
+                  type="text"
+                  required
+                  value={authUsername}
+                  onChange={(e) => setAuthUsername(e.target.value)}
+                  placeholder="nasmaltourism@admin"
+                  className={styles.authInput}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className={styles.authButton}
+              >
+                {authLoading ? 'Dispatching OTP...' : 'Send Security OTP to Email ✉️'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError('');
+                  setAuthSuccess('');
+                  setAuthView('login');
+                }}
+                className={styles.authSecondaryButton}
+              >
+                ← Back to Login
+              </button>
+            </form>
+          )}
+
+          {/* VIEW 3: VERIFY OTP */}
+          {authView === 'forgot_otp' && (
+            <form onSubmit={handleVerifyOtp} className={styles.authForm}>
+              <div className={styles.authField}>
+                <label className={styles.authLabel}>Enter 6-Digit OTP</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={authOtp}
+                  onChange={(e) => setAuthOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  className={`${styles.authInput} ${styles.authOtpInput}`}
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading || authOtp.length !== 6}
+                className={styles.authButton}
+              >
+                {authLoading ? 'Verifying OTP...' : 'Verify OTP Code →'}
+              </button>
+
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  disabled={authLoading}
+                  onClick={handleSendOtp}
+                  className={styles.authSecondaryButton}
+                  style={{ flex: 1 }}
+                >
+                  Resend OTP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthError('');
+                    setAuthSuccess('');
+                    setAuthView('login');
+                  }}
+                  className={styles.authSecondaryButton}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* VIEW 4: RESET PASSWORD */}
+          {authView === 'forgot_reset' && (
+            <form onSubmit={handleResetPassword} className={styles.authForm}>
+              <div className={styles.authField}>
+                <label className={styles.authLabel}>New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={authNewPassword}
+                  onChange={(e) => setAuthNewPassword(e.target.value)}
+                  placeholder="Minimum 6 characters"
+                  className={styles.authInput}
+                />
+              </div>
+
+              <div className={styles.authField}>
+                <label className={styles.authLabel}>Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={authConfirmPassword}
+                  onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className={styles.authInput}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className={styles.authButton}
+              >
+                {authLoading ? 'Updating Password...' : 'Save New Password & Sign In'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError('');
+                  setAuthSuccess('');
+                  setAuthView('login');
+                }}
+                className={styles.authSecondaryButton}
+              >
+                Cancel
+              </button>
+            </form>
+          )}
+
+          <div className={styles.authFooter}>
+            <span className={styles.authFooterLock}>🔒</span>
+            <span>256-Bit Encrypted TLS Session • Zero-Trust Protected</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.adminLayout}>
@@ -438,12 +1110,46 @@ export default function AdminPage() {
             <span>🛒</span> Orders
           </button>
         </nav>
+
+        <div className={styles.sidebarFooter}>
+          <button
+            type="button"
+            onClick={handleAdminLogout}
+            className={styles.logoutButton}
+          >
+            <span>🚪</span> Sign Out
+          </button>
+        </div>
       </aside>
 
       <main className={styles.mainContent}>
         <div className={styles.header}>
-          <h1>Admin Portal</h1>
-          <p>Welcome back! Here's what's happening today.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1>Admin Portal</h1>
+              <p>Welcome back, <strong>{authUsername}</strong>! Here's what's happening today.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAdminLogout}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                color: '#64748b',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {success && <div className={styles.successAlert}>Operation completed successfully!</div>}
@@ -515,12 +1221,15 @@ export default function AdminPage() {
                     {orders.slice(0, 5).map((order) => (
                       <tr key={order.id}>
                         <td>#{order.id.slice(0, 8)}</td>
-                        <td>{order.firstName} {order.lastName}</td>
-                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                        <td>AED {order.totalAmount}</td>
                         <td>
-                          <span className={`${styles.badge} ${order.status === 'confirmed' ? styles.badgeConfirmed : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
-                            {order.status || 'pending'}
+                          <div style={{ fontWeight: '600' }}>{order.firstName} {order.lastName}</div>
+                          {order.packageTitle && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{order.packageTitle}</div>}
+                        </td>
+                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td style={{ fontWeight: '600' }}>AED {order.totalPrice ?? order.totalAmount ?? 0}</td>
+                        <td>
+                          <span className={`${styles.badge} ${order.status?.toLowerCase() === 'confirmed' ? styles.badgeConfirmed : order.status?.toLowerCase() === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
+                            {order.status || 'Pending'}
                           </span>
                         </td>
                       </tr>
@@ -628,7 +1337,7 @@ export default function AdminPage() {
                         <td style={{ whiteSpace: 'nowrap' }}>
                           <button
                             type="button"
-                            onClick={() => setEditingPackage({ ...pkg })}
+                            onClick={() => startEditPackage(pkg)}
                             className={styles.editActionBtn}
                             title="Edit this package"
                           >
@@ -700,6 +1409,16 @@ export default function AdminPage() {
                 </div>
 
                 <div className={styles.formGroup}>
+                  <label htmlFor="childPrice">Child Price (AED) <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>(Optional)</span></label>
+                  <input type="text" id="childPrice" name="childPrice" value={packageData.childPrice} onChange={handlePackageChange} placeholder="e.g. 100" />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="childAgeLimit">Child Age Limit <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>(Optional)</span></label>
+                  <input type="text" id="childAgeLimit" name="childAgeLimit" value={packageData.childAgeLimit} onChange={handlePackageChange} placeholder="e.g. 3 - 12 years" />
+                </div>
+
+                <div className={styles.formGroup}>
                   <label>Main Image *</label>
                   <div className={styles.imageInputToggle}>
                     <button type="button" className={packageImageType === 'url' ? styles.activeToggle : ''} onClick={() => setPackageImageType('url')}>URL</button>
@@ -713,8 +1432,86 @@ export default function AdminPage() {
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <label htmlFor="images">Gallery Images (One URL per line)</label>
-                  <textarea id="images" name="images" value={packageData.images} onChange={handlePackageChange} rows={3}></textarea>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label htmlFor="images" style={{ margin: 0 }}>Gallery Images (One URL per line or Upload Multiple from PC)</label>
+                    {isUploadingGallery && (
+                      <span className={styles.galleryUploadLoading}>
+                        ⏳ Uploading images...
+                      </span>
+                    )}
+                  </div>
+
+                  {galleryUploadError && (
+                    <div style={{ color: '#e11d48', fontSize: '0.85rem', marginBottom: '8px' }}>
+                      ⚠️ {galleryUploadError}
+                    </div>
+                  )}
+
+                  {/* Multiple file upload from PC button */}
+                  <div className={styles.galleryUploadWrapper}>
+                    <div className={styles.galleryUploadHeader}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                          Upload Gallery Images from PC
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
+                          Choose one or multiple image files directly from your computer.
+                        </div>
+                      </div>
+
+                      <div>
+                        <input
+                          type="file"
+                          id="galleryMultiInput"
+                          multiple
+                          accept="image/*"
+                          onChange={handleMultipleGalleryUpload}
+                          style={{ display: 'none' }}
+                          disabled={isUploadingGallery}
+                        />
+                        <label
+                          htmlFor="galleryMultiInput"
+                          className={styles.galleryUploadBtn}
+                          style={{ opacity: isUploadingGallery ? 0.6 : 1, cursor: isUploadingGallery ? 'wait' : 'pointer' }}
+                        >
+                          {isUploadingGallery ? '⏳ Uploading...' : '📁 Choose Files (Multiple)'}
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Previews of uploaded gallery images with 1-click delete */}
+                    {packageData.images.split('\n').map(s => s.trim()).filter(Boolean).length > 0 && (
+                      <div className={styles.galleryPreviewGrid}>
+                        {packageData.images
+                          .split('\n')
+                          .map(s => s.trim())
+                          .filter(Boolean)
+                          .map((imgUrl, idx) => (
+                            <div key={idx} className={styles.galleryPreviewCard} title={imgUrl}>
+                              <img src={imgUrl} alt={`Gallery ${idx + 1}`} />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveGalleryImage(idx)}
+                                className={styles.galleryRemoveBtn}
+                                title="Remove image"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <textarea
+                    id="images"
+                    name="images"
+                    value={packageData.images}
+                    onChange={handlePackageChange}
+                    rows={3}
+                    placeholder="One image URL per line"
+                    style={{ marginTop: '10px' }}
+                  ></textarea>
                 </div>
 
                 <div className={styles.formGroupFull}>
@@ -967,7 +1764,11 @@ export default function AdminPage() {
                         <td style={{ whiteSpace: 'nowrap' }}>
                           <button
                             type="button"
-                            onClick={() => setEditingDest({ ...dest })}
+                            onClick={() => {
+                              setEditingDest({ ...dest });
+                              setEditDestImageType('url');
+                              setEditDestImageFile(null);
+                            }}
                             className={styles.editActionBtn}
                             title="Edit destination"
                           >
@@ -1045,9 +1846,11 @@ export default function AdminPage() {
                   <label htmlFor="packageId">Select Package *</label>
                   <select required id="packageId" name="packageId" value={dealData.packageId} onChange={handleDealChange}>
                     <option value="">-- Choose a package --</option>
-                    {packages.map(p => (
-                      <option key={p.id} value={p.id}>{p.title} ({p.destination})</option>
-                    ))}
+                    {packages
+                      .filter(p => destinations.some(d => d.title?.toLowerCase().trim() === (p.destination || '').toLowerCase().trim()))
+                      .map(p => (
+                        <option key={p.id} value={p.id}>{p.title} ({p.destination})</option>
+                      ))}
                   </select>
                 </div>
 
@@ -1085,34 +1888,50 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => (
-                    <tr key={order.id}>
-                      <td>#{order.id.slice(0, 8)}</td>
-                      <td>{order.firstName} {order.lastName}</td>
-                      <td>
-                        <div style={{ fontSize: '0.85rem' }}>{order.email}</div>
-                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{order.phone}</div>
-                      </td>
-                      <td style={{ fontWeight: '600' }}>AED {order.totalAmount}</td>
-                      <td>
-                        <span className={`${styles.badge} ${order.status === 'confirmed' ? styles.badgeConfirmed : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
-                          {order.status || 'pending'}
-                        </span>
-                      </td>
-                      <td>
-                        {order.status !== 'confirmed' && (
-                          <button onClick={() => updateOrderStatus(order.id, 'confirmed')} className={styles.actionBtn}>
-                            Confirm
+                  {orders.map((order) => {
+                    const isConfirmed = order.status?.toLowerCase() === 'confirmed';
+                    const isCancelled = order.status?.toLowerCase() === 'cancelled';
+                    return (
+                      <tr key={order.id}>
+                        <td>#{order.id.slice(0, 8)}</td>
+                        <td>
+                          <div style={{ fontWeight: '600', color: '#0f172a' }}>{order.firstName} {order.lastName}</div>
+                          {order.packageTitle && <div style={{ fontSize: '0.8rem', color: '#64748b' }}>📦 {order.packageTitle}</div>}
+                          {order.visitDate && <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>📅 {order.visitDate}</div>}
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.85rem' }}>{order.email}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{order.phone}</div>
+                        </td>
+                        <td style={{ fontWeight: '600' }}>AED {order.totalPrice ?? order.totalAmount ?? 0}</td>
+                        <td>
+                          <span className={`${styles.badge} ${isConfirmed ? styles.badgeConfirmed : isCancelled ? styles.badgeCancelled : styles.badgePending}`}>
+                            {order.status || 'Pending'}
+                          </span>
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {!isConfirmed && (
+                            <button onClick={() => updateOrderStatus(order.id, 'Confirmed')} className={styles.actionBtn}>
+                              Confirm
+                            </button>
+                          )}
+                          {!isCancelled && (
+                            <button onClick={() => updateOrderStatus(order.id, 'Cancelled')} className={styles.actionBtn}>
+                              Cancel
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className={styles.deleteActionBtn}
+                            title="Delete this order"
+                          >
+                            🗑️ Delete
                           </button>
-                        )}
-                        {order.status !== 'cancelled' && (
-                          <button onClick={() => updateOrderStatus(order.id, 'cancelled')} className={styles.actionBtn}>
-                            Cancel
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {orders.length === 0 && (
                     <tr>
                       <td colSpan={6} style={{ textAlign: 'center' }}>No orders found.</td>
@@ -1127,9 +1946,9 @@ export default function AdminPage() {
         {/* Edit Package Modal */}
         {editingPackage && (
           <div className={styles.modalOverlay} onClick={() => setEditingPackage(null)}>
-            <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '880px' }}>
               <div className={styles.modalHeader}>
-                <h3>Edit Package: {editingPackage.title}</h3>
+                <h3>✏️ Edit Package: {editingPackage.title}</h3>
                 <button 
                   type="button" 
                   onClick={() => setEditingPackage(null)}
@@ -1142,102 +1961,431 @@ export default function AdminPage() {
                 <div className={styles.modalBody}>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                      <label>Package Title *</label>
+                      <label htmlFor="editTitle">Package Title *</label>
                       <input 
                         required 
                         type="text" 
+                        id="editTitle"
                         value={editingPackage.title || ''} 
                         onChange={(e) => setEditingPackage({ ...editingPackage, title: e.target.value })} 
+                        placeholder="e.g. Desert Safari"
                       />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Destination *</label>
+                      <label htmlFor="editDestination">Destination *</label>
                       <select 
                         required 
+                        id="editDestination"
                         value={editingPackage.destination || ''} 
                         onChange={(e) => setEditingPackage({ ...editingPackage, destination: e.target.value })}
                       >
-                        {destinations.map(d => (
-                          <option key={d.id || d.title} value={d.title}>{d.title}</option>
+                        {destinations.map((d: any) => (
+                          <option key={d.id || d.title} value={d.title}>
+                            {d.title}
+                          </option>
                         ))}
+                        {destinations.length === 0 && (
+                          <>
+                            <option value="Dubai">Dubai</option>
+                            <option value="Abu Dhabi">Abu Dhabi</option>
+                            <option value="Sharjah">Sharjah</option>
+                          </>
+                        )}
                       </select>
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Price (AED) *</label>
+                      <label htmlFor="editPrice">Price (AED) *</label>
                       <input 
                         required 
                         type="text" 
+                        id="editPrice"
                         value={editingPackage.price || ''} 
                         onChange={(e) => setEditingPackage({ ...editingPackage, price: e.target.value })} 
+                        placeholder="e.g. 150"
                       />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Main Image URL *</label>
+                      <label htmlFor="editChildPrice">Child Price (AED) <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>(Optional)</span></label>
                       <input 
-                        required 
                         type="text" 
-                        value={editingPackage.image || ''} 
-                        onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })} 
+                        id="editChildPrice"
+                        value={editingPackage.childPrice || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, childPrice: e.target.value })} 
+                        placeholder="e.g. 100"
                       />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Rating</label>
+                      <label htmlFor="editChildAgeLimit">Child Age Limit <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>(Optional)</span></label>
                       <input 
                         type="text" 
+                        id="editChildAgeLimit"
+                        value={editingPackage.childAgeLimit || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, childAgeLimit: e.target.value })} 
+                        placeholder="e.g. 3 - 12 years"
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Main Image *</label>
+                      <div className={styles.imageInputToggle}>
+                        <button 
+                          type="button" 
+                          className={editPackageImageType === 'url' ? styles.activeToggle : ''} 
+                          onClick={() => setEditPackageImageType('url')}
+                        >
+                          URL
+                        </button>
+                        <button 
+                          type="button" 
+                          className={editPackageImageType === 'file' ? styles.activeToggle : ''} 
+                          onClick={() => setEditPackageImageType('file')}
+                        >
+                          File Upload
+                        </button>
+                      </div>
+                      {editPackageImageType === 'url' ? (
+                        <input 
+                          key="edit-pkg-url" 
+                          required 
+                          type="text" 
+                          value={editingPackage.image || ''} 
+                          onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })} 
+                          placeholder="https://..." 
+                        />
+                      ) : (
+                        <input 
+                          key="edit-pkg-file" 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => setEditPackageImageFile(e.target.files?.[0] || null)} 
+                        />
+                      )}
+                      {editingPackage.image && (
+                        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <img 
+                            src={editingPackage.image} 
+                            alt="Current main" 
+                            style={{ width: '48px', height: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
+                          />
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image preview</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Gallery Images Section */}
+                    <div className={styles.formGroupFull}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label htmlFor="editImages" style={{ margin: 0 }}>Gallery Images (One URL per line or Upload Multiple from PC)</label>
+                        {isEditingGalleryUploading && (
+                          <span className={styles.galleryUploadLoading}>
+                            ⏳ Uploading images...
+                          </span>
+                        )}
+                      </div>
+
+                      {editGalleryUploadError && (
+                        <div style={{ color: '#e11d48', fontSize: '0.85rem', marginBottom: '8px' }}>
+                          ⚠️ {editGalleryUploadError}
+                        </div>
+                      )}
+
+                      <div className={styles.galleryUploadWrapper}>
+                        <div className={styles.galleryUploadHeader}>
+                          <div>
+                            <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                              Upload Gallery Images from PC
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
+                              Choose one or multiple image files directly from your computer.
+                            </div>
+                          </div>
+
+                          <div>
+                            <input
+                              type="file"
+                              id="editGalleryMultiInput"
+                              multiple
+                              accept="image/*"
+                              onChange={handleMultipleEditGalleryUpload}
+                              style={{ display: 'none' }}
+                              disabled={isEditingGalleryUploading}
+                            />
+                            <label
+                              htmlFor="editGalleryMultiInput"
+                              className={styles.galleryUploadBtn}
+                              style={{ opacity: isEditingGalleryUploading ? 0.6 : 1, cursor: isEditingGalleryUploading ? 'wait' : 'pointer' }}
+                            >
+                              {isEditingGalleryUploading ? '⏳ Uploading...' : '📁 Choose Files (Multiple)'}
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Previews of uploaded gallery images with 1-click delete */}
+                        {typeof editingPackage.images === 'string' &&
+                          editingPackage.images.split('\n').map((s: string) => s.trim()).filter(Boolean).length > 0 && (
+                          <div className={styles.galleryPreviewGrid}>
+                            {editingPackage.images
+                              .split('\n')
+                              .map((s: string) => s.trim())
+                              .filter(Boolean)
+                              .map((imgUrl: string, idx: number) => (
+                                <div key={idx} className={styles.galleryPreviewCard} title={imgUrl}>
+                                  <img src={imgUrl} alt={`Gallery ${idx + 1}`} />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveEditGalleryImage(idx)}
+                                    className={styles.galleryRemoveBtn}
+                                    title="Remove image"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <textarea
+                        id="editImages"
+                        value={editingPackage.images || ''}
+                        onChange={(e) => setEditingPackage({ ...editingPackage, images: e.target.value })}
+                        rows={3}
+                        placeholder="One image URL per line"
+                        style={{ marginTop: '10px' }}
+                      />
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editDescription">Description</label>
+                      <textarea 
+                        id="editDescription" 
+                        value={editingPackage.description || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, description: e.target.value })} 
+                        rows={4} 
+                      />
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editHighlights">Highlights (One per line)</label>
+                      <textarea 
+                        id="editHighlights" 
+                        value={editingPackage.highlights || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, highlights: e.target.value })} 
+                        rows={3} 
+                      />
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editQuickFacts">Quick Facts (One per line, e.g. "Duration: 4 hours")</label>
+                      <textarea 
+                        id="editQuickFacts" 
+                        value={editingPackage.quickFacts || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, quickFacts: e.target.value })} 
+                        rows={3} 
+                      />
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editInclusions">Inclusions (One per line)</label>
+                      <textarea 
+                        id="editInclusions" 
+                        value={editingPackage.inclusions || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, inclusions: e.target.value })} 
+                        rows={3} 
+                      />
+                    </div>
+
+                    {/* Preferable / Suitable For */}
+                    <div className={styles.formGroupFull}>
+                      <div className={styles.prefSectionWrapper}>
+                        <div className={styles.prefSectionHeader}>
+                          <label className={styles.prefSectionLabel}>
+                            Most Preferable For
+                            {(editingPackage.suitableFor || []).length > 0 && (
+                              <span className={styles.badgeCount}>
+                                {(editingPackage.suitableFor || []).length} selected
+                              </span>
+                            )}
+                          </label>
+                          <span className={styles.prefHelpText}>
+                            Select traveller & activity types this package is suitable for:
+                          </span>
+                        </div>
+
+                        <div className={styles.prefButtonsContainer}>
+                          {preferences.map((pref) => {
+                            const isSelected = (editingPackage.suitableFor || []).includes(pref.label);
+                            return (
+                              <button
+                                key={pref.id}
+                                type="button"
+                                onClick={() => {
+                                  const current = editingPackage.suitableFor || [];
+                                  const next = isSelected 
+                                    ? current.filter((p: string) => p !== pref.label) 
+                                    : [...current, pref.label];
+                                  setEditingPackage({ ...editingPackage, suitableFor: next });
+                                }}
+                                className={`${styles.prefItem} ${isSelected ? styles.prefItemSelected : ''}`}
+                                title={`Toggle ${pref.label}`}
+                              >
+                                <div className={styles.prefIconWrapper}>
+                                  <span className={styles.prefIcon}>{pref.icon}</span>
+                                  {isSelected && <span className={styles.prefCheckMark}>✓</span>}
+                                </div>
+                                <span className={styles.prefLabel}>{pref.label}</span>
+                                <span className={styles.prefIndicatorLine}></span>
+                              </button>
+                            );
+                          })}
+
+                          {/* "+ Other" Button in Edit */}
+                          <button
+                            type="button"
+                            onClick={() => setShowEditAddPreference(prev => !prev)}
+                            className={`${styles.prefItem} ${styles.prefItemAdd} ${showEditAddPreference ? styles.prefItemAddActive : ''}`}
+                            title="Add new category with title and icon"
+                          >
+                            <div className={styles.prefIconWrapperAdd}>
+                              <span className={styles.prefIconAdd}>+</span>
+                            </div>
+                            <span className={styles.prefLabel}>Other</span>
+                            <span className={styles.prefIndicatorLine}></span>
+                          </button>
+                        </div>
+
+                        {showEditAddPreference && (
+                          <div className={styles.newPrefCard}>
+                            <div className={styles.newPrefHeader}>
+                              <h4>Add Custom Category / Preference</h4>
+                              <button
+                                type="button"
+                                onClick={() => setShowEditAddPreference(false)}
+                                className={styles.closeBtn}
+                                title="Close"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div className={styles.newPrefForm}>
+                              <div className={styles.newPrefInputCol}>
+                                <label>Title / Category Name *</label>
+                                <input
+                                  type="text"
+                                  value={newEditPrefTitle}
+                                  onChange={(e) => setNewEditPrefTitle(e.target.value)}
+                                  placeholder="e.g. Solo Travellers, Luxury, Nightlife..."
+                                  className={styles.titleInput}
+                                />
+                              </div>
+
+                              <div className={styles.newPrefInputCol}>
+                                <label>Icon / Emoji</label>
+                                <div className={styles.iconInputRow}>
+                                  <input
+                                    type="text"
+                                    value={newEditPrefIcon}
+                                    onChange={(e) => setNewEditPrefIcon(e.target.value)}
+                                    placeholder="Enter"
+                                    className={styles.iconInput}
+                                    maxLength={4}
+                                  />
+                                  <div className={styles.quickEmojis}>
+                                    {['🎒', '🏄', '🏖️', '🏎️', '🚢', '🚁', '👑', '🧗', '🏕️', '🎭', '🍕', '🛥️', '🎟️', '🧘'].map(emoji => (
+                                      <button
+                                        key={emoji}
+                                        type="button"
+                                        className={`${styles.quickEmojiBtn} ${newEditPrefIcon === emoji ? styles.quickEmojiBtnActive : ''}`}
+                                        onClick={() => setNewEditPrefIcon(prev => prev === emoji ? '' : emoji)}
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className={styles.newPrefActions}>
+                                <button
+                                  type="button"
+                                  disabled={!newEditPrefTitle.trim() || isSavingPref}
+                                  onClick={async () => {
+                                    const trimmedTitle = newEditPrefTitle.trim();
+                                    if (!trimmedTitle) return;
+                                    const iconToUse = newEditPrefIcon.trim() || '🏷️';
+                                    const id = trimmedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                                    const newOption = { id, label: trimmedTitle, icon: iconToUse, isCustom: true };
+                                    setPreferences(prev => [...prev.filter(p => p.id !== id), newOption]);
+                                    setEditingPackage((prev: any) => ({
+                                      ...prev,
+                                      suitableFor: [...(prev.suitableFor || []).filter((p: string) => p !== trimmedTitle), trimmedTitle]
+                                    }));
+                                    setNewEditPrefTitle('');
+                                    setNewEditPrefIcon('');
+                                    setShowEditAddPreference(false);
+                                    try {
+                                      await fetch('/api/preferences', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ label: trimmedTitle, icon: iconToUse })
+                                      });
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
+                                  }}
+                                  className={styles.addPrefConfirmBtn}
+                                >
+                                  Add & Select
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowEditAddPreference(false)}
+                                  className={styles.addPrefCancelBtn}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editTags">Tags (Comma separated)</label>
+                      <input 
+                        type="text" 
+                        id="editTags" 
+                        value={editingPackage.tags || ''} 
+                        onChange={(e) => setEditingPackage({ ...editingPackage, tags: e.target.value })} 
+                        placeholder="adventure, family, desert" 
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="editRating">Rating</label>
+                      <input 
+                        type="text" 
+                        id="editRating" 
                         value={editingPackage.rating || ''} 
                         onChange={(e) => setEditingPackage({ ...editingPackage, rating: e.target.value })} 
                       />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Reviews Count</label>
+                      <label htmlFor="editReviewsCount">Reviews Count</label>
                       <input 
                         type="number" 
+                        id="editReviewsCount" 
                         value={editingPackage.reviewsCount ?? ''} 
                         onChange={(e) => setEditingPackage({ ...editingPackage, reviewsCount: e.target.value })} 
                       />
                     </div>
-                    <div className={styles.formGroupFull}>
-                      <label>Description</label>
-                      <textarea 
-                        rows={3} 
-                        value={editingPackage.description || ''} 
-                        onChange={(e) => setEditingPackage({ ...editingPackage, description: e.target.value })} 
-                      />
-                    </div>
-                    <div className={styles.formGroupFull}>
-                      <label>Most Preferable For</label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-                        {preferences.map(pref => {
-                          const isSel = (editingPackage.suitableFor || []).includes(pref.label);
-                          return (
-                            <button
-                              key={pref.id}
-                              type="button"
-                              onClick={() => {
-                                const current = editingPackage.suitableFor || [];
-                                const next = isSel ? current.filter((p: string) => p !== pref.label) : [...current, pref.label];
-                                setEditingPackage({ ...editingPackage, suitableFor: next });
-                              }}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                border: isSel ? '2px solid #007bff' : '1px solid #cbd5e1',
-                                background: isSel ? '#eff6ff' : 'white',
-                                color: isSel ? '#007bff' : '#475569',
-                                fontWeight: isSel ? '600' : '500',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem'
-                              }}
-                            >
-                              <span>{pref.icon}</span> {pref.label} {isSel && '✓'}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+
                     <div className={styles.formGroupFull}>
                       <div className={styles.checkboxGroup}>
                         <input 
@@ -1246,9 +2394,34 @@ export default function AdminPage() {
                           checked={!!editingPackage.isPopular} 
                           onChange={(e) => setEditingPackage({ ...editingPackage, isPopular: e.target.checked })} 
                         />
-                        <label htmlFor="editPopular" style={{ marginBottom: 0 }}>Mark as Popular</label>
+                        <label htmlFor="editPopular" style={{ marginBottom: 0 }}>Mark as Popular Package</label>
                       </div>
                     </div>
+
+                    <div className={styles.formGroupFull}>
+                      <div className={styles.checkboxGroup}>
+                        <input 
+                          type="checkbox" 
+                          id="editBestDeal" 
+                          checked={!!editingPackage.isBestDeal} 
+                          onChange={(e) => setEditingPackage({ ...editingPackage, isBestDeal: e.target.checked })} 
+                        />
+                        <label htmlFor="editBestDeal" style={{ marginBottom: 0 }}>Mark as Best Deal</label>
+                      </div>
+                    </div>
+
+                    {editingPackage.isBestDeal && (
+                      <div className={styles.formGroupFull}>
+                        <label htmlFor="editOriginalPrice">Original Crossed-out Price (AED)</label>
+                        <input 
+                          type="text" 
+                          id="editOriginalPrice" 
+                          value={editingPackage.originalPrice || ''} 
+                          onChange={(e) => setEditingPackage({ ...editingPackage, originalPrice: e.target.value })} 
+                          placeholder="e.g. 250" 
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className={styles.modalFooter}>
@@ -1263,9 +2436,9 @@ export default function AdminPage() {
                     type="submit" 
                     disabled={editLoading} 
                     className={styles.submitBtn} 
-                    style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+                    style={{ padding: '10px 24px', fontSize: '0.95rem' }}
                   >
-                    {editLoading ? 'Saving...' : 'Save Changes'}
+                    {editLoading ? 'Saving Changes...' : 'Save Changes'}
                   </button>
                 </div>
               </form>
@@ -1299,13 +2472,50 @@ export default function AdminPage() {
                     />
                   </div>
                   <div className={styles.formGroupFull}>
-                    <label>Image URL *</label>
-                    <input 
-                      required 
-                      type="text" 
-                      value={editingDest.image || ''} 
-                      onChange={(e) => setEditingDest({ ...editingDest, image: e.target.value })} 
-                    />
+                    <label>Image *</label>
+                    <div className={styles.imageInputToggle} style={{ maxWidth: '300px' }}>
+                      <button 
+                        type="button" 
+                        className={editDestImageType === 'url' ? styles.activeToggle : ''} 
+                        onClick={() => setEditDestImageType('url')}
+                      >
+                        URL
+                      </button>
+                      <button 
+                        type="button" 
+                        className={editDestImageType === 'file' ? styles.activeToggle : ''} 
+                        onClick={() => setEditDestImageType('file')}
+                      >
+                        File Upload
+                      </button>
+                    </div>
+                    {editDestImageType === 'url' ? (
+                      <input 
+                        key="edit-dest-url" 
+                        required 
+                        type="text" 
+                        value={editingDest.image || ''} 
+                        onChange={(e) => setEditingDest({ ...editingDest, image: e.target.value })} 
+                        placeholder="https://..." 
+                      />
+                    ) : (
+                      <input 
+                        key="edit-dest-file" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => setEditDestImageFile(e.target.files?.[0] || null)} 
+                      />
+                    )}
+                    {editingDest.image && (
+                      <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <img 
+                          src={editingDest.image} 
+                          alt="Current destination" 
+                          style={{ width: '56px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
+                        />
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image preview</span>
+                      </div>
+                    )}
                   </div>
                   <div className={styles.formGroupFull}>
                     <label>Tours Count</label>

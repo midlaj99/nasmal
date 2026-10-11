@@ -1,0 +1,237 @@
+/**
+ * Backend Data Sanitization & Strict Validation
+ * Defense in depth: prevents NoSQL injection, XSS, and payload tampering.
+ */
+
+// HTML entity escaping for XSS prevention
+export function sanitizeString(input: unknown): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // Strip potential script/html angle brackets
+    .slice(0, 5000);      // Bound string length to prevent memory exhaustion
+}
+
+export function sanitizeUrl(url: unknown): string {
+  if (typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  // Allow safe protocols (http, https, relative paths, data URIs)
+  if (
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:image/')
+  ) {
+    return trimmed;
+  }
+  return '';
+}
+
+export function sanitizeArrayOfStrings(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map(item => (typeof item === 'string' ? sanitizeString(item) : ''))
+    .filter(Boolean);
+}
+
+export interface ValidationResult<T> {
+  isValid: boolean;
+  errors: string[];
+  data?: T;
+}
+
+export function validatePackagePayload(body: any): ValidationResult<any> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const title = sanitizeString(body.title);
+  if (!title || title.length < 2) {
+    errors.push('Title is required and must be at least 2 characters');
+  }
+
+  const destination = sanitizeString(body.destination);
+  if (!destination) {
+    errors.push('Destination is required');
+  }
+
+  const price = sanitizeString(String(body.price || ''));
+  if (!price || isNaN(Number(price)) || Number(price) <= 0) {
+    errors.push('Price must be a valid positive number');
+  }
+
+  const image = sanitizeUrl(body.image);
+  if (!image) {
+    errors.push('Main image URL is required and must be valid');
+  }
+
+  const rating = body.rating !== undefined ? String(body.rating).trim() : '5.0';
+  const ratingNum = parseFloat(rating);
+  if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    errors.push('Rating must be between 1.0 and 5.0');
+  }
+
+  const reviewsCount = parseInt(body.reviewsCount, 10);
+  const safeReviewsCount = isNaN(reviewsCount) || reviewsCount < 0 ? 0 : reviewsCount;
+
+  const images = sanitizeArrayOfStrings(body.images);
+  if (images.length === 0 && image) {
+    images.push(image);
+  }
+
+  const description = sanitizeString(body.description || '');
+  const highlights = sanitizeArrayOfStrings(body.highlights);
+  const quickFacts = sanitizeArrayOfStrings(body.quickFacts);
+  const inclusions = sanitizeArrayOfStrings(body.inclusions);
+  const tags = sanitizeArrayOfStrings(body.tags);
+  const suitableFor = sanitizeArrayOfStrings(body.suitableFor);
+
+  const isPopular = Boolean(body.isPopular);
+  const isBestDeal = Boolean(body.isBestDeal);
+  const originalPrice = body.originalPrice ? sanitizeString(String(body.originalPrice)) : undefined;
+  const childPrice = body.childPrice ? sanitizeString(String(body.childPrice)) : undefined;
+  const childAgeLimit = body.childAgeLimit ? sanitizeString(String(body.childAgeLimit)) : undefined;
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      title,
+      destination,
+      price,
+      rating: ratingNum.toFixed(1),
+      reviewsCount: safeReviewsCount,
+      image,
+      images,
+      description,
+      highlights,
+      quickFacts,
+      inclusions,
+      tags,
+      suitableFor,
+      isPopular,
+      isBestDeal,
+      originalPrice,
+      childPrice,
+      childAgeLimit,
+    }
+  };
+}
+
+export function validateDestinationPayload(body: any): ValidationResult<any> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const title = sanitizeString(body.title);
+  if (!title || title.length < 2) {
+    errors.push('Destination title is required and must be at least 2 characters');
+  }
+
+  const image = sanitizeUrl(body.image);
+  if (!image) {
+    errors.push('Destination image is required and must be a valid URL');
+  }
+
+  const toursCount = parseInt(body.toursCount, 10);
+  const safeToursCount = isNaN(toursCount) || toursCount < 0 ? 0 : toursCount;
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      title,
+      image,
+      toursCount: safeToursCount
+    }
+  };
+}
+
+export function validateOrderPayload(body: any): ValidationResult<any> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const firstName = sanitizeString(body.firstName);
+  if (!firstName || firstName.length < 2) {
+    errors.push('First name is required (min 2 characters)');
+  }
+
+  const lastName = sanitizeString(body.lastName);
+  if (!lastName) {
+    errors.push('Last name is required');
+  }
+
+  const email = sanitizeString(body.email).toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    errors.push('A valid email address is required');
+  }
+
+  const phone = sanitizeString(body.phone);
+  if (!phone || phone.length < 6 || phone.length > 20) {
+    errors.push('A valid phone number is required (6-20 characters)');
+  }
+
+  const packageTitle = sanitizeString(body.packageTitle);
+  if (!packageTitle) {
+    errors.push('Package title is required');
+  }
+
+  const visitDate = sanitizeString(body.visitDate);
+  if (!visitDate) {
+    errors.push('Visit date is required');
+  }
+
+  const adultsCount = parseInt(body.adultsCount, 10);
+  if (isNaN(adultsCount) || adultsCount < 1) {
+    errors.push('At least 1 adult is required');
+  }
+
+  const childrenCount = parseInt(body.childrenCount, 10) || 0;
+  if (childrenCount < 0) {
+    errors.push('Children count cannot be negative');
+  }
+
+  const totalPrice = parseFloat(body.totalPrice);
+  if (isNaN(totalPrice) || totalPrice <= 0) {
+    errors.push('Total price must be greater than zero');
+  }
+
+  const specialRequests = sanitizeString(body.specialRequests || '');
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      firstName,
+      lastName,
+      email,
+      phone,
+      packageTitle,
+      visitDate,
+      adultsCount,
+      childrenCount,
+      totalPrice,
+      specialRequests
+    }
+  };
+}

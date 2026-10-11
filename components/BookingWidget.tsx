@@ -9,15 +9,22 @@ interface BookingWidgetProps {
   packageTitle: string;
   packageImage: string;
   price: number;
+  childPrice?: number;
+  childAgeLimit?: string;
 }
 
 export default function BookingWidget({
   packageId,
   packageTitle,
   packageImage,
-  price
+  price,
+  childPrice,
+  childAgeLimit
 }: BookingWidgetProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Only consider child pricing valid if explicitly configured from admin page
+  const hasChildOption = typeof childPrice === 'number' && !isNaN(childPrice) && childPrice > 0;
 
   return (
     <>
@@ -28,7 +35,14 @@ export default function BookingWidget({
           <p className={styles.optionDesc}>
             Inclusion: The ticket allows visitors to enter the park and access to all 12 immersive zones.
           </p>
-          <div className={styles.optionPrice}>AED {price}</div>
+          <div className={styles.optionPrice}>
+            AED {price} <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>/ adult</span>
+            {hasChildOption && (
+              <div style={{ fontSize: '0.85rem', color: '#16a34a', marginTop: '4px', fontWeight: '600' }}>
+                AED {childPrice} / child {childAgeLimit ? `(${childAgeLimit})` : ''}
+              </div>
+            )}
+          </div>
         </div>
         <button className={styles.bookButton} onClick={() => setIsModalOpen(true)}>
           Select option
@@ -40,7 +54,8 @@ export default function BookingWidget({
         packageTitle={packageTitle}
         packageImage={packageImage}
         pricePerAdult={price}
-        pricePerChild={price * 0.8} // Mock child price as 80% of adult
+        pricePerChild={hasChildOption ? childPrice : undefined}
+        childAgeLimit={childAgeLimit}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
