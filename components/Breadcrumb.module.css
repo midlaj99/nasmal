@@ -1,0 +1,133 @@
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #64748b;
+  margin-bottom: 20px;
+  width: 100%;
+  font-family: var(--font-secondary, 'Poppins', sans-serif);
+}
+
+.breadcrumb a,
+.breadcrumb .breadcrumbLink {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover,
+.breadcrumb .breadcrumbLink:hover {
+  color: #0093d0;
+}
+
+.breadcrumbSeparator {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+  line-height: 1;
+}
+
+.breadcrumbCurrent {
+  color: #0093d0;
+  font-weight: 600;
+}
+
+/* Light on dark background variant (used in hero headers) */
+.breadcrumbDark {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 20px;
+  width: 100%;
+  font-family: var(--font-secondary, 'Poppins', sans-serif);
+}
+
+.breadcrumbDark a,
+.breadcrumbDark .breadcrumbLink {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.breadcrumbDark a:hover,
+.breadcrumbDark .breadcrumbLink:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.breadcrumbDark .breadcrumbSeparator {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.breadcrumbDark .breadcrumbCurrent {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Glass badge variant */
+.breadcrumbGlass {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 20px;
+  font-family: var(--font-secondary, 'Poppins', sans-serif);
+}
+
+.breadcrumbGlass a,
+.breadcrumbGlass .breadcrumbLink {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.breadcrumbGlass a:hover,
+.breadcrumbGlass .breadcrumbLink:hover {
+  color: #38bdf8;
+}
+
+.breadcrumbGlass .breadcrumbSeparator {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.breadcrumbGlass .breadcrumbCurrent {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@media (max-width: 540px) {
+  .breadcrumb,
+  .breadcrumbDark,
+  .breadcrumbGlass {
+    font-size: 12px;
+    gap: 6px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  
+  .breadcrumbSeparator {
+    font-size: 11px;
+  }
+}

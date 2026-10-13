@@ -1,13 +1,20 @@
-import Link from 'next/link';
-import ActivitiesFilter from '@/components/ActivitiesFilter';
-import styles from './page.module.css';
+import ActivitiesCatalog from '@/components/ActivitiesCatalog';
 import { getPackages, getPackagesByDestination } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ActivitiesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+export default async function ActivitiesPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
+}) {
   const resolvedSearchParams = await searchParams;
   const location = typeof resolvedSearchParams.location === 'string' ? resolvedSearchParams.location : '';
+  const search = typeof resolvedSearchParams.search === 'string' 
+    ? resolvedSearchParams.search 
+    : typeof resolvedSearchParams.q === 'string' 
+    ? resolvedSearchParams.q 
+    : '';
   
   let packages = [];
   let formattedLocation = 'All Destinations';
@@ -20,14 +27,12 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   }
 
   return (
-    <main className={styles.main}>
-      <div className="container">
-        <div className={styles.breadcrumb}>
-          <Link href="/">Home</Link> / {location ? <><Link href={`/destinations/${location}`}>{formattedLocation}</Link> / </> : null} Activities
-        </div>
-        
-        <ActivitiesFilter packages={packages} destinationName={formattedLocation} />
-      </div>
-    </main>
+    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingTop: '80px' }}>
+      <ActivitiesCatalog 
+        initialPackages={packages} 
+        destinationName={formattedLocation} 
+        initialSearch={search}
+      />
+    </div>
   );
 }

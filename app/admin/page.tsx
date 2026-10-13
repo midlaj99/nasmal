@@ -12,7 +12,7 @@ interface PreferenceOption {
 
 const DEFAULT_PREFERENCES: PreferenceOption[] = [
   { id: 'attractions', label: 'Attractions', icon: '🏛️' },
-  { id: 'families', label: 'Families With Kids', icon: '👨‍👩‍👧‍👦' },
+  { id: 'familie1s', label: 'Families With Kids', icon: '👨‍👩‍👧‍👦' },
   { id: 'couple', label: 'Couple', icon: '💑' },
   { id: 'food', label: 'Food Drinks', icon: '🍹' },
   { id: 'culture', label: 'Culture & Heritage', icon: '🕌' },
@@ -211,7 +211,7 @@ export default function AdminPage() {
         .split('\n')
         .map((s: string) => s.trim())
         .filter(Boolean);
-      const filtered = currentList.filter((_, idx) => idx !== indexToRemove);
+      const filtered = currentList.filter((_: string, idx: number) => idx !== indexToRemove);
       return {
         ...prev,
         images: filtered.join('\n'),
@@ -429,8 +429,18 @@ export default function AdminPage() {
 
     fetch('/api/packages')
       .then(r => r.json())
-      .then(data => setPackages(data))
-      .catch(console.error);
+      .then(data => {
+        if (Array.isArray(data)) {
+          setPackages(data);
+        } else {
+          console.error('API /api/packages returned non-array:', data);
+          setPackages([]);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch packages:', err);
+        setPackages([]);
+      });
 
     fetch('/api/destinations')
       .then(r => r.json())
@@ -441,14 +451,28 @@ export default function AdminPage() {
             ...prev,
             destination: prev.destination || data[0]?.title || 'Dubai'
           }));
+        } else {
+          setDestinations([]);
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Failed to fetch destinations:', err);
+        setDestinations([]);
+      });
 
     fetch('/api/orders')
       .then(r => r.json())
-      .then(data => setOrders(data))
-      .catch(console.error);
+      .then(data => {
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          setOrders([]);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch orders:', err);
+        setOrders([]);
+      });
 
     fetch('/api/preferences')
       .then(r => r.json())
@@ -1062,6 +1086,10 @@ export default function AdminPage() {
     );
   }
 
+  const safePackages = Array.isArray(packages) ? packages : [];
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeDestinations = Array.isArray(destinations) ? destinations : [];
+
   return (
     <div className={styles.adminLayout}>
       <aside className={styles.sidebar}>
@@ -1162,28 +1190,28 @@ export default function AdminPage() {
                 <div className={styles.statIcon}>📦</div>
                 <div className={styles.statInfo}>
                   <h3>Total Packages</h3>
-                  <p>{packages.length}</p>
+                  <p>{safePackages.length}</p>
                 </div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statIcon}>📍</div>
                 <div className={styles.statInfo}>
                   <h3>Destinations</h3>
-                  <p>{destinations.length}</p>
+                  <p>{safeDestinations.length}</p>
                 </div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statIcon}>🛍️</div>
                 <div className={styles.statInfo}>
                   <h3>Total Orders</h3>
-                  <p>{orders.length}</p>
+                  <p>{safeOrders.length}</p>
                 </div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statIcon}>🔥</div>
                 <div className={styles.statInfo}>
                   <h3>Best Deals</h3>
-                  <p>{packages.filter(p => p.isBestDeal).length}</p>
+                  <p>{safePackages.filter(p => p.isBestDeal).length}</p>
                 </div>
               </div>
             </div>
@@ -1218,7 +1246,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.slice(0, 5).map((order) => (
+                    {safeOrders.slice(0, 5).map((order) => (
                       <tr key={order.id}>
                         <td>#{order.id.slice(0, 8)}</td>
                         <td>
@@ -1234,7 +1262,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
-                    {orders.length === 0 && (
+                    {safeOrders.length === 0 && (
                       <tr>
                         <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#94a3b8' }}>No orders yet.</td>
                       </tr>
@@ -1250,7 +1278,7 @@ export default function AdminPage() {
           <div className={styles.contentSection}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2>All Packages ({packages.length})</h2>
+                <h2>All Packages ({safePackages.length})</h2>
                 <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '4px 0 0 0' }}>
                   Complete list of packages with edit and delete capabilities
                 </p>
@@ -1286,7 +1314,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {packages
+                  {safePackages
                     .filter(p => 
                       p.title?.toLowerCase().includes(packageSearch.toLowerCase()) || 
                       p.destination?.toLowerCase().includes(packageSearch.toLowerCase())
@@ -1354,7 +1382,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
-                  {packages.length === 0 && (
+                  {safePackages.length === 0 && (
                     <tr>
                       <td colSpan={7} style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
                         No packages found.
@@ -1388,12 +1416,12 @@ export default function AdminPage() {
                     value={packageData.destination} 
                     onChange={handlePackageChange}
                   >
-                    {destinations.map((d: any) => (
+                    {safeDestinations.map((d: any) => (
                       <option key={d.id || d.title} value={d.title}>
                         {d.title}
                       </option>
                     ))}
-                    {destinations.length === 0 && (
+                    {safeDestinations.length === 0 && (
                       <>
                         <option value="Dubai">Dubai</option>
                         <option value="Abu Dhabi">Abu Dhabi</option>
@@ -1709,7 +1737,7 @@ export default function AdminPage() {
           <div className={styles.contentSection}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2>All Destinations ({destinations.length})</h2>
+                <h2>All Destinations ({safeDestinations.length})</h2>
                 <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '4px 0 0 0' }}>
                   Complete list of destinations with edit and delete capabilities
                 </p>
@@ -1742,7 +1770,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {destinations
+                  {safeDestinations
                     .filter(d => d.title?.toLowerCase().includes(destSearch.toLowerCase()))
                     .map((dest: any) => (
                       <tr key={dest.id || dest.title}>
@@ -1785,7 +1813,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
-                  {destinations.length === 0 && (
+                  {safeDestinations.length === 0 && (
                     <tr>
                       <td colSpan={4} style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
                         No destinations found.
@@ -1846,8 +1874,8 @@ export default function AdminPage() {
                   <label htmlFor="packageId">Select Package *</label>
                   <select required id="packageId" name="packageId" value={dealData.packageId} onChange={handleDealChange}>
                     <option value="">-- Choose a package --</option>
-                    {packages
-                      .filter(p => destinations.some(d => d.title?.toLowerCase().trim() === (p.destination || '').toLowerCase().trim()))
+                    {safePackages
+                      .filter(p => safeDestinations.some(d => d.title?.toLowerCase().trim() === (p.destination || '').toLowerCase().trim()))
                       .map(p => (
                         <option key={p.id} value={p.id}>{p.title} ({p.destination})</option>
                       ))}
@@ -1888,7 +1916,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => {
+                  {safeOrders.map((order) => {
                     const isConfirmed = order.status?.toLowerCase() === 'confirmed';
                     const isCancelled = order.status?.toLowerCase() === 'cancelled';
                     return (
@@ -1932,7 +1960,7 @@ export default function AdminPage() {
                       </tr>
                     );
                   })}
-                  {orders.length === 0 && (
+                  {safeOrders.length === 0 && (
                     <tr>
                       <td colSpan={6} style={{ textAlign: 'center' }}>No orders found.</td>
                     </tr>

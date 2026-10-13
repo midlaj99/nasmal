@@ -8,7 +8,7 @@ export async function GET() {
     cloudinary: { status: 'testing' }
   };
 
-  const uri = process.env.MONGODB_URI || 'mongodb+srv://nasmaltourism_db_user:Nasmaldiya123@cluster0.ac74uw1.mongodb.net/nasmal_tourism?retryWrites=true&w=majority&appName=Cluster0';
+  const uri = process.env.MONGODB_URI || 'mongodb://nasmaltourism_db_user:Nasmaldiya123@ac-y4ckc6u-shard-00-00.ac74uw1.mongodb.net:27017,ac-y4ckc6u-shard-00-01.ac74uw1.mongodb.net:27017,ac-y4ckc6u-shard-00-02.ac74uw1.mongodb.net:27017/nasmal_tourism?ssl=true&replicaSet=atlas-787a4g-shard-0&authSource=admin&retryWrites=true&w=majority';
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'woe2kr5p';
   const apiKey = process.env.CLOUDINARY_API_KEY || 'nasmal';
   const apiSecret = process.env.CLOUDINARY_API_SECRET || 'Y5gSgiAmpgItACkSKO2KFPIiqAY';

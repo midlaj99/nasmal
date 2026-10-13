@@ -46,6 +46,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/destination',
+        destination: '/destinations',
+      },
+      {
+        source: '/destination/:slug',
+        destination: '/destinations/:slug',
+      },
+      {
+        source: '/bookings',
+        destination: '/booked-packages',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

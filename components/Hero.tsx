@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import HeroSearchBar from './HeroSearchBar';
 import styles from './Hero.module.css';
 
 const destinations = [
@@ -40,16 +41,10 @@ export default function Hero() {
           </h1>
           <p className={styles.subtitle}>Book activities, tours and experiences</p>
           
-          <div className={styles.searchBar}>
-            <input 
-              type="text" 
-              placeholder={`Search for destinations in ${destinations[activeIndex].name}...`} 
-              className={styles.searchInput}
-            />
-            <button className={styles.searchBtn} aria-label="Search">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </button>
-          </div>
+          <HeroSearchBar 
+            placeholder={`Search for destinations in ${destinations[activeIndex].name}...`} 
+            align="center" 
+          />
         </div>
       </div>
     </section>

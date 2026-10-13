@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useBooking } from '@/context/BookingContext';
+import Breadcrumb from '@/components/Breadcrumb';
 import styles from './page.module.css';
 
 export default function CheckoutPage() {
@@ -67,6 +68,27 @@ export default function CheckoutPage() {
         throw new Error(errData.error || 'Failed to submit order');
       }
 
+      // Save order in local history for Booked Packages view
+      try {
+        const localBookings = JSON.parse(localStorage.getItem('nasmal_booked_orders') || '[]');
+        localBookings.unshift({
+          id: 'BKG-' + Date.now().toString(36).toUpperCase(),
+          packageTitle: bookingData.packageTitle,
+          packageImage: bookingData.packageImage,
+          visitDate: bookingData.visitDate,
+          adults: bookingData.adultsCount,
+          children: bookingData.childrenCount,
+          totalPrice: bookingData.totalPrice,
+          bookedAt: new Date().toISOString(),
+          customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+          phone: `${formData.countryCode}${formData.phone}`,
+          status: 'Confirmed'
+        });
+        localStorage.setItem('nasmal_booked_orders', JSON.stringify(localBookings));
+      } catch (e) {
+        console.warn('Failed to save booking locally', e);
+      }
+
       // 2. Construct WhatsApp message with correct number 9633663256
       const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9633663256';
       const cleanDigits = rawWa.replace(/[^0-9]/g, '');
@@ -101,6 +123,16 @@ Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
     <div className={styles.checkoutContainer}>
       <div className={styles.header}>
         <div className="container">
+          <Breadcrumb
+            separator=">"
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Destination', href: '/destination' },
+              ...(bookingData?.packageTitle ? [{ label: bookingData.packageTitle }] : []),
+              { label: 'Checkout' },
+            ]}
+            style={{ marginBottom: '14px' }}
+          />
           <h1 className={styles.title}>Secure Checkout</h1>
           <div className={styles.progress}>
             <span>1. Select Package</span>

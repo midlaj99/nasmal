@@ -1,0 +1,92 @@
+.authContainer {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px 80px 20px;
+  font-family: var(--font-secondary, 'Poppins', sans-serif);
+}
+
+.authCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 36px 32px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #0093d0;
+  box-shadow: 0 0 0 3px rgba(0, 147, 208, 0.15);
+}
+
+.submitBtn {
+  width: 100%;
+  background: #0093d0;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.submitBtn:hover {
+  background: #007bb0;
+}
+
+.footerNote {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.footerNote a {
+  color: #0093d0;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footerNote a:hover {
+  text-decoration: underline;
+}

@@ -334,10 +334,26 @@ export async function getDestinationById(id: string): Promise<Destination | null
   await initializeDatabase();
   const db = await getDb();
   const safeId = String(id).trim().toLowerCase();
-  const doc = await db.collection('destinations').findOne(
+  
+  // 1. Direct match by id or title
+  let doc = await db.collection('destinations').findOne(
     { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeId}$`, 'i') } }] },
     { projection: { _id: 0 } }
   );
+
+  // 2. Fallback fuzzy match for typos like 'sharjaha' -> 'sharjah' or slug variants
+  if (!doc) {
+    const cleanSlug = safeId.replace(/[^a-z0-9]/g, '');
+    const all = await db.collection('destinations').find({}, { projection: { _id: 0 } }).toArray();
+    doc = all.find((d: any) => {
+      const dId = String(d.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const dTitle = String(d.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return dId.startsWith(cleanSlug) || cleanSlug.startsWith(dId) || 
+             dTitle.startsWith(cleanSlug) || cleanSlug.startsWith(dTitle) ||
+             dId.includes(cleanSlug) || cleanSlug.includes(dId);
+    }) as any;
+  }
+
   return (doc as unknown as Destination) || null;
 }
 

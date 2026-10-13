@@ -44,6 +44,52 @@
   z-index: 2;
 }
 
+.favButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.favButton:hover {
+  background: #ffffff;
+  color: #e11d48;
+  transform: scale(1.12);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.25);
+}
+
+.favButtonActive {
+  background: #ffffff;
+  color: #e11d48;
+}
+
+.favButtonActive svg {
+  fill: #e11d48;
+  stroke: #e11d48;
+  animation: heartPulse 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPulse {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
 .content {
   padding: 16px;
   display: flex;

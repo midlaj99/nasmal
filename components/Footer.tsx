@@ -4,13 +4,13 @@ import styles from './Footer.module.css';
 
 export default function Footer() {
   return (
-    <footer className={styles.footer}>
+    <footer id="footer" className={styles.footer}>
       <div className={`container ${styles.footerTop}`}>
         
         {/* Brand & Address */}
         <div className={styles.column}>
           <Link href="/" className={styles.logoWrapper}>
-            <Image src="/logo.png" alt="Nasmal Tourisms" width={180} height={60} className={styles.logo} />
+            <Image src="/logo-brand.png" alt="Nasmal Tourisms" width={180} height={60} className={styles.logo} />
           </Link>
           <p className={styles.description}>
             Experience the best of the UAE with Nasmal Tourisms. We provide premium packages, destination tours, and unforgettable experiences for travelers worldwide.
