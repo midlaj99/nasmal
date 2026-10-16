@@ -12,12 +12,25 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`get_dest_${ip}`, { windowMs: 60000, max: 240 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please slow down.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
+    }
+
     const resolvedParams = await params;
     const dest = await getDestinationById(resolvedParams.id);
     if (!dest) {
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
     }
-    return NextResponse.json(dest);
+    return NextResponse.json(dest, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching destination:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -96,20 +109,23 @@ export async function DELETE(
     }
 
     const resolvedParams = await params;
-    const success = await deleteDestination(resolvedParams.id);
-
-    if (!success) {
-      return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
+    const rawId = resolvedParams?.id || '';
+    if (!rawId.trim()) {
+      return NextResponse.json({ error: 'Destination ID is required' }, { status: 400 });
     }
+
+    await deleteDestination(rawId);
 
     try {
       revalidatePath('/');
       revalidatePath('/destinations');
+      revalidatePath(`/destinations/${rawId}`);
+      revalidatePath('/activities');
     } catch (e) {
       console.warn('Revalidation notice:', e);
     }
 
-    return NextResponse.json({ message: 'Destination deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Destination deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting destination:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

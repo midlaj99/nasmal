@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     const destinations = await getDestinations();
     return NextResponse.json(destinations, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60',
       },
     });
   } catch (error: any) {

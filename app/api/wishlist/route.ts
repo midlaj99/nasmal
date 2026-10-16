@@ -7,6 +7,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`wishlist_get_${ip}`, { windowMs: 60000, max: 120 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please slow down.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = sanitizeString(searchParams.get('userId') || '');
     const packageId = sanitizeString(searchParams.get('packageId') || '');
@@ -35,7 +44,10 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const rateLimit = checkRateLimit(`wishlist_post_${ip}`, { windowMs: 60000, max: 60 });
     if (!rateLimit.allowed) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait a moment.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
     }
 
     const body = await request.json();
@@ -56,6 +68,15 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`wishlist_del_${ip}`, { windowMs: 60000, max: 60 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait a moment.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.resetTime) } }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = sanitizeString(searchParams.get('userId') || '');
     const packageId = sanitizeString(searchParams.get('packageId') || '');

@@ -128,6 +128,7 @@ export default function PackageCard({ id, title, image, price, originalPrice, ra
           fill 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
           className={styles.image} 
+          unoptimized={Boolean(image && (image.startsWith('/api/images') || image.startsWith('data:')))}
         />
         
         {/* Wishlist Love Heart Button */}

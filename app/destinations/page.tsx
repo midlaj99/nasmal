@@ -6,7 +6,7 @@ import WhyChooseNasmal from '@/components/WhyChooseNasmal';
 import { getDestinations } from '@/lib/db';
 import styles from './destinations.module.css';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 export default async function DestinationsPage() {
   const destinations = await getDestinations();
@@ -97,6 +97,7 @@ export default async function DestinationsPage() {
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className={styles.cardImg}
+                    unoptimized={Boolean(dest.image && (dest.image.startsWith('/api/images') || dest.image.startsWith('data:')))}
                   />
                   <div className={styles.cardOverlay}>
                     <span className={styles.cardBadge}>Explore</span>

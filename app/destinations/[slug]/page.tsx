@@ -7,7 +7,7 @@ import WhyChooseNasmal from '@/components/WhyChooseNasmal';
 import styles from './page.module.css';
 import { getPackagesByDestination, getDestinationById } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 export default async function DestinationPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -54,6 +54,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
             sizes="100vw"
             className={styles.ambientImage}
             priority
+            unoptimized={Boolean(image && (image.startsWith('/api/images') || image.startsWith('data:')))}
           />
         </div>
 
@@ -66,6 +67,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
             sizes="(max-width: 991px) 100vw, 65vw"
             className={styles.focalImage}
             priority
+            unoptimized={Boolean(image && (image.startsWith('/api/images') || image.startsWith('data:')))}
           />
         </div>
         

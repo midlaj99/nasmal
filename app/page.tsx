@@ -7,8 +7,7 @@ import ReviewsMarquee from '@/components/ReviewsMarquee';
 import styles from './page.module.css';
 import { getPackages, getDestinations } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 15;
 
 const reviewsData = [
   { id: 'r1', name: 'Sarah Jenkins', location: 'London, UK', rating: 5, comment: 'Absolutely incredible experience! The booking process was seamless and our tour guide in Dubai was extremely knowledgeable.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&q=80' },
@@ -23,15 +22,14 @@ export default async function Home() {
   let destinations: any[] = [];
 
   try {
-    allPackages = await getPackages();
+    const [packagesRes, destinationsRes] = await Promise.all([
+      getPackages(),
+      getDestinations()
+    ]);
+    allPackages = packagesRes || [];
+    destinations = destinationsRes || [];
   } catch (e) {
-    console.error('Home page packages fetch error:', e);
-  }
-
-  try {
-    destinations = await getDestinations();
-  } catch (e) {
-    console.error('Home page destinations fetch error:', e);
+    console.error('Home page data fetch error:', e);
   }
 
   // ONLY dynamic packages from admin database

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useBooking } from '@/context/BookingContext';
 import WishlistButton from '@/components/WishlistButton';
@@ -29,17 +28,91 @@ interface PackageDetailClientProps {
   };
 }
 
+// Helper to bypass Next.js internal image proxy for fast direct browser loading
+const isLocalDbImage = (url?: string) =>
+  typeof url === 'string' && (url.startsWith('/api/images') || url.startsWith('data:'));
+
+function getHighlightIcon(title: string) {
+  const t = title.toLowerCase();
+  if (t.includes('car') || t.includes('4x4') || t.includes('dune') || t.includes('drive') || t.includes('transfer') || t.includes('bashing')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="11" rx="2" />
+        <circle cx="7" cy="18" r="2" />
+        <circle cx="17" cy="18" r="2" />
+        <path d="M5 7l2-4h10l2 4" />
+      </svg>
+    );
+  }
+  if (t.includes('camel') || t.includes('desert') || t.includes('sand') || t.includes('safari') || t.includes('wildlife')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 13c1-2 2-3 4-3 2 0 3 2 5 2 2 0 3-3 5-3 2 0 3 2 4 4" />
+        <circle cx="6" cy="7" r="2" />
+        <path d="M4 17h16" />
+      </svg>
+    );
+  }
+  if (t.includes('camp') || t.includes('bbq') || t.includes('dinner') || t.includes('food') || t.includes('drink') || t.includes('meal')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l8 18H4l8-18z" />
+        <path d="M12 11v9" />
+      </svg>
+    );
+  }
+  if (t.includes('view') || t.includes('sunset') || t.includes('sunrise') || t.includes('sky') || t.includes('burj')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="5" />
+        <line x1="12" y1="1" x2="12" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="23" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+        <line x1="1" y1="12" x2="3" y2="12" />
+        <line x1="21" y1="12" x2="23" y2="12" />
+      </svg>
+    );
+  }
+  if (t.includes('ticket') || t.includes('entry') || t.includes('pass') || t.includes('vip')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
 export default function PackageDetailClient({ packageData }: PackageDetailClientProps) {
   const router = useRouter();
   const { setBookingData } = useBooking();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'highlights' | 'inclusions' | 'important' | 'reviews'>('overview');
   const [selectedDate, setSelectedDate] = useState<string>('');
+  
+  // Guest counts
   const [adults, setAdults] = useState<number>(1);
-  const [showGuestDropdown, setShowGuestDropdown] = useState<boolean>(false);
+  const [children, setChildren] = useState<number>(0);
+
   const [activePhotoModal, setActivePhotoModal] = useState<boolean>(false);
   const [reviewIndex, setReviewIndex] = useState<number>(0);
   
+  // Viewport detection to eliminate Next.js height=0 warning and duplicate DOM images
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Mobile Gallery Carousel State
   const [mobileGalleryIndex, setMobileGalleryIndex] = useState<number>(0);
   const touchStartXRef = useRef<number | null>(null);
@@ -49,7 +122,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     ? packageData.images
     : [packageData.image];
 
-  // Auto-move images every 5s
+  // Auto-move images every 5s on mobile
   useEffect(() => {
     if (displayImages.length <= 1) return;
     const interval = setInterval(() => {
@@ -69,13 +142,11 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const handleMobileTouchEnd = () => {
     if (touchStartXRef.current === null || touchEndXRef.current === null) return;
     const diff = touchStartXRef.current - touchEndXRef.current;
-    const swipeThreshold = 40; // minimum distance in px
+    const swipeThreshold = 40;
 
     if (diff > swipeThreshold) {
-      // Swiped left -> Next image
       setMobileGalleryIndex((prev) => (prev + 1) % displayImages.length);
     } else if (diff < -swipeThreshold) {
-      // Swiped right -> Previous image
       setMobileGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
     }
 
@@ -99,7 +170,40 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const reviewsCount = packageData.reviewsCount || 24;
   const ratingNum = packageData.rating || '5.0';
 
-  // Sample or real reviews
+  // Check if admin added child age / price in admin portal
+  const hasChildConfig = Boolean(
+    (packageData.childAgeLimit && packageData.childAgeLimit.trim().length > 0) ||
+    (packageData.childPrice && String(packageData.childPrice).trim().length > 0 && parseFloat(packageData.childPrice) >= 0)
+  );
+  const childPriceNum = packageData.childPrice ? (parseFloat(packageData.childPrice) || 0) : 0;
+
+  // Dynamic Total Price Calculation
+  const totalPrice = (adults * priceNum) + (children * childPriceNum);
+
+  // Dynamic Highlights from Admin
+  const highlights = (packageData.highlights && packageData.highlights.length > 0)
+    ? packageData.highlights
+    : [
+        'Dune bashing in a 4x4 vehicle',
+        'Camel ride and sandboarding',
+        'Traditional Bedouin camp with BBQ dinner',
+        'Live entertainment (belly dance & tanoura show)',
+        'Stunning sunset views in the desert'
+      ];
+
+  // Dynamic Inclusions from Admin
+  const inclusions = (packageData.inclusions && packageData.inclusions.length > 0)
+    ? packageData.inclusions
+    : [
+        'Hotel pick-up and drop-off (selected areas)',
+        'Sandboarding',
+        'Dune bashing (30-45 minutes)',
+        'BBQ dinner with soft drinks',
+        'Camel ride (short ride)',
+        'Live entertainment show'
+      ];
+
+  // Reviews list
   const reviewsList = [
     {
       id: '1',
@@ -130,40 +234,17 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     }
   ];
 
-  // Highlights fallback
-  const highlights = (packageData.highlights && packageData.highlights.length > 0)
-    ? packageData.highlights
-    : [
-        'Dune bashing in a 4x4 vehicle',
-        'Camel ride and sandboarding',
-        'Traditional Bedouin camp with BBQ dinner',
-        'Live entertainment (belly dance & tanoura show)',
-        'Stunning sunset views in the desert'
-      ];
-
-  // Inclusions fallback
-  const inclusions = (packageData.inclusions && packageData.inclusions.length > 0)
-    ? packageData.inclusions
-    : [
-        'Hotel pick-up and drop-off (selected areas)',
-        'Sandboarding',
-        'Dune bashing (30-45 minutes)',
-        'BBQ dinner with soft drinks',
-        'Camel ride (short ride)',
-        'Live entertainment show'
-      ];
-
   const handleBookNow = () => {
     setBookingData({
       packageId: packageData.id,
       packageTitle: packageData.title,
       packageImage: mainImage,
       pricePerAdult: priceNum,
-      pricePerChild: 0,
+      pricePerChild: childPriceNum,
       adultsCount: adults,
-      childrenCount: 0,
+      childrenCount: children,
       visitDate: selectedDate || new Date().toISOString().split('T')[0],
-      totalPrice: adults * priceNum
+      totalPrice: totalPrice,
     });
     router.push('/checkout');
   };
@@ -202,129 +283,132 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
         </div>
       </div>
 
-      {/* Desktop Gallery Grid */}
-      <div className={`${styles.galleryGrid} ${styles.desktopGallery}`}>
-        <div className={styles.mainGalleryCol}>
-          <div className={styles.mainImageWrapper}>
-            <Image
-              src={mainImage}
-              alt={packageData.title}
-              fill
-              sizes="(max-width: 900px) 100vw, 66vw"
-              className={styles.galleryImg}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.sideGalleryCol}>
-          <div className={styles.sideImageTop}>
-            <Image
-              src={sideImage1}
-              alt={`${packageData.title} side photo 1`}
-              fill
-              sizes="(max-width: 900px) 100vw, 33vw"
-              className={styles.galleryImg}
-            />
-          </div>
-          <div className={styles.sideImageBottom}>
-            <Image
-              src={sideImage2}
-              alt={`${packageData.title} side photo 2`}
-              fill
-              sizes="(max-width: 900px) 100vw, 33vw"
-              className={styles.galleryImg}
-            />
-            <button 
-              className={styles.viewAllPhotosBtn} 
-              onClick={() => setActivePhotoModal(true)}
-              type="button"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <span>View all photos ({displayImages.length})</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Auto/Manual Scrollable Carousel */}
-      <div 
-        className={styles.mobileGalleryCarousel}
-        onTouchStart={handleMobileTouchStart}
-        onTouchMove={handleMobileTouchMove}
-        onTouchEnd={handleMobileTouchEnd}
-      >
-        <div 
-          className={styles.mobileCarouselTrack}
-          style={{ transform: `translateX(-${mobileGalleryIndex * 100}%)` }}
-        >
-          {displayImages.map((img, idx) => (
-            <div key={idx} className={styles.mobileCarouselSlide}>
+      {/* Desktop Gallery Grid (Rendered on tablet & desktop) */}
+      {!isMobileView ? (
+        <div className={`${styles.galleryGrid} ${styles.desktopGallery}`}>
+          <div className={styles.mainGalleryCol}>
+            <div className={styles.mainImageWrapper}>
               <Image
-                src={img}
-                alt={`${packageData.title} photo ${idx + 1}`}
+                src={mainImage}
+                alt={packageData.title}
                 fill
-                sizes="100vw"
-                className={styles.mobileSlideImg}
-                priority={idx === 0}
+                sizes="(max-width: 900px) 100vw, 800px"
+                className={styles.galleryImg}
+                priority
+                unoptimized={isLocalDbImage(mainImage)}
               />
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* View All Photos button on Mobile */}
-        <button 
-          className={styles.mobileViewPhotosBtn} 
-          onClick={() => setActivePhotoModal(true)}
-          type="button"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-          <span>{mobileGalleryIndex + 1}/{displayImages.length}</span>
-        </button>
-
-        {/* Manual Left/Right Arrows for Mobile */}
-        {displayImages.length > 1 && (
-          <>
-            <button 
-              className={`${styles.mobileArrowBtn} ${styles.mobileArrowPrev}`} 
-              onClick={prevMobileImage}
-              aria-label="Previous Image"
-              type="button"
-            >
-              &#8249;
-            </button>
-            <button 
-              className={`${styles.mobileArrowBtn} ${styles.mobileArrowNext}`} 
-              onClick={nextMobileImage}
-              aria-label="Next Image"
-              type="button"
-            >
-              &#8250;
-            </button>
-
-            {/* Navigation Dots */}
-            <div className={styles.mobileCarouselDots}>
-              {displayImages.map((_, dotIdx) => (
-                <button
-                  key={dotIdx}
-                  className={`${styles.mobileDot} ${dotIdx === mobileGalleryIndex ? styles.mobileDotActive : ''}`}
-                  onClick={() => setMobileGalleryIndex(dotIdx)}
-                  aria-label={`Go to slide ${dotIdx + 1}`}
-                  type="button"
-                />
-              ))}
+          <div className={styles.sideGalleryCol}>
+            <div className={styles.sideImageTop}>
+              <Image
+                src={sideImage1}
+                alt={`${packageData.title} side photo 1`}
+                fill
+                sizes="(max-width: 900px) 100vw, 400px"
+                className={styles.galleryImg}
+                unoptimized={isLocalDbImage(sideImage1)}
+              />
             </div>
-          </>
-        )}
-      </div>
+            <div className={styles.sideImageBottom}>
+              <Image
+                src={sideImage2}
+                alt={`${packageData.title} side photo 2`}
+                fill
+                sizes="(max-width: 900px) 100vw, 400px"
+                className={styles.galleryImg}
+                unoptimized={isLocalDbImage(sideImage2)}
+              />
+              <button 
+                className={styles.viewAllPhotosBtn} 
+                onClick={() => setActivePhotoModal(true)}
+                type="button"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span>View all photos ({displayImages.length})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Mobile Auto/Manual Scrollable Carousel (Rendered on mobile only to prevent duplicate DOM and height 0 warnings) */
+        <div 
+          className={styles.mobileGalleryCarousel}
+          onTouchStart={handleMobileTouchStart}
+          onTouchMove={handleMobileTouchMove}
+          onTouchEnd={handleMobileTouchEnd}
+        >
+          <div 
+            className={styles.mobileCarouselTrack}
+            style={{ transform: `translateX(-${mobileGalleryIndex * 100}%)` }}
+          >
+            {displayImages.map((img, idx) => (
+              <div key={idx} className={styles.mobileCarouselSlide}>
+                <Image
+                  src={img}
+                  alt={`${packageData.title} photo ${idx + 1}`}
+                  fill
+                  sizes="100vw"
+                  className={styles.mobileSlideImg}
+                  priority={idx === 0}
+                  unoptimized={isLocalDbImage(img)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <button 
+            className={styles.mobileViewPhotosBtn} 
+            onClick={() => setActivePhotoModal(true)}
+            type="button"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span>{mobileGalleryIndex + 1}/{displayImages.length}</span>
+          </button>
+
+          {displayImages.length > 1 && (
+            <>
+              <button 
+                className={`${styles.mobileArrowBtn} ${styles.mobileArrowPrev}`} 
+                onClick={prevMobileImage}
+                aria-label="Previous Image"
+                type="button"
+              >
+                &#8249;
+              </button>
+              <button 
+                className={`${styles.mobileArrowBtn} ${styles.mobileArrowNext}`} 
+                onClick={nextMobileImage}
+                aria-label="Next Image"
+                type="button"
+              >
+                &#8250;
+              </button>
+
+              <div className={styles.mobileCarouselDots}>
+                {displayImages.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    className={`${styles.mobileDot} ${dotIdx === mobileGalleryIndex ? styles.mobileDotActive : ''}`}
+                    onClick={() => setMobileGalleryIndex(dotIdx)}
+                    aria-label={`Go to slide ${dotIdx + 1}`}
+                    type="button"
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Main Content Layout with 2 Columns */}
       <div className={styles.layoutContainer}>
@@ -369,7 +453,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             </button>
           </div>
 
-          {/* 1. Overview Card - shown when 'overview' is active */}
+          {/* 1. Overview Card - DYNAMIC FROM ADMIN */}
           {activeTab === 'overview' && (
             <div id="overview" className={styles.contentCard}>
               <div className={styles.cardHeader}>
@@ -382,70 +466,57 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                 <h2 className={styles.cardTitle}>Overview</h2>
               </div>
               
-              <p className={styles.overviewText}>
-                {packageData.description && packageData.description.length > 20
-                  ? packageData.description
-                  : `Experience the thrill of the UAE desert with our ${packageData.title} package. Enjoy exciting dune bashing, camel rides, sandboarding, and a traditional Bedouin camp experience. Perfect for adventure seekers, families, and anyone looking to explore the natural beauty and rich culture of the Arabian desert.`}
-              </p>
-
-              {/* Feature Icons Row */}
-              <div className={styles.featureIconsRow}>
-                <div className={styles.featurePill}>
-                  <div className={styles.featureIconBubble}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="7" width="20" height="11" rx="2" />
-                      <circle cx="7" cy="18" r="2" />
-                      <circle cx="17" cy="18" r="2" />
-                      <path d="M5 7l2-4h10l2 4" />
-                    </svg>
-                  </div>
-                  <div className={styles.featurePillTitle}>Dune Bashing</div>
-                  <div className={styles.featurePillSubtitle}>Thrilling 4x4 ride</div>
-                </div>
-
-                <div className={styles.featurePill}>
-                  <div className={styles.featureIconBubble}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 13c1-2 2-3 4-3 2 0 3 2 5 2 2 0 3-3 5-3 2 0 3 2 4 4" />
-                      <circle cx="6" cy="7" r="2" />
-                      <path d="M4 17h16" />
-                    </svg>
-                  </div>
-                  <div className={styles.featurePillTitle}>Camel Ride</div>
-                  <div className={styles.featurePillSubtitle}>Experience tradition</div>
-                </div>
-
-                <div className={styles.featurePill}>
-                  <div className={styles.featureIconBubble}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l8 18H4l8-18z" />
-                      <path d="M12 11v9" />
-                    </svg>
-                  </div>
-                  <div className={styles.featurePillTitle}>Desert Camp</div>
-                  <div className={styles.featurePillSubtitle}>Food & entertainment</div>
-                </div>
-
-                <div className={styles.featurePill}>
-                  <div className={styles.featureIconBubble}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="5" />
-                      <line x1="12" y1="1" x2="12" y2="3" />
-                      <line x1="12" y1="21" x2="12" y2="23" />
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                      <line x1="1" y1="12" x2="3" y2="12" />
-                      <line x1="21" y1="12" x2="23" y2="12" />
-                    </svg>
-                  </div>
-                  <div className={styles.featurePillTitle}>Sunset Views</div>
-                  <div className={styles.featurePillSubtitle}>Unforgettable moments</div>
-                </div>
+              {/* Dynamic Description from Admin Page */}
+              <div className={styles.overviewText}>
+                {packageData.description ? (
+                  packageData.description.split('\n').map((paragraph, pIdx) => (
+                    <p key={pIdx} style={{ margin: pIdx > 0 ? '12px 0 0 0' : 0 }}>
+                      {paragraph}
+                    </p>
+                  ))
+                ) : (
+                  <p style={{ margin: 0 }}>
+                    Experience the best tours and attractions in UAE with our {packageData.title} package.
+                  </p>
+                )}
               </div>
+
+              {/* Dynamic Highlights Pills from Admin Page */}
+              {highlights.length > 0 && (
+                <div className={styles.featureIconsRow} style={{ marginTop: '24px' }}>
+                  {highlights.map((item, idx) => {
+                    let title = item;
+                    let subtitle = 'Included with tour';
+                    if (item.includes(' - ')) {
+                      const parts = item.split(' - ');
+                      title = parts[0].trim();
+                      subtitle = parts.slice(1).join(' - ').trim();
+                    } else if (item.includes(': ')) {
+                      const parts = item.split(': ');
+                      title = parts[0].trim();
+                      subtitle = parts.slice(1).join(': ').trim();
+                    } else if (item.includes('–')) {
+                      const parts = item.split('–');
+                      title = parts[0].trim();
+                      subtitle = parts.slice(1).join('–').trim();
+                    }
+
+                    return (
+                      <div key={idx} className={styles.featurePill}>
+                        <div className={styles.featureIconBubble}>
+                          {getHighlightIcon(title)}
+                        </div>
+                        <div className={styles.featurePillTitle}>{title}</div>
+                        <div className={styles.featurePillSubtitle}>{subtitle}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {/* 2. Highlights Card - shown in Overview OR when Highlights is clicked */}
+          {/* 2. Highlights Card - DYNAMIC FROM ADMIN */}
           {(activeTab === 'overview' || activeTab === 'highlights') && (
             <div id="highlights" className={styles.contentCard}>
               <div className={styles.cardHeader}>
@@ -470,7 +541,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             </div>
           )}
 
-          {/* 3. Inclusions Card - shown in Overview OR when Inclusions is clicked */}
+          {/* 3. Inclusions Card - DYNAMIC FROM ADMIN */}
           {(activeTab === 'overview' || activeTab === 'inclusions') && (
             <div id="inclusions" className={styles.contentCard}>
               <div className={styles.cardHeader}>
@@ -499,7 +570,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             </div>
           )}
 
-          {/* 4. Important Information Card - shown in Overview OR when Important Information is clicked */}
+          {/* 4. Important Information Card */}
           {(activeTab === 'overview' || activeTab === 'important') && (
             <div id="important" className={styles.contentCard}>
               <div className={styles.cardHeader}>
@@ -522,7 +593,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                     </svg>
                     <span className={styles.infoBoxLabel}>Duration</span>
                   </div>
-                  <div className={styles.infoBoxVal}>6 – 7 hours</div>
+                  <div className={styles.infoBoxVal}>Flexible / Full Tour</div>
                 </div>
 
                 <div className={styles.infoBox}>
@@ -533,10 +604,9 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    <span className={styles.infoBoxLabel}>Pickup Time</span>
+                    <span className={styles.infoBoxLabel}>Confirmation</span>
                   </div>
-                  <div className={styles.infoBoxVal}>3:00 PM – 4:00 PM</div>
-                  <div className={styles.infoBoxSub}>(varies by location)</div>
+                  <div className={styles.infoBoxVal}>Instant WhatsApp Ticket</div>
                 </div>
 
                 <div className={styles.infoBox}>
@@ -559,14 +629,15 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                     </svg>
                     <span className={styles.infoBoxLabel}>Suitability</span>
                   </div>
-                  <div className={styles.infoBoxVal}>All ages</div>
-                  <div className={styles.infoBoxSub}>(under 5 free)</div>
+                  <div className={styles.infoBoxVal}>
+                    {hasChildConfig ? (packageData.childAgeLimit || 'All ages welcome') : 'All ages welcome'}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 5. Customer Reviews Card - shown in Overview OR when Reviews is clicked */}
+          {/* 5. Customer Reviews Card */}
           {(activeTab === 'overview' || activeTab === 'reviews') && (
             <div id="reviews" className={styles.contentCard}>
               <div className={styles.reviewsCardHeader}>
@@ -610,6 +681,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                             fill
                             sizes="40px"
                             className={styles.reviewerAvatar}
+                            unoptimized={isLocalDbImage(rev.avatar)}
                           />
                         </div>
                         <div className={styles.reviewerInfo}>
@@ -678,37 +750,97 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               </div>
             </div>
 
-            {/* Guests Selector */}
+            {/* Adults Count Selector - Stepper & Custom Input (Removed 6+ restriction) */}
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span>Guests</span>
+                <span>Adults (Age 12+)</span>
+                <span className={styles.guestPriceTag}>AED {priceNum} / person</span>
               </label>
-              <div className={styles.selectWrapper}>
-                <select
-                  value={adults}
-                  onChange={(e) => setAdults(parseInt(e.target.value, 10))}
-                  className={styles.customSelect}
+              <div className={styles.stepperContainer}>
+                <button
+                  type="button"
+                  className={styles.stepperBtn}
+                  onClick={() => setAdults(prev => Math.max(1, prev - 1))}
+                  aria-label="Decrease adults"
+                  disabled={adults <= 1}
                 >
-                  <option value={1}>1 Adult</option>
-                  <option value={2}>2 Adults</option>
-                  <option value={3}>3 Adults</option>
-                  <option value={4}>4 Adults</option>
-                  <option value={5}>5 Adults</option>
-                  <option value={6}>6+ Adults</option>
-                </select>
-                <div className={styles.selectChevron}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </div>
+                  –
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  value={adults}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setAdults(isNaN(val) || val < 1 ? 1 : val);
+                  }}
+                  className={styles.stepperInput}
+                  aria-label="Adult count"
+                />
+                <button
+                  type="button"
+                  className={styles.stepperBtn}
+                  onClick={() => setAdults(prev => prev + 1)}
+                  aria-label="Increase adults"
+                >
+                  +
+                </button>
               </div>
             </div>
 
-            {/* Package Option Radio Card */}
+            {/* Child Count Selector (ONLY rendered if admin added child age / price in admin portal) */}
+            {hasChildConfig && (
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M6 21v-2a6 6 0 0 1 12 0v2" />
+                  </svg>
+                  <span>Children {packageData.childAgeLimit ? `(${packageData.childAgeLimit})` : ''}</span>
+                  <span className={styles.guestPriceTag}>
+                    {childPriceNum > 0 ? `AED ${childPriceNum} / child` : 'Free'}
+                  </span>
+                </label>
+                <div className={styles.stepperContainer}>
+                  <button
+                    type="button"
+                    className={styles.stepperBtn}
+                    onClick={() => setChildren(prev => Math.max(0, prev - 1))}
+                    aria-label="Decrease children"
+                    disabled={children <= 0}
+                  >
+                    –
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    max="999"
+                    value={children}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setChildren(isNaN(val) || val < 0 ? 0 : val);
+                    }}
+                    className={styles.stepperInput}
+                    aria-label="Child count"
+                  />
+                  <button
+                    type="button"
+                    className={styles.stepperBtn}
+                    onClick={() => setChildren(prev => prev + 1)}
+                    aria-label="Increase children"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Package Option Radio Card - DYNAMIC FROM ADMIN INCLUSIONS */}
             <div className={styles.packageOptionContainer}>
               <div className={styles.optionHeaderLabel}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -724,11 +856,17 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                   </div>
                   <div className={styles.optionDetail}>
                     <div className={styles.optionName}>Standard {packageData.title}</div>
+                    {/* Dynamic Inclusions from Admin Page */}
                     <div className={styles.optionDescription}>
-                      Dune bashing, camel ride, camp, BBQ dinner and entertainment.
+                      {inclusions.length > 0
+                        ? inclusions.join(', ')
+                        : (packageData.description || 'Full tour experience included.')}
                     </div>
                     <div className={styles.optionItemPrice}>
                       AED {priceNum} <span className={styles.optionPerUnit}>/ adult</span>
+                      {hasChildConfig && childPriceNum > 0 && (
+                        <span className={styles.optionPerUnitChild}> • AED {childPriceNum} / child</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -745,6 +883,14 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               <div className={styles.availTag}>
                 <span>Limited availability</span>
               </div>
+            </div>
+
+            {/* Live Total Calculated Price Display */}
+            <div className={styles.calculatedPriceRow}>
+              <span className={styles.totalPriceLabel}>
+                Total ({adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}):
+              </span>
+              <span className={styles.totalPriceVal}>AED {totalPrice.toFixed(2)}</span>
             </div>
 
             {/* Check Availability / Book Button */}
@@ -827,7 +973,14 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div className={styles.photoModalGrid}>
               {displayImages.map((img, idx) => (
                 <div key={idx} className={styles.photoModalItem}>
-                  <Image src={img} alt={`Photo ${idx + 1}`} fill sizes="400px" style={{ objectFit: 'cover' }} />
+                  <Image 
+                    src={img} 
+                    alt={`Photo ${idx + 1}`} 
+                    fill 
+                    sizes="300px" 
+                    style={{ objectFit: 'cover' }}
+                    unoptimized={isLocalDbImage(img)}
+                  />
                 </div>
               ))}
             </div>

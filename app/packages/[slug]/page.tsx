@@ -2,7 +2,8 @@ import PackageDetailClient from '@/components/PackageDetailClient';
 import { getPackageById } from '@/lib/db';
 import { notFound } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+// Revalidate every 30 seconds with immediate on-demand invalidation when admin updates
+export const revalidate = 30;
 
 export default async function PackagePage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;

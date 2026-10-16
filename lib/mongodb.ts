@@ -22,33 +22,22 @@ declare global {
 function createClient(uriString: string): MongoClient {
   return new MongoClient(uriString, {
     tls: true,
-    tlsAllowInvalidCertificates: true,
-    tlsAllowInvalidHostnames: true,
     autoSelectFamily: false,
-    serverSelectionTimeoutMS: 15000,
-    connectTimeoutMS: 20000,
-    maxPoolSize: 20,
-    minPoolSize: 1,
-    maxIdleTimeMS: 30000,
+    serverSelectionTimeoutMS: 8000,
+    connectTimeoutMS: 15000,
+    maxPoolSize: 100, // High-throughput connection pool to handle thousands of concurrent Dubai customers
+    minPoolSize: 5,   // Keep hot connections ready for zero-latency queries
+    maxIdleTimeMS: 60000,
+    waitQueueTimeoutMS: 10000,
   });
 }
 
-// Reset any previously cached failing promise from SRV attempts
-if (global._mongoClientPromise) {
-  // Reset cache so new direct URI is picked up immediately
-  global._mongoClientPromise = undefined;
-}
-
-if (process.env.NODE_ENV === 'development') {
-  if (!global._mongoClientPromise) {
-    client = createClient(uri);
-    global._mongoClientPromise = client.connect();
-  }
-  clientPromise = global._mongoClientPromise;
-} else {
+// Global connection caching in both production and development for Next.js serverless/container runtimes
+if (!global._mongoClientPromise) {
   client = createClient(uri);
-  clientPromise = client.connect();
+  global._mongoClientPromise = client.connect();
 }
+clientPromise = global._mongoClientPromise;
 
 /**
  * Returns the MongoDB Database instance with automatic retry if disconnected
@@ -58,17 +47,15 @@ export async function getDb(): Promise<Db> {
     const connectedClient = await clientPromise;
     return connectedClient.db(dbName);
   } catch (err: any) {
-    console.error('Initial MongoDB connection error:', err?.message || err);
+    console.error('MongoDB connection retry needed:', err?.message || err);
     try {
       const freshClient = createClient(uri);
       const connectedClient = await freshClient.connect();
-      if (process.env.NODE_ENV === 'development') {
-        global._mongoClientPromise = Promise.resolve(connectedClient);
-        clientPromise = global._mongoClientPromise;
-      }
+      global._mongoClientPromise = Promise.resolve(connectedClient);
+      clientPromise = global._mongoClientPromise;
       return connectedClient.db(dbName);
     } catch (retryErr: any) {
-      console.error('MongoDB retry connection error:', retryErr?.message || retryErr);
+      console.error('MongoDB critical connection failure:', retryErr?.message || retryErr);
       throw retryErr;
     }
   }

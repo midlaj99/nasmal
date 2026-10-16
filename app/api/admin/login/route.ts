@@ -35,13 +35,32 @@ export async function POST(request: Request) {
     const admin = await getOrCreateAdmin();
     const db = await getDb();
 
-    // Check account lockout
-    if (admin.lockUntil && new Date(admin.lockUntil).getTime() > Date.now()) {
-      const remainingMinutes = Math.ceil((new Date(admin.lockUntil).getTime() - Date.now()) / (60 * 1000));
-      return NextResponse.json(
-        { error: `Account temporarily locked due to consecutive failed attempts. Please try again in ${remainingMinutes} minute(s).` },
-        { status: 423 }
-      );
+    // Check account lockout status
+    if (admin.lockUntil) {
+      const lockExpiryTime = new Date(admin.lockUntil).getTime();
+      const now = Date.now();
+
+      if (lockExpiryTime > now) {
+        const remainingSeconds = Math.max(1, Math.ceil((lockExpiryTime - now) / 1000));
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        const timeMessage = mins > 0
+          ? `${mins} minute${mins === 1 ? '' : 's'} and ${secs} second${secs === 1 ? '' : 's'}`
+          : `${secs} second${secs === 1 ? '' : 's'}`;
+
+        return NextResponse.json(
+          { error: `Account locked due to 3 failed attempts. Please try again in ${timeMessage}.` },
+          { status: 423 }
+        );
+      } else {
+        // 5-minute lockout has expired: automatically reset failed attempts
+        await db.collection('admins').updateOne(
+          { id: admin.id },
+          { $set: { failedAttempts: 0, lockUntil: null } }
+        );
+        admin.failedAttempts = 0;
+        admin.lockUntil = null;
+      }
     }
 
     // Verify username or email match
@@ -49,18 +68,31 @@ export async function POST(request: Request) {
     const isPasswordMatch = isIdentifierMatch && verifyPassword(password, admin.passwordHash);
 
     if (!isPasswordMatch) {
-      const newFailedAttempts = (admin.failedAttempts || 0) + 1;
+      const currentFailures = admin.failedAttempts || 0;
+      const newFailedAttempts = currentFailures + 1;
       const updates: any = { failedAttempts: newFailedAttempts };
 
-      // Lock account after 5 consecutive failed attempts
-      if (newFailedAttempts >= 5) {
-        updates.lockUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes lockout
+      // Requirement: Exactly 3 failed attempts locks for 5 minutes
+      if (newFailedAttempts >= 3) {
+        const lockUntil = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes lockout
+        updates.lockUntil = lockUntil;
+        updates.failedAttempts = 3;
+
+        await db.collection('admins').updateOne({ id: admin.id }, { $set: updates });
+
+        return NextResponse.json(
+          { error: 'Account locked for 5 minutes due to 3 consecutive failed login attempts.' },
+          { status: 423 }
+        );
       }
 
       await db.collection('admins').updateOne({ id: admin.id }, { $set: updates });
+      const remainingAttempts = 3 - newFailedAttempts;
 
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        {
+          error: `Invalid credentials. ${remainingAttempts} attempt${remainingAttempts === 1 ? '' : 's'} remaining before a 5-minute lockout.`
+        },
         { status: 401 }
       );
     }

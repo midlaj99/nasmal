@@ -75,6 +75,7 @@ export default function AutoCarousel({ deals = [] }: { deals: Deal[] }) {
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className={styles.offerImage}
+                unoptimized={Boolean(deal.image && (deal.image.startsWith('/api/images') || deal.image.startsWith('data:')))}
               />
               <div className={styles.offerOverlay}>
                 <h3 className={styles.offerTitle}>{deal.title}</h3>

@@ -75,13 +75,13 @@ export async function DELETE(
     }
 
     const resolvedParams = await params;
-    const success = await deleteOrder(resolvedParams.id);
-
-    if (!success) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const rawId = resolvedParams?.id || '';
+    if (!rawId.trim()) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    return NextResponse.json({ message: 'Order deleted successfully' });
+    await deleteOrder(rawId);
+    return NextResponse.json({ success: true, message: 'Order deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting order:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

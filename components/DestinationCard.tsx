@@ -14,7 +14,14 @@ export default function DestinationCard({ title, image, toursCount }: Destinatio
   return (
     <Link href={`/destinations/${title.toLowerCase().replace(/\s+/g, '-')}`} className={styles.card}>
       <div className={styles.imageWrapper}>
-        <Image src={safeImage} alt={title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className={styles.image} />
+        <Image 
+          src={safeImage} 
+          alt={title} 
+          fill 
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+          className={styles.image} 
+          unoptimized={Boolean(safeImage && (safeImage.startsWith('/api/images') || safeImage.startsWith('data:')))}
+        />
         <div className={styles.overlay}></div>
       </div>
       <div className={styles.content}>

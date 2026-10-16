@@ -1,4 +1,5 @@
 import { getDb } from './mongodb';
+import { ObjectId } from 'mongodb';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -94,68 +95,126 @@ const DEFAULT_DESTINATIONS: Destination[] = [
   },
 ];
 
+/**
+ * ReDoS & NoSQL Injection Protection
+ * Safely escapes characters before constructing regular expressions
+ */
+export function escapeRegex(text: string): string {
+  return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// =============================================================
+// HIGH-SPEED IN-MEMORY CACHE FOR MASSIVE CONCURRENCY
+// Delivers sub-millisecond responses to handle lakhs of visitors
+// =============================================================
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+let packagesCache: CacheEntry<Package[]> | null = null;
+const packageItemCache = new Map<string, CacheEntry<Package>>();
+let destinationsCache: CacheEntry<Destination[]> | null = null;
+const destinationItemCache = new Map<string, CacheEntry<Destination>>();
+let preferencesCache: CacheEntry<PreferenceOption[]> | null = null;
+
+// Memory cache for active images (Max 100 items to bound RAM)
+const imageMemoryCache = new Map<string, { data: Buffer; contentType: string; expiresAt: number }>();
+
+export function invalidatePackagesCache() {
+  packagesCache = null;
+  packageItemCache.clear();
+}
+
+export function invalidateDestinationsCache() {
+  destinationsCache = null;
+  destinationItemCache.clear();
+  invalidatePackagesCache();
+}
+
+export function invalidatePreferencesCache() {
+  preferencesCache = null;
+}
+
 let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 /**
  * Initializes database indexes and seed data if collections are empty
  */
 async function initializeDatabase() {
   if (isInitialized) return;
-  try {
-    const db = await getDb();
-
-    // Ensure indexes for blazing fast query performance
-    await Promise.allSettled([
-      db.collection('packages').createIndex({ id: 1 }, { unique: true }),
-      db.collection('packages').createIndex({ destination: 1 }),
-      db.collection('packages').createIndex({ isPopular: 1 }),
-      db.collection('packages').createIndex({ isBestDeal: 1 }),
-      db.collection('destinations').createIndex({ id: 1 }, { unique: true }),
-      db.collection('orders').createIndex({ id: 1 }, { unique: true }),
-      db.collection('orders').createIndex({ createdAt: -1 }),
-      db.collection('preferences').createIndex({ id: 1 }, { unique: true }),
-      db.collection('wishlist').createIndex({ userId: 1, packageId: 1 }, { unique: true }),
-    ]);
-
-    // Seed destinations if empty
-    const destCount = await db.collection('destinations').countDocuments();
-    if (destCount === 0) {
-      // Check if data/destinations.json exists to migrate existing ones
+  if (!initPromise) {
+    initPromise = (async () => {
       try {
-        const legacyFile = path.join(process.cwd(), 'data', 'destinations.json');
-        const raw = await fs.readFile(legacyFile, 'utf8');
-        const legacyDests = JSON.parse(raw);
-        if (Array.isArray(legacyDests) && legacyDests.length > 0) {
-          await db.collection('destinations').insertMany(legacyDests);
-        } else {
-          await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
-        }
-      } catch {
-        await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
-      }
-    }
+        const db = await getDb();
 
-    // Seed preferences if empty
-    const prefCount = await db.collection('preferences').countDocuments();
-    if (prefCount === 0) {
-      try {
-        const legacyPrefFile = path.join(process.cwd(), 'data', 'preferences.json');
-        const raw = await fs.readFile(legacyPrefFile, 'utf8');
-        const legacyPrefs = JSON.parse(raw);
-        if (Array.isArray(legacyPrefs) && legacyPrefs.length > 0) {
-          await db.collection('preferences').insertMany(legacyPrefs);
-        } else {
-          await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
-        }
-      } catch {
-        await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
-      }
-    }
+        // Ensure indexes for blazing fast query performance & high concurrency
+        await Promise.allSettled([
+          db.collection('packages').createIndex({ id: 1 }, { unique: true }),
+          db.collection('packages').createIndex({ destination: 1, createdAt: -1 }),
+          db.collection('packages').createIndex({ createdAt: -1 }),
+          db.collection('packages').createIndex({ isPopular: 1 }),
+          db.collection('packages').createIndex({ isBestDeal: 1 }),
+          db.collection('destinations').createIndex({ id: 1 }, { unique: true }),
+          db.collection('destinations').createIndex({ title: 1 }),
+          db.collection('orders').createIndex({ id: 1 }, { unique: true }),
+          db.collection('orders').createIndex({ createdAt: -1 }),
+          db.collection('preferences').createIndex({ id: 1 }, { unique: true }),
+          db.collection('wishlist').createIndex({ userId: 1, packageId: 1 }, { unique: true }),
+          db.collection('wishlist').createIndex({ userId: 1 }),
+          db.collection('images').createIndex({ id: 1 }, { unique: true }),
+          db.collection('admins').createIndex({ id: 1 }, { unique: true }),
+          db.collection('admins').createIndex({ username: 1 }),
+          db.collection('admins').createIndex({ email: 1 }),
+          db.collection('sessions').createIndex({ id: 1 }, { unique: true }),
+          db.collection('sessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+          db.collection('otps').createIndex({ id: 1 }, { unique: true }),
+          db.collection('otps').createIndex({ email: 1 }),
+          db.collection('otps').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+        ]);
 
-    isInitialized = true;
-  } catch (err) {
-    console.error('Database initialization warning:', err);
+        // Seed destinations if empty
+        const destCount = await db.collection('destinations').countDocuments();
+        if (destCount === 0) {
+          try {
+            const legacyFile = path.join(process.cwd(), 'data', 'destinations.json');
+            const raw = await fs.readFile(legacyFile, 'utf8');
+            const legacyDests = JSON.parse(raw);
+            if (Array.isArray(legacyDests) && legacyDests.length > 0) {
+              await db.collection('destinations').insertMany(legacyDests);
+            } else {
+              await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
+            }
+          } catch {
+            await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
+          }
+        }
+
+        // Seed preferences if empty
+        const prefCount = await db.collection('preferences').countDocuments();
+        if (prefCount === 0) {
+          try {
+            const legacyPrefFile = path.join(process.cwd(), 'data', 'preferences.json');
+            const raw = await fs.readFile(legacyPrefFile, 'utf8');
+            const legacyPrefs = JSON.parse(raw);
+            if (Array.isArray(legacyPrefs) && legacyPrefs.length > 0) {
+              await db.collection('preferences').insertMany(legacyPrefs);
+            } else {
+              await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
+            }
+          } catch {
+            await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
+          }
+        }
+
+        isInitialized = true;
+      } catch (err) {
+        console.error('Database initialization warning:', err);
+      }
+    })();
   }
+  await initPromise;
 }
 
 // -------------------------------------------------------------
@@ -163,68 +222,105 @@ async function initializeDatabase() {
 // -------------------------------------------------------------
 
 export async function getPackages(): Promise<Package[]> {
+  const now = Date.now();
+  if (packagesCache && packagesCache.expiresAt > now) {
+    return packagesCache.data;
+  }
+
   await initializeDatabase();
   const db = await getDb();
 
-  // Get active destination titles
-  const activeDests = await db
-    .collection('destinations')
-    .find({}, { projection: { _id: 0, title: 1 } })
-    .toArray();
-  const activeTitles = activeDests.map((d: any) => String(d.title || '').toLowerCase().trim()).filter(Boolean);
+  // Fetch all packages cleanly and ensure each document has a valid `id`
+  const docs = await db.collection('packages').find({}).sort({ createdAt: -1 }).toArray();
 
-  const docs = await db
-    .collection('packages')
-    .find({}, { projection: { _id: 0 } })
-    .sort({ createdAt: -1 })
-    .toArray();
+  const resultPackages: Package[] = docs.map((doc: any) => {
+    const id = String(doc.id || doc._id?.toString() || '').trim();
+    const { _id, ...cleanDoc } = doc;
+    return { ...cleanDoc, id } as Package;
+  });
 
-  if (activeTitles.length > 0) {
-    // Check for orphaned packages whose destinations no longer exist
-    const orphanedIds: string[] = [];
-    const validPackages: Package[] = [];
+  // Cache for 30 seconds (instantly invalidated upon any admin add/update/delete)
+  packagesCache = {
+    data: resultPackages,
+    expiresAt: now + 30000,
+  };
 
-    for (const pkg of docs as any[]) {
-      const destName = String(pkg.destination || '').toLowerCase().trim();
-      if (activeTitles.includes(destName)) {
-        validPackages.push(pkg);
-      } else {
-        orphanedIds.push(pkg.id);
-      }
-    }
-
-    // Auto-purge orphaned packages from DB so deleted destinations never linger
-    if (orphanedIds.length > 0) {
-      await db.collection('packages').deleteMany({ id: { $in: orphanedIds } });
-    }
-
-    return validPackages;
-  }
-
-  return docs as unknown as Package[];
+  return resultPackages;
 }
 
 export async function getPackageById(id: string): Promise<Package | null> {
+  const safeId = String(id || '').trim();
+  if (!safeId) return null;
+
+  const decodedId = decodeURIComponent(safeId).trim();
+  const slugifiedId = safeId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  const now = Date.now();
+  const cached = packageItemCache.get(safeId) || packageItemCache.get(decodedId);
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
-  const doc = await db.collection('packages').findOne({ id: safeId }, { projection: { _id: 0 } });
-  return (doc as unknown as Package) || null;
+
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: slugifiedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { title: safeId },
+    { title: decodedId },
+    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
+  }
+
+  const doc = await db.collection('packages').findOne({ $or: queryConditions });
+  
+  if (doc) {
+    const pkgId = String(doc.id || doc._id?.toString() || safeId).trim();
+    const { _id, ...cleanDoc } = doc;
+    const pkg: Package = { ...cleanDoc, id: pkgId } as Package;
+    packageItemCache.set(safeId, { data: pkg, expiresAt: now + 60000 });
+    packageItemCache.set(pkgId, { data: pkg, expiresAt: now + 60000 });
+    return pkg;
+  }
+
+  return null;
 }
 
 export async function getPackagesByDestination(destination: string): Promise<Package[]> {
   await initializeDatabase();
   const db = await getDb();
-  const safeDest = String(destination).trim().toLowerCase();
+  const safeDest = escapeRegex(String(destination || '').trim());
+  
   const docs = await db
     .collection('packages')
     .find(
-      { destination: { $regex: new RegExp(`^${safeDest}$`, 'i') } },
-      { projection: { _id: 0 } }
+      { destination: { $regex: new RegExp(`^${safeDest}$`, 'i') } }
     )
     .sort({ createdAt: -1 })
     .toArray();
-  return docs as unknown as Package[];
+
+  return docs.map((doc: any) => {
+    const id = String(doc.id || doc._id?.toString() || '').trim();
+    const { _id, ...cleanDoc } = doc;
+    return { ...cleanDoc, id } as Package;
+  });
 }
 
 export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Package> {
@@ -257,16 +353,15 @@ export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Packa
   await db.collection('packages').insertOne(pkgWithId as any);
 
   // Update toursCount on matching destination
-  try {
-    await db.collection('destinations').updateOne(
-      { title: { $regex: new RegExp(`^${newPackage.destination}$`, 'i') } },
-      { $inc: { toursCount: 1 } }
-    );
-  } catch (e) {
-    console.error('Failed to update destination count:', e);
-  }
+  const safeDestTitle = escapeRegex(newPackage.destination);
+  db.collection('destinations').updateOne(
+    { title: { $regex: new RegExp(`^${safeDestTitle}$`, 'i') } },
+    { $inc: { toursCount: 1 } }
+  ).catch(console.error);
 
-  // Return clean package without MongoDB _id
+  // Invalidate cache immediately for zero-lag sync
+  invalidatePackagesCache();
+
   const { _id, ...cleanPkg } = pkgWithId as any;
   return cleanPkg as Package;
 }
@@ -274,7 +369,36 @@ export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Packa
 export async function updatePackage(id: string, updates: Partial<Package>): Promise<Package | null> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
+  const safeId = String(id || '').trim();
+  if (!safeId) return null;
+
+  const decodedId = decodeURIComponent(safeId).trim();
+  const slugifiedId = safeId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: slugifiedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { title: safeId },
+    { title: decodedId },
+    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
+  }
 
   const updateDoc = {
     ...updates,
@@ -282,38 +406,78 @@ export async function updatePackage(id: string, updates: Partial<Package>): Prom
   };
 
   const res = await db.collection('packages').findOneAndUpdate(
-    { id: safeId },
+    { $or: queryConditions },
     { $set: updateDoc },
-    { returnDocument: 'after', projection: { _id: 0 } }
+    { returnDocument: 'after' }
   );
 
-  return (res as unknown as Package) || null;
+  invalidatePackagesCache();
+
+  if (res) {
+    const pkgId = String((res as any).id || (res as any)._id?.toString() || safeId).trim();
+    const { _id, ...cleanPkg } = res as any;
+    return { ...cleanPkg, id: pkgId } as Package;
+  }
+
+  return null;
 }
 
 export async function deletePackage(id: string): Promise<boolean> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
+  const safeId = String(id || '').trim();
+  if (!safeId) return true;
 
-  // Find package first to decrement destination count
-  const existing = await db.collection('packages').findOne({ id: safeId });
-  const result = await db.collection('packages').deleteOne({ id: safeId });
+  const decodedId = decodeURIComponent(safeId).trim();
+  const slugifiedId = safeId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-  if (result.deletedCount > 0 && existing?.destination) {
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: slugifiedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(slugifiedId)}$`, 'i') } },
+    { title: safeId },
+    { title: decodedId },
+    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
     try {
-      await db.collection('destinations').updateOne(
-        { title: { $regex: new RegExp(`^${existing.destination}$`, 'i') } },
-        { $inc: { toursCount: -1 } }
-      );
-    } catch (e) {
-      console.error('Failed to decrement tours count:', e);
-    }
-    // Also remove from wishlists
-    await db.collection('wishlist').deleteMany({ packageId: safeId });
-    return true;
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
   }
 
-  return result.deletedCount > 0;
+  // 1. Find existing record to clean up associations
+  const existing = await db.collection('packages').findOne({ $or: queryConditions });
+
+  // 2. Perform deletion
+  const result = await db.collection('packages').deleteOne({ $or: queryConditions });
+
+  if (existing?.destination) {
+    const safeDestTitle = escapeRegex(existing.destination);
+    db.collection('destinations').updateOne(
+      { title: { $regex: new RegExp(`^${safeDestTitle}$`, 'i') } },
+      { $inc: { toursCount: -1 } }
+    ).catch(console.error);
+  }
+
+  const packageIdentifier = existing?.id || safeId;
+  db.collection('wishlist').deleteMany({
+    $or: [{ packageId: packageIdentifier }, { packageId: safeId }, { packageId: decodedId }]
+  }).catch(console.error);
+
+  invalidatePackagesCache();
+  return true;
 }
 
 // -------------------------------------------------------------
@@ -321,30 +485,56 @@ export async function deletePackage(id: string): Promise<boolean> {
 // -------------------------------------------------------------
 
 export async function getDestinations(): Promise<Destination[]> {
+  const now = Date.now();
+  if (destinationsCache && destinationsCache.expiresAt > now) {
+    return destinationsCache.data;
+  }
+
   await initializeDatabase();
   const db = await getDb();
   const docs = await db
     .collection('destinations')
-    .find({}, { projection: { _id: 0 } })
+    .find({})
     .toArray();
-  return docs as unknown as Destination[];
+
+  const result: Destination[] = docs.map((doc: any) => {
+    const id = String(doc.id || doc._id?.toString() || '').trim();
+    const { _id, ...cleanDoc } = doc;
+    return { ...cleanDoc, id } as Destination;
+  });
+
+  destinationsCache = {
+    data: result,
+    expiresAt: now + 60000,
+  };
+
+  return result;
 }
 
 export async function getDestinationById(id: string): Promise<Destination | null> {
+  const safeId = String(id || '').trim().toLowerCase();
+  if (!safeId) return null;
+
+  const now = Date.now();
+  const cached = destinationItemCache.get(safeId);
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim().toLowerCase();
+  const safeEscaped = escapeRegex(safeId);
   
-  // 1. Direct match by id or title
+  // 1. Direct match by id or title with escaped regex
   let doc = await db.collection('destinations').findOne(
-    { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeId}$`, 'i') } }] },
+    { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeEscaped}$`, 'i') } }] },
     { projection: { _id: 0 } }
   );
 
-  // 2. Fallback fuzzy match for typos like 'sharjaha' -> 'sharjah' or slug variants
+  // 2. Fallback fuzzy match for typos or slug variants
   if (!doc) {
     const cleanSlug = safeId.replace(/[^a-z0-9]/g, '');
-    const all = await db.collection('destinations').find({}, { projection: { _id: 0 } }).toArray();
+    const all = await getDestinations();
     doc = all.find((d: any) => {
       const dId = String(d.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const dTitle = String(d.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -354,7 +544,13 @@ export async function getDestinationById(id: string): Promise<Destination | null
     }) as any;
   }
 
-  return (doc as unknown as Destination) || null;
+  if (doc) {
+    const dest = doc as unknown as Destination;
+    destinationItemCache.set(safeId, { data: dest, expiresAt: now + 60000 });
+    return dest;
+  }
+
+  return null;
 }
 
 export async function addDestination(
@@ -375,9 +571,9 @@ export async function addDestination(
     id = `${id}-${Math.floor(100 + Math.random() * 900)}`;
   }
 
-  // Count current packages for this destination
+  const safeTitle = escapeRegex(newDest.title);
   const currentCount = await db.collection('packages').countDocuments({
-    destination: { $regex: new RegExp(`^${newDest.title}$`, 'i') },
+    destination: { $regex: new RegExp(`^${safeTitle}$`, 'i') },
   });
 
   const destWithId: Destination = {
@@ -388,6 +584,7 @@ export async function addDestination(
   };
 
   await db.collection('destinations').insertOne(destWithId as any);
+  invalidateDestinationsCache();
 
   const { _id, ...cleanDest } = destWithId as any;
   return cleanDest as Destination;
@@ -399,34 +596,94 @@ export async function updateDestination(
 ): Promise<Destination | null> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
+  const safeId = String(id || '').trim();
+  if (!safeId) return null;
+
+  const decodedId = decodeURIComponent(safeId).trim();
+  const slugifiedId = safeId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: slugifiedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { title: safeId },
+    { title: decodedId },
+    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
+  }
 
   const res = await db.collection('destinations').findOneAndUpdate(
-    { id: safeId },
+    { $or: queryConditions },
     { $set: updates },
     { returnDocument: 'after', projection: { _id: 0 } }
   );
 
+  invalidateDestinationsCache();
   return (res as unknown as Destination) || null;
 }
 
 export async function deleteDestination(id: string): Promise<boolean> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
+  const safeId = String(id || '').trim();
+  if (!safeId) return true;
 
-  // Find destination first to get title
-  const dest = await db.collection('destinations').findOne({ id: safeId });
-  const result = await db.collection('destinations').deleteOne({ id: safeId });
+  const decodedId = decodeURIComponent(safeId).trim();
+  const slugifiedId = safeId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-  if (result.deletedCount > 0 && dest?.title) {
-    // Cascade delete packages belonging to this deleted destination
-    await db.collection('packages').deleteMany({
-      destination: { $regex: new RegExp(`^${dest.title}$`, 'i') }
-    });
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: slugifiedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { title: safeId },
+    { title: decodedId },
+    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
   }
 
-  return result.deletedCount > 0;
+  const dest = await db.collection('destinations').findOne({ $or: queryConditions });
+  await db.collection('destinations').deleteOne({ $or: queryConditions });
+
+  if (dest?.title) {
+    const safeTitle = escapeRegex(dest.title);
+    await db.collection('packages').deleteMany({
+      destination: { $regex: new RegExp(`^${safeTitle}$`, 'i') }
+    });
+    invalidatePackagesCache();
+  }
+
+  invalidateDestinationsCache();
+  return true;
 }
 
 // -------------------------------------------------------------
@@ -471,10 +728,33 @@ export async function updateOrderStatus(
 ): Promise<Order | null> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
+  const safeId = String(id || '').trim();
+  if (!safeId) return null;
+
+  const decodedId = decodeURIComponent(safeId).trim();
+
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
+  }
 
   const res = await db.collection('orders').findOneAndUpdate(
-    { id: safeId },
+    { $or: queryConditions },
     { $set: { status } },
     { returnDocument: 'after', projection: { _id: 0 } }
   );
@@ -485,9 +765,33 @@ export async function updateOrderStatus(
 export async function deleteOrder(id: string): Promise<boolean> {
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
-  const res = await db.collection('orders').deleteOne({ id: safeId });
-  return res.deletedCount > 0;
+  const safeId = String(id || '').trim();
+  if (!safeId) return true;
+
+  const decodedId = decodeURIComponent(safeId).trim();
+
+  const queryConditions: any[] = [
+    { id: safeId },
+    { id: decodedId },
+    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+    { _id: safeId },
+    { _id: decodedId },
+  ];
+
+  if (ObjectId.isValid(safeId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(safeId) });
+    } catch {}
+  }
+  if (ObjectId.isValid(decodedId)) {
+    try {
+      queryConditions.push({ _id: new ObjectId(decodedId) });
+    } catch {}
+  }
+
+  await db.collection('orders').deleteOne({ $or: queryConditions });
+  return true;
 }
 
 // -------------------------------------------------------------
@@ -495,13 +799,25 @@ export async function deleteOrder(id: string): Promise<boolean> {
 // -------------------------------------------------------------
 
 export async function getPreferences(): Promise<PreferenceOption[]> {
+  const now = Date.now();
+  if (preferencesCache && preferencesCache.expiresAt > now) {
+    return preferencesCache.data;
+  }
+
   await initializeDatabase();
   const db = await getDb();
   const docs = await db
     .collection('preferences')
     .find({}, { projection: { _id: 0 } })
     .toArray();
-  return (docs as unknown as PreferenceOption[]) || DEFAULT_PREFERENCES;
+
+  const result = (docs as unknown as PreferenceOption[]) || DEFAULT_PREFERENCES;
+  preferencesCache = {
+    data: result,
+    expiresAt: now + 60000,
+  };
+
+  return result;
 }
 
 export async function addPreference(
@@ -515,8 +831,9 @@ export async function addPreference(
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 
+  const safeLabel = escapeRegex(newPref.label);
   const existing = await db.collection('preferences').findOne({
-    $or: [{ id }, { label: { $regex: new RegExp(`^${newPref.label}$`, 'i') } }],
+    $or: [{ id }, { label: { $regex: new RegExp(`^${safeLabel}$`, 'i') } }],
   });
 
   if (existing) {
@@ -526,6 +843,7 @@ export async function addPreference(
 
   const prefWithId: PreferenceOption = { ...newPref, id, isCustom: true };
   await db.collection('preferences').insertOne(prefWithId as any);
+  invalidatePreferencesCache();
 
   const { _id, ...cleanPref } = prefWithId as any;
   return cleanPref as PreferenceOption;
@@ -551,10 +869,14 @@ export async function getWishlist(userId: string): Promise<Package[]> {
 
   const packages = await db
     .collection('packages')
-    .find({ id: { $in: packageIds } }, { projection: { _id: 0 } })
+    .find({ $or: [{ id: { $in: packageIds } }, { _id: { $in: packageIds } }] })
     .toArray();
 
-  return packages as unknown as Package[];
+  return packages.map((doc: any) => {
+    const id = String(doc.id || doc._id?.toString() || '').trim();
+    const { _id, ...cleanDoc } = doc;
+    return { ...cleanDoc, id } as Package;
+  });
 }
 
 export async function addToWishlist(userId: string, packageId: string): Promise<boolean> {
@@ -597,7 +919,7 @@ export async function isWishlisted(userId: string, packageId: string): Promise<b
 }
 
 // -------------------------------------------------------------
-// DATABASE STORED MEDIA / IMAGES
+// DATABASE STORED MEDIA / IMAGES WITH IN-MEMORY SPEED ACCELERATOR
 // -------------------------------------------------------------
 
 export async function saveImageToDb(
@@ -620,21 +942,51 @@ export async function saveImageToDb(
     createdAt: new Date().toISOString(),
   });
 
+  // Populate memory cache immediately for zero-delay instant serving
+  if (imageMemoryCache.size > 100) {
+    const oldestKey = imageMemoryCache.keys().next().value;
+    if (oldestKey) imageMemoryCache.delete(oldestKey);
+  }
+  imageMemoryCache.set(id, {
+    data: buffer,
+    contentType,
+    expiresAt: Date.now() + 300000, // 5 minutes in-memory cache
+  });
+
   return `/api/images/${id}`;
 }
 
 export async function getImageFromDb(
   id: string
 ): Promise<{ data: Buffer; contentType: string } | null> {
+  const safeId = String(id).trim();
+  if (!safeId) return null;
+
+  // Check fast in-memory accelerator
+  const cached = imageMemoryCache.get(safeId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { data: cached.data, contentType: cached.contentType };
+  }
+
   await initializeDatabase();
   const db = await getDb();
-  const safeId = String(id).trim();
 
   const doc = await db.collection('images').findOne({ id: safeId });
   if (!doc || !doc.data) return null;
 
-  return {
-    data: Buffer.from(doc.data, 'base64'),
-    contentType: doc.contentType || 'image/jpeg',
-  };
+  const buffer = Buffer.from(doc.data, 'base64');
+  const contentType = doc.contentType || 'image/jpeg';
+
+  // Save into in-memory accelerator
+  if (imageMemoryCache.size > 100) {
+    const oldestKey = imageMemoryCache.keys().next().value;
+    if (oldestKey) imageMemoryCache.delete(oldestKey);
+  }
+  imageMemoryCache.set(safeId, {
+    data: buffer,
+    contentType,
+    expiresAt: Date.now() + 300000,
+  });
+
+  return { data: buffer, contentType };
 }

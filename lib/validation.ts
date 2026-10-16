@@ -3,18 +3,23 @@
  * Defense in depth: prevents NoSQL injection, XSS, and payload tampering.
  */
 
-// HTML entity escaping for XSS prevention
+// HTML entity escaping for XSS prevention & Null byte injection defense
 export function sanitizeString(input: unknown): string {
   if (typeof input !== 'string') return '';
   return input
-    .trim()
+    .replace(/\0/g, '')   // Strip dangerous null bytes
     .replace(/[<>]/g, '') // Strip potential script/html angle brackets
+    .trim()
     .slice(0, 5000);      // Bound string length to prevent memory exhaustion
 }
 
 export function sanitizeUrl(url: unknown): string {
   if (typeof url !== 'string') return '';
-  const trimmed = url.trim();
+  const trimmed = url.replace(/\0/g, '').trim();
+  // Prevent protocol-relative bypasses (e.g. //evil.com or /\evil.com)
+  if (trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+    return '';
+  }
   // Allow safe protocols (http, https, relative paths, data URIs)
   if (
     trimmed.startsWith('https://') ||

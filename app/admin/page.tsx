@@ -12,7 +12,7 @@ interface PreferenceOption {
 
 const DEFAULT_PREFERENCES: PreferenceOption[] = [
   { id: 'attractions', label: 'Attractions', icon: '🏛️' },
-  { id: 'familie1s', label: 'Families With Kids', icon: '👨‍👩‍👧‍👦' },
+  { id: 'families', label: 'Families With Kids', icon: '👨‍👩‍👧‍👦' },
   { id: 'couple', label: 'Couple', icon: '💑' },
   { id: 'food', label: 'Food Drinks', icon: '🍹' },
   { id: 'culture', label: 'Culture & Heritage', icon: '🕌' },
@@ -250,8 +250,11 @@ export default function AdminPage() {
   const handleDeleteOrder = async (orderId: string) => {
     if (!window.confirm('Are you sure you want to delete this order?')) return;
     try {
-      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete order');
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete order');
+      }
       setOrders(prev => prev.filter(o => o.id !== orderId));
       setSuccess(true);
     } catch (err: any) {
@@ -636,7 +639,7 @@ export default function AdminPage() {
     setError('');
 
     try {
-      const res = await fetch(`/api/packages/${dealData.packageId}`, {
+      const res = await fetch(`/api/packages/${encodeURIComponent(dealData.packageId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -701,7 +704,7 @@ export default function AdminPage() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -719,8 +722,11 @@ export default function AdminPage() {
   const handleDeletePackage = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this package?')) return;
     try {
-      const res = await fetch(`/api/packages/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete package');
+      const res = await fetch(`/api/packages/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete package');
+      }
       setPackages(prev => prev.filter(p => p.id !== id));
       setSuccess(true);
     } catch (err: any) {
@@ -774,7 +780,7 @@ export default function AdminPage() {
         payload.images.push(payload.image);
       }
 
-      const res = await fetch(`/api/packages/${editingPackage.id}`, {
+      const res = await fetch(`/api/packages/${encodeURIComponent(editingPackage.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -797,8 +803,11 @@ export default function AdminPage() {
   const handleDeleteDestination = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this destination? Any packages linked to it will also be removed.')) return;
     try {
-      const res = await fetch(`/api/destinations/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete destination');
+      const res = await fetch(`/api/destinations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete destination');
+      }
       const targetDest = destinations.find(d => d.id === id);
       setDestinations(prev => prev.filter(d => d.id !== id));
       if (targetDest) {
@@ -821,7 +830,7 @@ export default function AdminPage() {
         finalImageUrl = await uploadImage(editDestImageFile);
       }
 
-      const res = await fetch(`/api/destinations/${editingDest.id}`, {
+      const res = await fetch(`/api/destinations/${encodeURIComponent(editingDest.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

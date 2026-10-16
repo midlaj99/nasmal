@@ -212,7 +212,14 @@ Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
             
             <div className={styles.packageSummary}>
               <div className={styles.packageImage}>
-                <Image src={bookingData.packageImage} alt={bookingData.packageTitle} fill sizes="(max-width: 768px) 100vw, 30vw" style={{ objectFit: 'cover' }} />
+                <Image 
+                  src={bookingData.packageImage} 
+                  alt={bookingData.packageTitle} 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, 30vw" 
+                  style={{ objectFit: 'cover' }} 
+                  unoptimized={Boolean(bookingData.packageImage && (bookingData.packageImage.startsWith('/api/images') || bookingData.packageImage.startsWith('data:')))}
+                />
               </div>
               <div className={styles.packageInfo}>
                 <h3>{bookingData.packageTitle}</h3>

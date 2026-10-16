@@ -1,7 +1,7 @@
 import ActivitiesCatalog from '@/components/ActivitiesCatalog';
 import { getPackages, getPackagesByDestination } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 export default async function ActivitiesPage({ 
   searchParams 

@@ -50,6 +50,24 @@ export async function POST(request: Request) {
     const admin = await getOrCreateAdmin();
     const db = await getDb();
 
+    // Check single-use token protection to prevent replay attacks
+    const crypto = await import('crypto');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const alreadyUsed = await db.collection('used_reset_tokens').findOne({ tokenHash });
+    if (alreadyUsed) {
+      return NextResponse.json(
+        { error: 'This reset token has already been used. Please request a new OTP.' },
+        { status: 401 }
+      );
+    }
+
+    // Mark token as used immediately
+    await db.collection('used_reset_tokens').insertOne({
+      tokenHash,
+      usedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+
     // Hash new password using scrypt
     const newPasswordHash = hashPassword(newPassword);
 

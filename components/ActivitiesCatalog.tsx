@@ -419,6 +419,7 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className={styles.cardImg}
+                      unoptimized={Boolean(pkg.image && (pkg.image.startsWith('/api/images') || pkg.image.startsWith('data:')))}
                     />
 
                     {/* Top Left Badge */}
