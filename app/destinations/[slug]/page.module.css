@@ -215,9 +215,8 @@
    ACTIVITIES SECTION
    ========================================= */
 .activitiesSection {
-  background-color: #f8fafc;
+  background-color: #ffffff;
   padding: 70px 0 100px;
-  border-top: 1px solid #edf2f7;
 }
 
 .container {
@@ -274,7 +273,7 @@
 .emptyState {
   text-align: center;
   padding: 60px 20px;
-  background: #ffffff;
+  background: #f8fafc;
   border-radius: 20px;
   border: 1px dashed #cbd5e1;
   color: #64748b;

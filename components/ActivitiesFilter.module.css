@@ -45,7 +45,7 @@
 }
 
 .input:focus {
-  border-color: var(--primary-color, #0056b3);
+  border-color: var(--primary-color, #047857);
 }
 
 .filterSection {
@@ -76,7 +76,7 @@
   left: 0;
   width: 16px;
   height: 16px;
-  background: #007bff;
+  background: #047857;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -200,9 +200,9 @@
 }
 
 .tabActive .tabIcon {
-  border: 2px solid #007bff;
-  background: #f0f8ff;
-  color: #007bff;
+  border: 2px solid #047857;
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .tabLabel {
@@ -220,7 +220,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #007bff;
+  background: #047857;
 }
 
 .grid {

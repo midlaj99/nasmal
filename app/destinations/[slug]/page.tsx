@@ -123,9 +123,6 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
-      {/* ================= WHY NASMAL TOURISM SECTION ================= */}
-      <WhyChooseNasmal />
-
       {/* ================= ALL ACTIVITIES SECTION ================= */}
       <section id="activities" className={styles.activitiesSection}>
         <div className={styles.container}>
@@ -158,6 +155,9 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
           )}
         </div>
       </section>
+
+      {/* ================= WHY NASMAL TOURISM SECTION ================= */}
+      <WhyChooseNasmal />
     </main>
   );
 }

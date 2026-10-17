@@ -6,11 +6,11 @@ const features = [
     id: 'price',
     title: 'Best Price Guarantee',
     description: 'Explore top-rated activities at the best prices, from popular tours to hidden gems.',
-    bgColor: '#e0f2fe',
+    bgColor: '#ecfdf5',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L4 5.5V11.5C4 16.5 7.4 21.1 12 22.3C16.6 21.1 20 16.5 20 11.5V5.5L12 2Z" fill="#0284c7" fillOpacity="0.18" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M9 12L11 14L15 10" stroke="#0284c7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 2L4 5.5V11.5C4 16.5 7.4 21.1 12 22.3C16.6 21.1 20 16.5 20 11.5V5.5L12 2Z" fill="#047857" fillOpacity="0.18" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 12L11 14L15 10" stroke="#047857" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     )
   },
@@ -32,13 +32,13 @@ const features = [
     id: 'transaction',
     title: 'Easy Online Transaction',
     description: 'Simplify your bookings. Earn and redeem miles effortlessly with every transaction.',
-    bgColor: '#e0f2fe',
+    bgColor: '#ecfdf5',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="5" width="20" height="14" rx="3" fill="#0284c7" fillOpacity="0.18" stroke="#0284c7" strokeWidth="2"/>
-        <line x1="2" y1="10" x2="22" y2="10" stroke="#0284c7" strokeWidth="2"/>
-        <circle cx="6" cy="14.5" r="1.5" fill="#0284c7"/>
-        <line x1="10" y1="14.5" x2="14" y2="14.5" stroke="#0284c7" strokeWidth="2" strokeLinecap="round"/>
+        <rect x="2" y="5" width="20" height="14" rx="3" fill="#047857" fillOpacity="0.18" stroke="#047857" strokeWidth="2"/>
+        <line x1="2" y1="10" x2="22" y2="10" stroke="#047857" strokeWidth="2"/>
+        <circle cx="6" cy="14.5" r="1.5" fill="#047857"/>
+        <line x1="10" y1="14.5" x2="14" y2="14.5" stroke="#047857" strokeWidth="2" strokeLinecap="round"/>
       </svg>
     )
   },

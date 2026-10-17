@@ -145,7 +145,7 @@
 .priceValue {
   font-size: 20px;
   font-weight: 800;
-  color: #0284c7;
+  color: #047857;
 }
 
 .supportBtn {
@@ -207,7 +207,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #0093d0;
+  background: #047857;
   color: #ffffff;
   font-weight: 700;
   font-size: 14.5px;
@@ -218,7 +218,7 @@
 }
 
 .browseBtn:hover {
-  background: #0077b5;
+  background: #065f46;
   transform: translateY(-2px);
 }
 

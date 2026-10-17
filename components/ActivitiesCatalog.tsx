@@ -68,6 +68,38 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
   const [visibleCount, setVisibleCount] = useState<number>(6);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
+  // Mobile filter collapse/expand state (open by default on first visit)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(true);
+
+  const resetScrollToTop = () => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      document.documentElement.style.scrollBehavior = 'auto';
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+          if (typeof document !== 'undefined') {
+            document.documentElement.style.scrollBehavior = '';
+          }
+        }, 120);
+      });
+    }
+  };
+
+  const handleToggleMobileFilter = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement)?.blur();
+    }
+    setIsMobileFilterOpen(prev => {
+      const willClose = prev;
+      if (willClose) {
+        resetScrollToTop();
+      }
+      return !prev;
+    });
+  };
+
   // Dynamic destination options from database packages + UAE defaults
   const availableDestinations = useMemo(() => {
     const list = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Fujairah', 'Ras Al Khaimah'];
@@ -99,6 +131,18 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
     setSelectedTravellerType('all');
     setSortBy('recommended');
   };
+
+  // Count active filters (for badge)
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchQuery.trim()) count++;
+    if (selectedDestination !== 'all') count++;
+    if (selectedDate) count++;
+    if (maxPrice < 1000) count++;
+    if (!selectedCategories.tours || !selectedCategories.attractions || !selectedCategories.experiences) count++;
+    if (selectedTravellerType !== 'all') count++;
+    return count;
+  }, [searchQuery, selectedDestination, selectedDate, maxPrice, selectedCategories, selectedTravellerType]);
 
   // Filter & Sort Logic
   const filteredList = useMemo(() => {
@@ -152,6 +196,221 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
       });
   }, [combinedPackages, searchQuery, selectedDestination, maxPrice, selectedTravellerType, sortBy]);
 
+  const renderFilterContent = (isMobile = false) => (
+    <>
+      {/* Search Inputs Box */}
+      <div className={styles.searchBoxCard}>
+        {/* Search Activities */}
+        <div className={styles.searchField}>
+          <span className={styles.fieldIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search activities"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className={styles.fieldInput}
+          />
+        </div>
+
+        {/* Destination Dropdown */}
+        <div className={styles.searchField}>
+          <span className={styles.fieldIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </span>
+          <select
+            value={selectedDestination}
+            onChange={e => setSelectedDestination(e.target.value)}
+            className={styles.fieldSelect}
+          >
+            <option value="all">All destinations</option>
+            {availableDestinations.map(dest => (
+              <option key={dest} value={dest}>{dest}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Choose Dates */}
+        <div className={styles.searchField}>
+          <span className={styles.fieldIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            className={styles.fieldInput}
+            placeholder="Choose dates"
+          />
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div className={styles.filterSection}>
+        <div className={styles.sectionHeaderTitle}>Price range</div>
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          step={50}
+          value={maxPrice}
+          onChange={e => setMaxPrice(parseInt(e.target.value, 10))}
+          className={styles.rangeSlider}
+        />
+        <div className={styles.priceRangeLabels}>
+          <span>AED 0</span>
+          <span>AED {maxPrice === 1000 ? '1,000+' : maxPrice}</span>
+        </div>
+      </div>
+
+      {/* Category */}
+      <div className={styles.filterSection}>
+        <div className={styles.sectionHeaderTitle}>Category</div>
+        <div className={styles.checkboxList}>
+          <label className={styles.checkboxItem}>
+            <div
+              className={`${styles.checkboxSquare} ${selectedCategories.tours ? styles.checkboxActive : ''}`}
+              onClick={() => setSelectedCategories(p => ({ ...p, tours: !p.tours }))}
+            >
+              {selectedCategories.tours && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span className={styles.itemLabel}>🏛️ Tours</span>
+          </label>
+
+          <label className={styles.checkboxItem}>
+            <div
+              className={`${styles.checkboxSquare} ${selectedCategories.attractions ? styles.checkboxActive : ''}`}
+              onClick={() => setSelectedCategories(p => ({ ...p, attractions: !p.attractions }))}
+            >
+              {selectedCategories.attractions && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span className={styles.itemLabel}>🎡 Attractions</span>
+          </label>
+
+          <label className={styles.checkboxItem}>
+            <div
+              className={`${styles.checkboxSquare} ${selectedCategories.experiences ? styles.checkboxActive : ''}`}
+              onClick={() => setSelectedCategories(p => ({ ...p, experiences: !p.experiences }))}
+            >
+              {selectedCategories.experiences && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span className={styles.itemLabel}>✨ Experiences</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Traveller Type 3x2 Grid */}
+      <div className={styles.filterSection}>
+        <div className={styles.sectionHeaderTitle}>Traveller type</div>
+        <div className={styles.travellerGrid}>
+          {TRAVELLER_TYPES.map(item => (
+            <div
+              key={item.id}
+              className={`${styles.travellerCard} ${selectedTravellerType === item.id ? styles.travellerCardActive : ''}`}
+              onClick={() => setSelectedTravellerType(prev => prev === item.id ? 'all' : item.id)}
+            >
+              <div className={styles.travellerIcon}>{item.icon}</div>
+              <div className={styles.travellerName}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sort By Radio - Desktop only */}
+      {!isMobile && (
+        <div className={styles.filterSection}>
+          <div className={styles.sectionHeaderTitle}>Sort by</div>
+          <div className={styles.radioList}>
+            {[
+              { id: 'recommended', label: 'Recommended' },
+              { id: 'price-asc', label: 'Price: Low to High' },
+              { id: 'price-desc', label: 'Price: High to Low' },
+              { id: 'popular', label: 'Most popular' }
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={styles.radioItem}
+                onClick={() => setSortBy(opt.id)}
+              >
+                <div className={`${styles.radioCircle} ${sortBy === opt.id ? styles.radioCircleActive : ''}`}>
+                  {sortBy === opt.id && <div className={styles.radioDot} />}
+                </div>
+                <span>{opt.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Clear / Apply Actions */}
+      {isMobile ? (
+        <div className={styles.mobileFilterActions}>
+          <button
+            onClick={handleClearFilters}
+            className={styles.clearFiltersBtn}
+            type="button"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            <span>Clear all</span>
+          </button>
+          <button
+            type="button"
+            className={styles.applyFiltersBtn}
+            onClick={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement)?.blur();
+              resetScrollToTop();
+              setIsMobileFilterOpen(false);
+            }}
+          >
+            Apply filters {filteredList.length > 0 ? `(${filteredList.length})` : ''}
+          </button>
+        </div>
+      ) : (
+        <div className={styles.desktopFilterActions}>
+          <button
+            onClick={handleClearFilters}
+            className={styles.clearFiltersBtn}
+            type="button"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            <span>Clear all filters</span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className={styles.activitiesWrapper}>
       {/* Breadcrumb Navigation */}
@@ -170,188 +429,11 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
 
       <div className={styles.layout}>
         {/* ========================================= */}
-        {/* LEFT SIDEBAR FILTERS */}
+        {/* LEFT SIDEBAR FILTERS (DESKTOP) */}
         {/* ========================================= */}
         <aside className={styles.sidebar}>
-          {/* Search Inputs Box */}
-          <div className={styles.searchBoxCard}>
-            {/* Search Activities */}
-            <div className={styles.searchField}>
-              <span className={styles.fieldIcon}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                placeholder="Search activities"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className={styles.fieldInput}
-              />
-            </div>
-
-            {/* Destination Dropdown */}
-            <div className={styles.searchField}>
-              <span className={styles.fieldIcon}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </span>
-              <select
-                value={selectedDestination}
-                onChange={e => setSelectedDestination(e.target.value)}
-                className={styles.fieldSelect}
-              >
-                <option value="all">All destinations</option>
-                {availableDestinations.map(dest => (
-                  <option key={dest} value={dest}>{dest}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Choose Dates */}
-            <div className={styles.searchField}>
-              <span className={styles.fieldIcon}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              </span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-                className={styles.fieldInput}
-                placeholder="Choose dates"
-              />
-            </div>
-          </div>
-
-          {/* Price Range */}
-          <div className={styles.filterSection}>
-            <div className={styles.sectionHeaderTitle}>Price range</div>
-            <input
-              type="range"
-              min={0}
-              max={1000}
-              step={50}
-              value={maxPrice}
-              onChange={e => setMaxPrice(parseInt(e.target.value, 10))}
-              className={styles.rangeSlider}
-            />
-            <div className={styles.priceRangeLabels}>
-              <span>AED 0</span>
-              <span>AED {maxPrice === 1000 ? '1,000+' : maxPrice}</span>
-            </div>
-          </div>
-
-          {/* Category */}
-          <div className={styles.filterSection}>
-            <div className={styles.sectionHeaderTitle}>Category</div>
-            <div className={styles.checkboxList}>
-              <label className={styles.checkboxItem}>
-                <div
-                  className={`${styles.checkboxSquare} ${selectedCategories.tours ? styles.checkboxActive : ''}`}
-                  onClick={() => setSelectedCategories(p => ({ ...p, tours: !p.tours }))}
-                >
-                  {selectedCategories.tours && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-                <span className={styles.itemLabel}>🏛️ Tours</span>
-              </label>
-
-              <label className={styles.checkboxItem}>
-                <div
-                  className={`${styles.checkboxSquare} ${selectedCategories.attractions ? styles.checkboxActive : ''}`}
-                  onClick={() => setSelectedCategories(p => ({ ...p, attractions: !p.attractions }))}
-                >
-                  {selectedCategories.attractions && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-                <span className={styles.itemLabel}>🎡 Attractions</span>
-              </label>
-
-              <label className={styles.checkboxItem}>
-                <div
-                  className={`${styles.checkboxSquare} ${selectedCategories.experiences ? styles.checkboxActive : ''}`}
-                  onClick={() => setSelectedCategories(p => ({ ...p, experiences: !p.experiences }))}
-                >
-                  {selectedCategories.experiences && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-                <span className={styles.itemLabel}>✨ Experiences</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Traveller Type 3x2 Grid */}
-          <div className={styles.filterSection}>
-            <div className={styles.sectionHeaderTitle}>Traveller type</div>
-            <div className={styles.travellerGrid}>
-              {TRAVELLER_TYPES.map(item => (
-                <div
-                  key={item.id}
-                  className={`${styles.travellerCard} ${selectedTravellerType === item.id ? styles.travellerCardActive : ''}`}
-                  onClick={() => setSelectedTravellerType(prev => prev === item.id ? 'all' : item.id)}
-                >
-                  <div className={styles.travellerIcon}>{item.icon}</div>
-                  <div className={styles.travellerName}>{item.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sort By Radio */}
-          <div className={styles.filterSection}>
-            <div className={styles.sectionHeaderTitle}>Sort by</div>
-            <div className={styles.radioList}>
-              {[
-                { id: 'recommended', label: 'Recommended' },
-                { id: 'price-asc', label: 'Price: Low to High' },
-                { id: 'price-desc', label: 'Price: High to Low' },
-                { id: 'popular', label: 'Most popular' }
-              ].map(opt => (
-                <div
-                  key={opt.id}
-                  className={styles.radioItem}
-                  onClick={() => setSortBy(opt.id)}
-                >
-                  <div className={`${styles.radioCircle} ${sortBy === opt.id ? styles.radioCircleActive : ''}`}>
-                    {sortBy === opt.id && <div className={styles.radioDot} />}
-                  </div>
-                  <span>{opt.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Clear All Filters */}
-          <div>
-            <button
-              onClick={handleClearFilters}
-              className={styles.clearFiltersBtn}
-              type="button"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="1 4 1 10 7 10" />
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-              </svg>
-              <span>Clear all filters</span>
-            </button>
+          <div className={styles.desktopFilterContent}>
+            {renderFilterContent(false)}
           </div>
         </aside>
 
@@ -363,6 +445,57 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
           <div className={styles.mainHeader}>
             <h1 className={styles.pageTitle}>Activities for every kind of trip</h1>
             <p className={styles.pageSubtitle}>Discover unforgettable experiences across the UAE.</p>
+
+            {/* Collapsible Mobile Filter Panel (FIRST) */}
+            <div
+              className={`${styles.mobileFilterPanel} ${
+                isMobileFilterOpen ? styles.mobileFilterPanelOpen : styles.mobileFilterPanelClosed
+              }`}
+            >
+              <div className={styles.mobileFilterContent}>
+                {renderFilterContent(true)}
+              </div>
+            </div>
+
+            {/* Mobile Filter Toggle Button (Placed UNDER the filter content, above Sort by) */}
+            <div className={styles.mobileFilterBar}>
+              <button
+                type="button"
+                className={`${styles.mobileFilterToggleBtn} ${isMobileFilterOpen ? styles.mobileFilterToggleBtnActive : ''}`}
+                onClick={handleToggleMobileFilter}
+                aria-expanded={isMobileFilterOpen}
+                aria-label="Toggle activity filters"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14" />
+                  <line x1="4" y1="10" x2="4" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12" y2="3" />
+                  <line x1="20" y1="21" x2="20" y2="16" />
+                  <line x1="20" y1="12" x2="20" y2="3" />
+                  <line x1="1" y1="14" x2="7" y2="14" />
+                  <line x1="9" y1="8" x2="15" y2="8" />
+                  <line x1="17" y1="16" x2="23" y2="16" />
+                </svg>
+                <span>Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className={styles.activeFilterBadge}>{activeFilterCount}</span>
+                )}
+                <svg
+                  className={`${styles.filterChevron} ${isMobileFilterOpen ? styles.filterChevronOpen : ''}`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </div>
 
             {/* Badges count & dropdown */}
             <div className={styles.headerTopRow}>

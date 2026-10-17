@@ -52,13 +52,13 @@
 }
 
 .input:focus {
-  border-color: #0093d0;
-  box-shadow: 0 0 0 3px rgba(0, 147, 208, 0.15);
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
 }
 
 .submitBtn {
   width: 100%;
-  background: #0093d0;
+  background: #047857;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -71,7 +71,7 @@
 }
 
 .submitBtn:hover {
-  background: #007bb0;
+  background: #065f46;
 }
 
 .footerNote {
@@ -82,7 +82,7 @@
 }
 
 .footerNote a {
-  color: #0093d0;
+  color: #047857;
   text-decoration: none;
   font-weight: 600;
 }

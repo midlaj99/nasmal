@@ -36,7 +36,7 @@ function getHighlightIcon(title: string) {
   const t = title.toLowerCase();
   if (t.includes('car') || t.includes('4x4') || t.includes('dune') || t.includes('drive') || t.includes('transfer') || t.includes('bashing')) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="11" rx="2" />
         <circle cx="7" cy="18" r="2" />
         <circle cx="17" cy="18" r="2" />
@@ -46,7 +46,7 @@ function getHighlightIcon(title: string) {
   }
   if (t.includes('camel') || t.includes('desert') || t.includes('sand') || t.includes('safari') || t.includes('wildlife')) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 13c1-2 2-3 4-3 2 0 3 2 5 2 2 0 3-3 5-3 2 0 3 2 4 4" />
         <circle cx="6" cy="7" r="2" />
         <path d="M4 17h16" />
@@ -55,7 +55,7 @@ function getHighlightIcon(title: string) {
   }
   if (t.includes('camp') || t.includes('bbq') || t.includes('dinner') || t.includes('food') || t.includes('drink') || t.includes('meal')) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2l8 18H4l8-18z" />
         <path d="M12 11v9" />
       </svg>
@@ -63,7 +63,7 @@ function getHighlightIcon(title: string) {
   }
   if (t.includes('view') || t.includes('sunset') || t.includes('sunrise') || t.includes('sky') || t.includes('burj')) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="5" />
         <line x1="12" y1="1" x2="12" y2="3" />
         <line x1="12" y1="21" x2="12" y2="23" />
@@ -76,15 +76,80 @@ function getHighlightIcon(title: string) {
   }
   if (t.includes('ticket') || t.includes('entry') || t.includes('pass') || t.includes('vip')) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" />
         <line x1="2" y1="10" x2="22" y2="10" />
       </svg>
     );
   }
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+// Smart icon selector for dynamic Quick Facts from Admin
+function getFactIcon(label: string) {
+  const l = label.toLowerCase();
+  if (l.includes('duration') || l.includes('time') || l.includes('hour')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+  }
+  if (l.includes('confirm') || l.includes('ticket') || l.includes('voucher') || l.includes('booking')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    );
+  }
+  if (l.includes('lang') || l.includes('guide') || l.includes('audio')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    );
+  }
+  if (l.includes('age') || l.includes('suit') || l.includes('child') || l.includes('family') || l.includes('people')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    );
+  }
+  if (l.includes('pickup') || l.includes('transfer') || l.includes('drop') || l.includes('transport') || l.includes('car')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    );
+  }
+  if (l.includes('cancel') || l.includes('refund')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 4 23 10 17 10" />
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
     </svg>
   );
 }
@@ -93,7 +158,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const router = useRouter();
   const { setBookingData } = useBooking();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'highlights' | 'inclusions' | 'important' | 'reviews'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'highlights' | 'inclusions' | 'important'>('overview');
   const [selectedDate, setSelectedDate] = useState<string>('');
   
   // Guest counts
@@ -101,20 +166,9 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const [children, setChildren] = useState<number>(0);
 
   const [activePhotoModal, setActivePhotoModal] = useState<boolean>(false);
-  const [reviewIndex, setReviewIndex] = useState<number>(0);
-  
-  // Viewport detection to eliminate Next.js height=0 warning and duplicate DOM images
-  const [isMobileView, setIsMobileView] = useState<boolean>(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Mobile Gallery Carousel State
-  const [mobileGalleryIndex, setMobileGalleryIndex] = useState<number>(0);
+  // Universal Gallery Carousel State (Runs on ANY device)
+  const [galleryIndex, setGalleryIndex] = useState<number>(0);
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
 
@@ -122,44 +176,44 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     ? packageData.images
     : [packageData.image];
 
-  // Auto-move images every 5s on mobile
+  // Auto-move images every 6s across any device
   useEffect(() => {
     if (displayImages.length <= 1) return;
     const interval = setInterval(() => {
-      setMobileGalleryIndex((prev) => (prev + 1) % displayImages.length);
-    }, 5000);
+      setGalleryIndex((prev) => (prev + 1) % displayImages.length);
+    }, 6000);
     return () => clearInterval(interval);
   }, [displayImages.length]);
 
-  const handleMobileTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
   };
 
-  const handleMobileTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     touchEndXRef.current = e.touches[0].clientX;
   };
 
-  const handleMobileTouchEnd = () => {
+  const handleTouchEnd = () => {
     if (touchStartXRef.current === null || touchEndXRef.current === null) return;
     const diff = touchStartXRef.current - touchEndXRef.current;
     const swipeThreshold = 40;
 
     if (diff > swipeThreshold) {
-      setMobileGalleryIndex((prev) => (prev + 1) % displayImages.length);
+      setGalleryIndex((prev) => (prev + 1) % displayImages.length);
     } else if (diff < -swipeThreshold) {
-      setMobileGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+      setGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
     }
 
     touchStartXRef.current = null;
     touchEndXRef.current = null;
   };
 
-  const prevMobileImage = () => {
-    setMobileGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+  const prevImage = () => {
+    setGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
   };
 
-  const nextMobileImage = () => {
-    setMobileGalleryIndex((prev) => (prev + 1) % displayImages.length);
+  const nextImage = () => {
+    setGalleryIndex((prev) => (prev + 1) % displayImages.length);
   };
 
   const mainImage = displayImages[0] || packageData.image;
@@ -203,37 +257,6 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
         'Live entertainment show'
       ];
 
-  // Reviews list
-  const reviewsList = [
-    {
-      id: '1',
-      name: 'Mohamed Farouk',
-      tag: 'Solo',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
-      rating: 5,
-      comment: 'Very well done. Seamless booking experience and great support!',
-      date: '12 Mar 2025'
-    },
-    {
-      id: '2',
-      name: 'Jinwoo Park',
-      tag: 'Family',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&q=80',
-      rating: 5,
-      comment: 'Really enjoyed it. Perfect for kids, teens, and families. Highly recommended!',
-      date: '5 Mar 2025'
-    },
-    {
-      id: '3',
-      name: 'Sarah Jenkins',
-      tag: 'Couple',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80',
-      rating: 5,
-      comment: 'Unforgettable experience! Sunset view was breathtaking and hospitality was top notch.',
-      date: '28 Feb 2025'
-    }
-  ];
-
   const handleBookNow = () => {
     setBookingData({
       packageId: packageData.id,
@@ -249,7 +272,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     router.push('/checkout');
   };
 
-  const handleTabChange = (tab: 'overview' | 'highlights' | 'inclusions' | 'important' | 'reviews') => {
+  const handleTabChange = (tab: 'overview' | 'highlights' | 'inclusions' | 'important') => {
     setActiveTab(tab);
   };
 
@@ -273,7 +296,6 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
           <div className={styles.ratingBox}>
             <span className={styles.starIcon}>★</span>
             <span className={styles.ratingNumber}>{ratingNum}</span>
-            <span className={styles.reviewsCount}>({reviewsCount} Reviews)</span>
           </div>
           <span className={styles.metaDivider}>|</span>
           <div className={styles.priceMeta}>
@@ -283,132 +305,58 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
         </div>
       </div>
 
-      {/* Desktop Gallery Grid (Rendered on tablet & desktop) */}
-      {!isMobileView ? (
-        <div className={`${styles.galleryGrid} ${styles.desktopGallery}`}>
-          <div className={styles.mainGalleryCol}>
-            <div className={styles.mainImageWrapper}>
-              <Image
-                src={mainImage}
-                alt={packageData.title}
-                fill
-                sizes="(max-width: 900px) 100vw, 800px"
-                className={styles.galleryImg}
-                priority
-                unoptimized={isLocalDbImage(mainImage)}
-              />
-            </div>
-          </div>
-
-          <div className={styles.sideGalleryCol}>
-            <div className={styles.sideImageTop}>
-              <Image
-                src={sideImage1}
-                alt={`${packageData.title} side photo 1`}
-                fill
-                sizes="(max-width: 900px) 100vw, 400px"
-                className={styles.galleryImg}
-                unoptimized={isLocalDbImage(sideImage1)}
-              />
-            </div>
-            <div className={styles.sideImageBottom}>
-              <Image
-                src={sideImage2}
-                alt={`${packageData.title} side photo 2`}
-                fill
-                sizes="(max-width: 900px) 100vw, 400px"
-                className={styles.galleryImg}
-                unoptimized={isLocalDbImage(sideImage2)}
-              />
-              <button 
-                className={styles.viewAllPhotosBtn} 
-                onClick={() => setActivePhotoModal(true)}
-                type="button"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                <span>View all photos ({displayImages.length})</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Mobile Auto/Manual Scrollable Carousel (Rendered on mobile only to prevent duplicate DOM and height 0 warnings) */
+      {/* Universal Image Carousel for ANY Device */}
+      <div className={styles.carouselContainer}>
         <div 
-          className={styles.mobileGalleryCarousel}
-          onTouchStart={handleMobileTouchStart}
-          onTouchMove={handleMobileTouchMove}
-          onTouchEnd={handleMobileTouchEnd}
+          className={styles.carouselWrapper}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <div 
-            className={styles.mobileCarouselTrack}
-            style={{ transform: `translateX(-${mobileGalleryIndex * 100}%)` }}
+            className={styles.carouselTrack}
+            style={{ transform: `translateX(-${galleryIndex * 100}%)` }}
           >
             {displayImages.map((img, idx) => (
-              <div key={idx} className={styles.mobileCarouselSlide}>
+              <div key={idx} className={styles.carouselSlide}>
                 <Image
                   src={img}
                   alt={`${packageData.title} photo ${idx + 1}`}
                   fill
-                  sizes="100vw"
-                  className={styles.mobileSlideImg}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                  className={styles.slideImg}
                   priority={idx === 0}
                   unoptimized={isLocalDbImage(img)}
                 />
               </div>
             ))}
           </div>
-
-          <button 
-            className={styles.mobileViewPhotosBtn} 
-            onClick={() => setActivePhotoModal(true)}
-            type="button"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            <span>{mobileGalleryIndex + 1}/{displayImages.length}</span>
-          </button>
-
-          {displayImages.length > 1 && (
-            <>
-              <button 
-                className={`${styles.mobileArrowBtn} ${styles.mobileArrowPrev}`} 
-                onClick={prevMobileImage}
-                aria-label="Previous Image"
-                type="button"
-              >
-                &#8249;
-              </button>
-              <button 
-                className={`${styles.mobileArrowBtn} ${styles.mobileArrowNext}`} 
-                onClick={nextMobileImage}
-                aria-label="Next Image"
-                type="button"
-              >
-                &#8250;
-              </button>
-
-              <div className={styles.mobileCarouselDots}>
-                {displayImages.map((_, dotIdx) => (
-                  <button
-                    key={dotIdx}
-                    className={`${styles.mobileDot} ${dotIdx === mobileGalleryIndex ? styles.mobileDotActive : ''}`}
-                    onClick={() => setMobileGalleryIndex(dotIdx)}
-                    aria-label={`Go to slide ${dotIdx + 1}`}
-                    type="button"
-                  />
-                ))}
-              </div>
-            </>
-          )}
         </div>
-      )}
+
+        {/* Thumbnail Strip (Interactive for any device) */}
+        {displayImages.length > 1 && (
+          <div className={styles.thumbnailStrip}>
+            {displayImages.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`${styles.thumbBtn} ${idx === galleryIndex ? styles.thumbBtnActive : ''}`}
+                onClick={() => setGalleryIndex(idx)}
+                aria-label={`Show photo ${idx + 1}`}
+              >
+                <Image
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  fill
+                  sizes="120px"
+                  className={styles.thumbImg}
+                  unoptimized={isLocalDbImage(img)}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Main Content Layout with 2 Columns */}
       <div className={styles.layoutContainer}>
@@ -444,13 +392,6 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             >
               Important Information
             </button>
-            <button
-              className={`${styles.tabBtn} ${activeTab === 'reviews' ? styles.tabBtnActive : ''}`}
-              onClick={() => handleTabChange('reviews')}
-              type="button"
-            >
-              Reviews
-            </button>
           </div>
 
           {/* 1. Overview Card - DYNAMIC FROM ADMIN */}
@@ -458,7 +399,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div id="overview" className={styles.contentCard}>
               <div className={styles.cardHeader}>
                 <div className={styles.headerIconCircle}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -521,7 +462,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div id="highlights" className={styles.contentCard}>
               <div className={styles.cardHeader}>
                 <div className={styles.headerIconCircle}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                   </svg>
                 </div>
@@ -531,7 +472,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               <ul className={styles.checkmarkList}>
                 {highlights.map((item, idx) => (
                   <li key={idx} className={styles.checkItem}>
-                    <svg className={styles.checkIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className={styles.checkIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                     <span>{item}</span>
@@ -546,7 +487,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div id="inclusions" className={styles.contentCard}>
               <div className={styles.cardHeader}>
                 <div className={styles.headerIconCircle}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                     <line x1="16" y1="13" x2="8" y2="13" />
@@ -560,7 +501,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               <div className={styles.inclusionsGrid}>
                 {inclusions.map((item, idx) => (
                   <div key={idx} className={styles.checkItem}>
-                    <svg className={styles.checkIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className={styles.checkIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                     <span>{item}</span>
@@ -575,7 +516,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div id="important" className={styles.contentCard}>
               <div className={styles.cardHeader}>
                 <div className={styles.headerIconCircle}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="16" x2="12" y2="12" />
                     <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -584,132 +525,72 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                 <h2 className={styles.cardTitle}>Important Information</h2>
               </div>
 
-              <div className={styles.infoBoxesGrid}>
-                <div className={styles.infoBox}>
-                  <div className={styles.infoBoxHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span className={styles.infoBoxLabel}>Duration</span>
-                  </div>
-                  <div className={styles.infoBoxVal}>Flexible / Full Tour</div>
-                </div>
+              {/* Dynamic Quick Facts from Admin */}
+              {(() => {
+                const rawFacts: unknown = packageData.quickFacts;
+                let factsList: string[] = [];
+                if (Array.isArray(rawFacts)) {
+                  factsList = rawFacts.map(item => String(item).trim()).filter(Boolean);
+                } else if (typeof rawFacts === 'string' && rawFacts.trim().length > 0) {
+                  factsList = rawFacts.split('\n').map((s: string) => s.trim()).filter(Boolean);
+                }
 
-                <div className={styles.infoBox}>
-                  <div className={styles.infoBoxHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span className={styles.infoBoxLabel}>Confirmation</span>
-                  </div>
-                  <div className={styles.infoBoxVal}>Instant WhatsApp Ticket</div>
-                </div>
-
-                <div className={styles.infoBox}>
-                  <div className={styles.infoBoxHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                    <span className={styles.infoBoxLabel}>Languages</span>
-                  </div>
-                  <div className={styles.infoBoxVal}>English, Arabic</div>
-                </div>
-
-                <div className={styles.infoBox}>
-                  <div className={styles.infoBoxHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <span className={styles.infoBoxLabel}>Suitability</span>
-                  </div>
-                  <div className={styles.infoBoxVal}>
-                    {hasChildConfig ? (packageData.childAgeLimit || 'All ages welcome') : 'All ages welcome'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 5. Customer Reviews Card */}
-          {(activeTab === 'overview' || activeTab === 'reviews') && (
-            <div id="reviews" className={styles.contentCard}>
-              <div className={styles.reviewsCardHeader}>
-                <div className={styles.cardHeaderLeft}>
-                  <div className={styles.headerIconCircle}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
-                  <h2 className={styles.cardTitle}>Customer Reviews</h2>
-                </div>
-                <button className={styles.viewAllReviewsLink} type="button">
-                  View all reviews &rsaquo;
-                </button>
-              </div>
-
-              <div className={styles.overallRatingBadge}>
-                <span className={styles.ratingStar}>★</span>
-                <span className={styles.ratingScore}>{ratingNum}</span>
-                <span className={styles.reviewsTotal}>({reviewsCount} Reviews)</span>
-              </div>
-
-              <div className={styles.reviewsCarouselContainer}>
-                <button
-                  className={styles.carouselArrowBtn}
-                  onClick={() => setReviewIndex(prev => (prev === 0 ? reviewsList.length - 2 : prev - 1))}
-                  aria-label="Previous review"
-                  type="button"
-                >
-                  &lsaquo;
-                </button>
-
-                <div className={styles.reviewCardsRow}>
-                  {reviewsList.slice(reviewIndex, reviewIndex + 2).map((rev) => (
-                    <div key={rev.id} className={styles.reviewCardItem}>
-                      <div className={styles.reviewerTop}>
-                        <div className={styles.reviewerAvatarWrapper}>
-                          <Image
-                            src={rev.avatar}
-                            alt={rev.name}
-                            fill
-                            sizes="40px"
-                            className={styles.reviewerAvatar}
-                            unoptimized={isLocalDbImage(rev.avatar)}
-                          />
+                if (factsList.length === 0) {
+                  return (
+                    <div className={styles.infoBoxesGrid}>
+                      <div className={styles.infoBox}>
+                        <div className={styles.infoBoxHeader}>
+                          {getFactIcon('Destination')}
+                          <span className={styles.infoBoxLabel}>Destination</span>
                         </div>
-                        <div className={styles.reviewerInfo}>
-                          <div className={styles.reviewerName}>{rev.name} <span className={styles.reviewerTag}>({rev.tag})</span></div>
-                          <div className={styles.reviewStars}>
-                            {Array.from({ length: rev.rating }).map((_, i) => (
-                              <span key={i} className={styles.starYellow}>★</span>
-                            ))}
-                          </div>
-                        </div>
+                        <div className={styles.infoBoxVal}>{packageData.destination || 'UAE'}</div>
                       </div>
-                      <p className={styles.reviewComment}>"{rev.comment}"</p>
-                      <div className={styles.reviewDate}>{rev.date}</div>
+                      <div className={styles.infoBox}>
+                        <div className={styles.infoBoxHeader}>
+                          {getFactIcon('Confirmation')}
+                          <span className={styles.infoBoxLabel}>Confirmation</span>
+                        </div>
+                        <div className={styles.infoBoxVal}>Instant WhatsApp Ticket</div>
+                      </div>
+                      {hasChildConfig && (
+                        <div className={styles.infoBox}>
+                          <div className={styles.infoBoxHeader}>
+                            {getFactIcon('Suitability')}
+                            <span className={styles.infoBoxLabel}>Child Age Limit</span>
+                          </div>
+                          <div className={styles.infoBoxVal}>{packageData.childAgeLimit || 'All ages welcome'}</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                }
 
-                <button
-                  className={styles.carouselArrowBtn}
-                  onClick={() => setReviewIndex(prev => (prev >= reviewsList.length - 2 ? 0 : prev + 1))}
-                  aria-label="Next review"
-                  type="button"
-                >
-                  &rsaquo;
-                </button>
-              </div>
+                return (
+                  <div className={styles.infoBoxesGrid}>
+                    {factsList.map((fact: string, idx: number) => {
+                      const separator: string | null = fact.includes(':') ? ':' : fact.includes('-') ? '-' : null;
+                      const parts = separator ? fact.split(separator) : null;
+                      const label = parts ? parts[0].trim() : 'Quick Fact';
+                      const val = parts ? parts.slice(1).join(separator || '').trim() : fact.trim();
+                      const icon = getFactIcon(label);
+
+                      return (
+                        <div key={idx} className={styles.infoBox}>
+                          <div className={styles.infoBoxHeader}>
+                            {icon}
+                            <span className={styles.infoBoxLabel}>{label}</span>
+                          </div>
+                          <div className={styles.infoBoxVal}>{val}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
+
+
         </div>
 
         {/* Right Column: Sticky Booking Widget Sidebar */}
@@ -843,7 +724,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             {/* Package Option Radio Card - DYNAMIC FROM ADMIN INCLUSIONS */}
             <div className={styles.packageOptionContainer}>
               <div className={styles.optionHeaderLabel}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <path d="M7 15h0M2 9.5a2.5 2.5 0 0 1 0 5M22 9.5a2.5 2.5 0 0 0 0 5" />
                 </svg>
@@ -917,7 +798,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             <div className={styles.trustBadgesList}>
               <div className={styles.trustItem}>
                 <div className={styles.trustIconCircle}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
@@ -929,7 +810,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
 
               <div className={styles.trustItem}>
                 <div className={styles.trustIconCircle}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
                     <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
                   </svg>
@@ -942,7 +823,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
 
               <div className={styles.trustItem}>
                 <div className={styles.trustIconCircle}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0093d0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                   </svg>
                 </div>

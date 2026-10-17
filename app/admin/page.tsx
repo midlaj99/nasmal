@@ -57,11 +57,8 @@ export default function AdminPage() {
   const [newPrefIcon, setNewPrefIcon] = useState('');
   const [isSavingPref, setIsSavingPref] = useState(false);
 
-  const [packageImageType, setPackageImageType] = useState<'url' | 'file'>('url');
   const [packageImageFile, setPackageImageFile] = useState<File | null>(null);
-  const [destImageType, setDestImageType] = useState<'url' | 'file'>('url');
   const [destImageFile, setDestImageFile] = useState<File | null>(null);
-  const [editDestImageType, setEditDestImageType] = useState<'url' | 'file'>('url');
   const [editDestImageFile, setEditDestImageFile] = useState<File | null>(null);
 
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
@@ -146,7 +143,6 @@ export default function AdminPage() {
   };
 
   // Edit package upload & gallery states
-  const [editPackageImageType, setEditPackageImageType] = useState<'url' | 'file'>('url');
   const [editPackageImageFile, setEditPackageImageFile] = useState<File | null>(null);
   const [isEditingGalleryUploading, setIsEditingGalleryUploading] = useState(false);
   const [editGalleryUploadError, setEditGalleryUploadError] = useState('');
@@ -241,7 +237,6 @@ export default function AdminPage() {
       isBestDeal: !!pkg.isBestDeal,
       originalPrice: String(pkg.originalPrice ?? '')
     });
-    setEditPackageImageType('url');
     setEditPackageImageFile(null);
     setEditGalleryUploadError('');
     setShowEditAddPreference(false);
@@ -584,8 +579,11 @@ export default function AdminPage() {
 
     try {
       let finalImageUrl = packageData.image;
-      if (packageImageType === 'file' && packageImageFile) {
+      if (packageImageFile) {
         finalImageUrl = await uploadImage(packageImageFile);
+      }
+      if (!finalImageUrl) {
+        throw new Error('Please select a main image file to upload.');
       }
 
       const payload = {
@@ -667,8 +665,11 @@ export default function AdminPage() {
 
     try {
       let finalImageUrl = destData.image;
-      if (destImageType === 'file' && destImageFile) {
+      if (destImageFile) {
         finalImageUrl = await uploadImage(destImageFile);
+      }
+      if (!finalImageUrl) {
+        throw new Error('Please select a destination image file to upload.');
       }
 
       const res = await fetch('/api/destinations', {
@@ -741,7 +742,7 @@ export default function AdminPage() {
     setError('');
     try {
       let finalImageUrl = editingPackage.image;
-      if (editPackageImageType === 'file' && editPackageImageFile) {
+      if (editPackageImageFile) {
         finalImageUrl = await uploadImage(editPackageImageFile);
       }
 
@@ -826,7 +827,7 @@ export default function AdminPage() {
     setError('');
     try {
       let finalImageUrl = editingDest.image;
-      if (editDestImageType === 'file' && editDestImageFile) {
+      if (editDestImageFile) {
         finalImageUrl = await uploadImage(editDestImageFile);
       }
 
@@ -1456,21 +1457,25 @@ export default function AdminPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Main Image *</label>
-                  <div className={styles.imageInputToggle}>
-                    <button type="button" className={packageImageType === 'url' ? styles.activeToggle : ''} onClick={() => setPackageImageType('url')}>URL</button>
-                    <button type="button" className={packageImageType === 'file' ? styles.activeToggle : ''} onClick={() => setPackageImageType('file')}>File Upload</button>
-                  </div>
-                  {packageImageType === 'url' ? (
-                    <input key="pkg-url" required type="text" id="image" name="image" value={packageData.image || ''} onChange={handlePackageChange} placeholder="https://..." />
-                  ) : (
-                    <input key="pkg-file" required type="file" accept="image/*" onChange={(e) => setPackageImageFile(e.target.files?.[0] || null)} />
+                  <label htmlFor="pkg-file">Main Image * (Upload File from PC)</label>
+                  <input 
+                    key="pkg-file" 
+                    required={!packageData.image}
+                    type="file" 
+                    id="pkg-file"
+                    accept="image/*" 
+                    onChange={(e) => setPackageImageFile(e.target.files?.[0] || null)} 
+                  />
+                  {packageImageFile && (
+                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#047857' }}>
+                      Selected: {packageImageFile.name}
+                    </div>
                   )}
                 </div>
 
                 <div className={styles.formGroupFull}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label htmlFor="images" style={{ margin: 0 }}>Gallery Images (One URL per line or Upload Multiple from PC)</label>
+                    <label style={{ margin: 0 }}>Gallery Images (Upload Multiple from PC)</label>
                     {isUploadingGallery && (
                       <span className={styles.galleryUploadLoading}>
                         ⏳ Uploading images...
@@ -1539,16 +1544,6 @@ export default function AdminPage() {
                       </div>
                     )}
                   </div>
-
-                  <textarea
-                    id="images"
-                    name="images"
-                    value={packageData.images}
-                    onChange={handlePackageChange}
-                    rows={3}
-                    placeholder="One image URL per line"
-                    style={{ marginTop: '10px' }}
-                  ></textarea>
                 </div>
 
                 <div className={styles.formGroupFull}>
@@ -1803,7 +1798,6 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => {
                               setEditingDest({ ...dest });
-                              setEditDestImageType('url');
                               setEditDestImageFile(null);
                             }}
                             className={styles.editActionBtn}
@@ -1848,15 +1842,19 @@ export default function AdminPage() {
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <label>Image *</label>
-                  <div className={styles.imageInputToggle} style={{ maxWidth: '300px' }}>
-                    <button type="button" className={destImageType === 'url' ? styles.activeToggle : ''} onClick={() => setDestImageType('url')}>URL</button>
-                    <button type="button" className={destImageType === 'file' ? styles.activeToggle : ''} onClick={() => setDestImageType('file')}>File Upload</button>
-                  </div>
-                  {destImageType === 'url' ? (
-                    <input key="dest-url" required type="text" id="destImage" name="image" value={destData.image || ''} onChange={handleDestChange} placeholder="https://..." />
-                  ) : (
-                    <input key="dest-file" required type="file" accept="image/*" onChange={(e) => setDestImageFile(e.target.files?.[0] || null)} />
+                  <label htmlFor="dest-file">Destination Image * (Upload File from PC)</label>
+                  <input 
+                    key="dest-file" 
+                    required 
+                    type="file" 
+                    id="dest-file"
+                    accept="image/*" 
+                    onChange={(e) => setDestImageFile(e.target.files?.[0] || null)} 
+                  />
+                  {destImageFile && (
+                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#047857' }}>
+                      Selected: {destImageFile.name}
+                    </div>
                   )}
                 </div>
 
@@ -2067,39 +2065,18 @@ export default function AdminPage() {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>Main Image *</label>
-                      <div className={styles.imageInputToggle}>
-                        <button 
-                          type="button" 
-                          className={editPackageImageType === 'url' ? styles.activeToggle : ''} 
-                          onClick={() => setEditPackageImageType('url')}
-                        >
-                          URL
-                        </button>
-                        <button 
-                          type="button" 
-                          className={editPackageImageType === 'file' ? styles.activeToggle : ''} 
-                          onClick={() => setEditPackageImageType('file')}
-                        >
-                          File Upload
-                        </button>
-                      </div>
-                      {editPackageImageType === 'url' ? (
-                        <input 
-                          key="edit-pkg-url" 
-                          required 
-                          type="text" 
-                          value={editingPackage.image || ''} 
-                          onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })} 
-                          placeholder="https://..." 
-                        />
-                      ) : (
-                        <input 
-                          key="edit-pkg-file" 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => setEditPackageImageFile(e.target.files?.[0] || null)} 
-                        />
+                      <label htmlFor="edit-pkg-file">Main Image (Upload New File from PC)</label>
+                      <input 
+                        key="edit-pkg-file" 
+                        id="edit-pkg-file"
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => setEditPackageImageFile(e.target.files?.[0] || null)} 
+                      />
+                      {editPackageImageFile && (
+                        <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#047857' }}>
+                          Selected: {editPackageImageFile.name}
+                        </div>
                       )}
                       {editingPackage.image && (
                         <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2108,7 +2085,7 @@ export default function AdminPage() {
                             alt="Current main" 
                             style={{ width: '48px', height: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
                           />
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image preview</span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image</span>
                         </div>
                       )}
                     </div>
@@ -2116,7 +2093,7 @@ export default function AdminPage() {
                     {/* Gallery Images Section */}
                     <div className={styles.formGroupFull}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <label htmlFor="editImages" style={{ margin: 0 }}>Gallery Images (One URL per line or Upload Multiple from PC)</label>
+                        <label style={{ margin: 0 }}>Gallery Images (Upload Multiple from PC)</label>
                         {isEditingGalleryUploading && (
                           <span className={styles.galleryUploadLoading}>
                             ⏳ Uploading images...
@@ -2185,15 +2162,6 @@ export default function AdminPage() {
                           </div>
                         )}
                       </div>
-
-                      <textarea
-                        id="editImages"
-                        value={editingPackage.images || ''}
-                        onChange={(e) => setEditingPackage({ ...editingPackage, images: e.target.value })}
-                        rows={3}
-                        placeholder="One image URL per line"
-                        style={{ marginTop: '10px' }}
-                      />
                     </div>
 
                     <div className={styles.formGroupFull}>
@@ -2509,39 +2477,18 @@ export default function AdminPage() {
                     />
                   </div>
                   <div className={styles.formGroupFull}>
-                    <label>Image *</label>
-                    <div className={styles.imageInputToggle} style={{ maxWidth: '300px' }}>
-                      <button 
-                        type="button" 
-                        className={editDestImageType === 'url' ? styles.activeToggle : ''} 
-                        onClick={() => setEditDestImageType('url')}
-                      >
-                        URL
-                      </button>
-                      <button 
-                        type="button" 
-                        className={editDestImageType === 'file' ? styles.activeToggle : ''} 
-                        onClick={() => setEditDestImageType('file')}
-                      >
-                        File Upload
-                      </button>
-                    </div>
-                    {editDestImageType === 'url' ? (
-                      <input 
-                        key="edit-dest-url" 
-                        required 
-                        type="text" 
-                        value={editingDest.image || ''} 
-                        onChange={(e) => setEditingDest({ ...editingDest, image: e.target.value })} 
-                        placeholder="https://..." 
-                      />
-                    ) : (
-                      <input 
-                        key="edit-dest-file" 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => setEditDestImageFile(e.target.files?.[0] || null)} 
-                      />
+                    <label htmlFor="edit-dest-file">Destination Image (Upload New File from PC)</label>
+                    <input 
+                      key="edit-dest-file" 
+                      id="edit-dest-file"
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => setEditDestImageFile(e.target.files?.[0] || null)} 
+                    />
+                    {editDestImageFile && (
+                      <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#047857' }}>
+                        Selected: {editDestImageFile.name}
+                      </div>
                     )}
                     {editingDest.image && (
                       <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2550,7 +2497,7 @@ export default function AdminPage() {
                           alt="Current destination" 
                           style={{ width: '56px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
                         />
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image preview</span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Current image</span>
                       </div>
                     )}
                   </div>

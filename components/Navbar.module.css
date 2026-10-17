@@ -76,9 +76,9 @@
 }
 
 .searchBar:focus-within {
-  border-color: #0093d0;
+  border-color: #047857;
   background-color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 147, 208, 0.16);
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.2);
   transform: translateY(-1px);
 }
 
@@ -96,7 +96,7 @@
 }
 
 .searchIconBtn:hover {
-  color: #0093d0;
+  color: #047857;
 }
 
 .searchBar input {
@@ -183,15 +183,15 @@
 }
 
 .suggestionItem:hover {
-  background-color: #f0f9ff;
+  background-color: #ecfdf5;
 }
 
 .destIconBubble {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #e0f2fe;
-  color: #0284c7;
+  background: #ecfdf5;
+  color: #047857;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -224,7 +224,7 @@
 }
 
 .suggestionItem:hover .suggestionTitle {
-  color: #0093d0;
+  color: #047857;
 }
 
 .suggestionSub {
@@ -243,7 +243,7 @@
 }
 
 .suggestionItem:hover .suggestionArrow {
-  color: #0093d0;
+  color: #047857;
   transform: translateX(3px);
 }
 
@@ -259,7 +259,7 @@
 }
 
 .suggestionFooter:hover {
-  background-color: #f0f9ff;
+  background-color: #ecfdf5;
 }
 
 .footerSearchText {
@@ -268,7 +268,7 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: #0093d0;
+  color: #047857;
 }
 
 .footerSearchText strong {
@@ -322,10 +322,10 @@
 
 .mobileSearchIconBtn:hover,
 .mobileSearchIconActive {
-  background: #0093d0;
+  background: #047857;
   color: #ffffff;
-  border-color: #0093d0;
-  box-shadow: 0 3px 10px rgba(0, 147, 208, 0.25);
+  border-color: #047857;
+  box-shadow: 0 3px 10px rgba(4, 120, 87, 0.25);
 }
 
 .mobileMenuBtn {
@@ -361,7 +361,7 @@
 
 .link:hover,
 .activeLink {
-  color: var(--primary-color, #0093d0) !important;
+  color: var(--primary-color, #047857) !important;
 }
 
 /* Destinations Dropdown Container */
@@ -389,7 +389,7 @@
 
 .dropdownTrigger:hover,
 .dropdownContainer:hover .dropdownTrigger {
-  color: var(--primary-color, #0093d0);
+  color: var(--primary-color, #047857);
 }
 
 .chevron {
@@ -400,7 +400,7 @@
 .dropdownContainer:hover .chevron,
 .chevronOpen {
   transform: rotate(180deg);
-  color: var(--primary-color, #0093d0);
+  color: var(--primary-color, #047857);
 }
 
 /* Desktop Dropdown Menu */
@@ -446,8 +446,8 @@
 }
 
 .destItem:hover {
-  background-color: #f0f9ff;
-  color: var(--primary-color, #0093d0);
+  background-color: #ecfdf5;
+  color: var(--primary-color, #047857);
   padding-left: 18px;
 }
 
@@ -456,7 +456,7 @@
   font-size: 14px;
   transform: translateX(-4px);
   transition: all 0.15s ease;
-  color: var(--primary-color, #0093d0);
+  color: var(--primary-color, #047857);
 }
 
 .destItem:hover .destArrow {
@@ -506,19 +506,19 @@
   font-weight: 700;
   font-size: 14px;
   color: #ffffff;
-  background: linear-gradient(135deg, #0284c7 0%, #0093d0 100%);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
   padding: 9px 18px;
   border-radius: 9999px;
-  box-shadow: 0 4px 12px rgba(0, 147, 208, 0.25);
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
   transition: all 0.2s ease;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .bookedNavBtn:hover {
-  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 147, 208, 0.35);
+  box-shadow: 0 6px 16px rgba(4, 120, 87, 0.35);
 }
 
 .navBtnIcon {
@@ -631,15 +631,15 @@
     display: flex;
     align-items: center;
     background-color: #f8fafc;
-    border: 1.5px solid #0093d0;
+    border: 1.5px solid #047857;
     border-radius: 9999px;
     padding: 5px 6px 5px 14px;
     gap: 8px;
-    box-shadow: 0 2px 10px rgba(0, 147, 208, 0.1);
+    box-shadow: 0 2px 10px rgba(4, 120, 87, 0.15);
   }
 
   .mobileInputSearchIcon {
-    color: #0093d0;
+    color: #047857;
     flex-shrink: 0;
   }
 
@@ -655,7 +655,7 @@
   }
 
   .mobileSearchSubmitBtn {
-    background: linear-gradient(135deg, #0284c7 0%, #0093d0 100%);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
     color: #ffffff;
     border: none;
     border-radius: 9999px;

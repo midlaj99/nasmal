@@ -233,7 +233,7 @@ export default function Navbar() {
         {/* Left Section: Brand Logo */}
         <div className={styles.leftSection}>
           <Link href="/" className={styles.logo} onClick={closeAllMenus}>
-            <Image src="/logo-brand.png" alt="Nasmal Tourisms" width={220} height={75} className={styles.logoImg} priority />
+            <Image src="/logo.png" alt="Nasmal Tourisms" width={220} height={75} className={styles.logoImg} priority />
           </Link>
         </div>
 

@@ -702,7 +702,7 @@
 }
 
 .prefItem:focus-visible {
-  outline: 2px solid #007bff;
+  outline: 2px solid #047857;
   border-radius: 8px;
 }
 
@@ -729,9 +729,9 @@
 
 /* Active / Selected state matching screenshot */
 .prefItemSelected .prefIconWrapper {
-  border: 2.5px solid #007bff;
-  background: #f0f7ff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
+  border: 2.5px solid #047857;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.15);
   transform: translateY(-2px);
 }
 
@@ -750,14 +750,14 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #007bff;
+  background: #047857;
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 2px 5px rgba(4, 120, 87, 0.3);
 }
 
 .prefLabel {
@@ -774,7 +774,7 @@
   font-weight: 700;
 }
 
-/* Horizontal blue indicator underline matching screenshot */
+/* Horizontal dark green indicator underline matching screenshot */
 .prefIndicatorLine {
   position: absolute;
   bottom: 0;
@@ -787,7 +787,7 @@
 }
 
 .prefItemSelected .prefIndicatorLine {
-  background: #007bff;
+  background: #047857;
 }
 
 /* "+ Other" Button styling */
@@ -807,12 +807,12 @@
 
 .prefItemAdd:hover .prefIconWrapperAdd,
 .prefItemAddActive .prefIconWrapperAdd {
-  border-color: #007bff;
-  color: #007bff;
-  background: #f0f7ff;
+  border-color: #047857;
+  color: #047857;
+  background: #ecfdf5;
   border-style: solid;
   transform: translateY(-2px);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.12);
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.15);
 }
 
 .prefIconAdd {
@@ -822,7 +822,7 @@
 }
 
 .prefItemAddActive .prefLabel {
-  color: #007bff;
+  color: #047857;
   font-weight: 600;
 }
 
@@ -933,8 +933,8 @@
 }
 
 .iconInput:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
   background: white;
 }
 
@@ -977,16 +977,16 @@
 }
 
 .quickEmojiBtn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
 }
 
 .quickEmojiBtnActive {
-  background: #eff6ff;
-  border: 2px solid #007bff !important;
-  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.25);
+  background: #ecfdf5;
+  border: 2px solid #047857 !important;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
   transform: translateY(-2px);
 }
 
@@ -1006,7 +1006,7 @@
 }
 
 .addPrefConfirmBtn {
-  background: #007bff;
+  background: #047857;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1018,7 +1018,7 @@
 }
 
 .addPrefConfirmBtn:hover:not(:disabled) {
-  background: #0056b3;
+  background: #065f46;
 }
 
 .addPrefConfirmBtn:disabled {
@@ -1123,9 +1123,9 @@
 }
 
 .searchBar:focus {
-  border-color: #007bff;
+  border-color: #047857;
   background: white;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
 }
 
 /* Modal styles */
@@ -1236,7 +1236,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #0284c7;
+  color: #047857;
   font-size: 0.9rem;
   font-weight: 600;
 }

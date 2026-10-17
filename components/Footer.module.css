@@ -8,8 +8,8 @@
 
 .footerTop {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 64px;
+  grid-template-columns: 1.6fr 1fr 1.3fr 1.2fr;
+  gap: 48px;
   padding-bottom: 60px;
 }
 
@@ -25,11 +25,9 @@
 
 .logo {
   object-fit: contain;
-  /* CSS magic: Invert the black and white logo, then screen it to drop the black background. Results in a perfect white transparent logo! */
-  filter: invert(1);
-  mix-blend-mode: screen;
-  transform: scale(1.4);
+  transform: scale(1.2);
   transform-origin: left center;
+  filter: brightness(1.75) contrast(1.1);
 }
 
 .description {
@@ -40,9 +38,9 @@
 
 .title {
   color: white;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 32px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 24px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -53,34 +51,39 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .link {
   color: #d1d5db;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+  font-size: 14.5px;
 }
 
 .link:hover {
-  color: var(--primary-color);
+  color: #34d399;
+  transform: translateX(3px);
 }
 
 .contactItem {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   line-height: 1.6;
 }
 
 .contactItem strong {
   display: block;
   color: white;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .contactItem p {
   color: #9ca3af;
   margin: 0;
+  font-size: 14px;
 }
 
 .footerBottom {
@@ -94,32 +97,63 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
 }
 
 .copyright {
   color: #9ca3af;
   margin: 0;
+  font-size: 14.5px;
 }
 
-.legalLinks {
+.socialIcons {
   display: flex;
-  gap: 32px;
+  align-items: center;
+  gap: 14px;
 }
 
-.legalLink {
-  color: #9ca3af;
+.socialIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #d1d5db;
+  border: 1px solid #374151;
   text-decoration: none;
-  transition: color 0.2s ease;
-  font-size: 14px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.legalLink:hover {
-  color: white;
+.socialIcon:hover {
+  transform: translateY(-3px) scale(1.08);
+}
+
+.whatsappIcon:hover {
+  background: #25D366;
+  color: #ffffff;
+  border-color: #25D366;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+}
+
+.instagramIcon:hover {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(220, 39, 67, 0.4);
+}
+
+.facebookIcon:hover {
+  background: #1877F2;
+  color: #ffffff;
+  border-color: #1877F2;
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.4);
 }
 
 @media (max-width: 1024px) {
   .footerTop {
+    grid-template-columns: repeat(2, 1fr);
     gap: 40px;
   }
 }
@@ -127,15 +161,16 @@
 @media (max-width: 768px) {
   .footerTop {
     grid-template-columns: 1fr;
-    gap: 48px;
+    gap: 36px;
   }
   
   .bottomContainer {
     flex-direction: column;
     text-align: center;
+    gap: 16px;
   }
   
-  .legalLinks {
+  .socialIcons {
     justify-content: center;
   }
 }
