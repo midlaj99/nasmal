@@ -6,7 +6,19 @@ import { useRouter } from 'next/navigation';
 import { useBooking } from '@/context/BookingContext';
 import WishlistButton from '@/components/WishlistButton';
 import Breadcrumb from '@/components/Breadcrumb';
+import { isEmbedVideo, getEmbedUrl } from '@/lib/videoHelper';
 import styles from './PackageDetailClient.module.css';
+
+export interface PackageOption {
+  id: string;
+  title: string;
+  badge?: string;
+  inclusions?: string[];
+  moreDetails?: string;
+  price?: string;
+  childPrice?: string;
+  isAvailable?: boolean;
+}
 
 interface PackageDetailClientProps {
   packageData: {
@@ -25,6 +37,10 @@ interface PackageDetailClientProps {
     inclusions?: string[];
     childPrice?: string;
     childAgeLimit?: string;
+    hasOptions?: boolean;
+    optionsSectionTitle?: string;
+    options?: PackageOption[];
+    video?: string;
   };
 }
 
@@ -158,7 +174,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const router = useRouter();
   const { setBookingData } = useBooking();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'highlights' | 'inclusions' | 'important'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'options' | 'highlights' | 'inclusions' | 'important'>('overview');
   const [selectedDate, setSelectedDate] = useState<string>('');
   
   // Guest counts
@@ -167,23 +183,88 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
 
   const [activePhotoModal, setActivePhotoModal] = useState<boolean>(false);
 
-  // Universal Gallery Carousel State (Runs on ANY device)
+  // Available options from admin
+  const availableOptions: PackageOption[] = (packageData.hasOptions && packageData.options && packageData.options.length > 0)
+    ? packageData.options
+    : [];
+
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() => {
+    if (availableOptions.length > 0) {
+      const firstAvail = availableOptions.find(o => o.isAvailable !== false);
+      return firstAvail ? firstAvail.id : availableOptions[0].id;
+    }
+    return null;
+  });
+
+  const [expandedOptionIds, setExpandedOptionIds] = useState<Record<string, boolean>>({});
+
+  const toggleOptionDetails = (id: string) => {
+    setExpandedOptionIds(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const selectedOption = availableOptions.find(o => o.id === selectedOptionId) || null;
+
+  // Universal Gallery Carousel State (Runs on ANY device with images + tour video)
   const [galleryIndex, setGalleryIndex] = useState<number>(0);
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const displayImages = (packageData.images && packageData.images.length > 0)
+  const rawImages = (packageData.images && packageData.images.length > 0)
     ? packageData.images
     : [packageData.image];
+  const displayImages = rawImages;
 
-  // Auto-move images every 6s across any device
+  // Combine cover image, tour video (if added), and gallery images into one carousel
+  const mediaItems: Array<{ type: 'image' | 'video'; url: string; poster?: string }> = [];
+  if (rawImages.length > 0) {
+    mediaItems.push({ type: 'image', url: rawImages[0] });
+  }
+  if (packageData.video) {
+    mediaItems.push({
+      type: 'video',
+      url: packageData.video,
+      poster: rawImages[0] || packageData.image
+    });
+  }
+  for (let i = 1; i < rawImages.length; i++) {
+    mediaItems.push({ type: 'image', url: rawImages[i] });
+  }
+  if (mediaItems.length === 0) {
+    mediaItems.push({ type: 'image', url: packageData.image });
+  }
+
+  // Play/pause video when navigating carousel slides
   useEffect(() => {
-    if (displayImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setGalleryIndex((prev) => (prev + 1) % displayImages.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [displayImages.length]);
+    const currentItem = mediaItems[galleryIndex];
+    if (currentItem?.type === 'video') {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      }
+    } else {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    }
+  }, [galleryIndex, mediaItems]);
+
+  // Auto-move carousel: gives 25s for video slide, 6s for image slides
+  useEffect(() => {
+    if (mediaItems.length <= 1) return;
+
+    const currentItem = mediaItems[galleryIndex];
+    const duration = currentItem?.type === 'video' ? 25000 : 6000;
+
+    const timer = setTimeout(() => {
+      setGalleryIndex((prev) => (prev + 1) % mediaItems.length);
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [galleryIndex, mediaItems.length]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
@@ -199,37 +280,48 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     const swipeThreshold = 40;
 
     if (diff > swipeThreshold) {
-      setGalleryIndex((prev) => (prev + 1) % displayImages.length);
+      setGalleryIndex((prev) => (prev + 1) % mediaItems.length);
     } else if (diff < -swipeThreshold) {
-      setGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+      setGalleryIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
     }
 
     touchStartXRef.current = null;
     touchEndXRef.current = null;
   };
 
-  const prevImage = () => {
-    setGalleryIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+  const prevMedia = () => {
+    setGalleryIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
   };
 
-  const nextImage = () => {
-    setGalleryIndex((prev) => (prev + 1) % displayImages.length);
+  const nextMedia = () => {
+    setGalleryIndex((prev) => (prev + 1) % mediaItems.length);
   };
 
-  const mainImage = displayImages[0] || packageData.image;
-  const sideImage1 = displayImages[1] || displayImages[0] || packageData.image;
-  const sideImage2 = displayImages[2] || displayImages[0] || packageData.image;
+  const mainImage = rawImages[0] || packageData.image;
+  const sideImage1 = rawImages[1] || rawImages[0] || packageData.image;
+  const sideImage2 = rawImages[2] || rawImages[0] || packageData.image;
 
-  const priceNum = parseFloat(packageData.price) || 150;
+  const baseAdultPrice = parseFloat(packageData.price) || 150;
   const reviewsCount = packageData.reviewsCount || 24;
   const ratingNum = packageData.rating || '5.0';
 
   // Check if admin added child age / price in admin portal
   const hasChildConfig = Boolean(
     (packageData.childAgeLimit && packageData.childAgeLimit.trim().length > 0) ||
-    (packageData.childPrice && String(packageData.childPrice).trim().length > 0 && parseFloat(packageData.childPrice) >= 0)
+    (packageData.childPrice && String(packageData.childPrice).trim().length > 0 && parseFloat(packageData.childPrice) >= 0) ||
+    (selectedOption && selectedOption.childPrice && parseFloat(selectedOption.childPrice) >= 0)
   );
-  const childPriceNum = packageData.childPrice ? (parseFloat(packageData.childPrice) || 0) : 0;
+
+  const baseChildPrice = packageData.childPrice ? (parseFloat(packageData.childPrice) || 0) : 0;
+
+  // Active prices based on selected option (or base package price)
+  const priceNum = (selectedOption && selectedOption.price && parseFloat(selectedOption.price) > 0)
+    ? parseFloat(selectedOption.price)
+    : baseAdultPrice;
+
+  const childPriceNum = (selectedOption && selectedOption.childPrice && parseFloat(selectedOption.childPrice) >= 0)
+    ? parseFloat(selectedOption.childPrice)
+    : baseChildPrice;
 
   // Dynamic Total Price Calculation
   const totalPrice = (adults * priceNum) + (children * childPriceNum);
@@ -258,9 +350,13 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
       ];
 
   const handleBookNow = () => {
+    const bookingTitle = selectedOption
+      ? `${packageData.title} (${selectedOption.title})`
+      : packageData.title;
+
     setBookingData({
       packageId: packageData.id,
-      packageTitle: packageData.title,
+      packageTitle: bookingTitle,
       packageImage: mainImage,
       pricePerAdult: priceNum,
       pricePerChild: childPriceNum,
@@ -272,7 +368,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     router.push('/checkout');
   };
 
-  const handleTabChange = (tab: 'overview' | 'highlights' | 'inclusions' | 'important') => {
+  const handleTabChange = (tab: 'overview' | 'options' | 'highlights' | 'inclusions' | 'important') => {
     setActiveTab(tab);
   };
 
@@ -305,7 +401,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
         </div>
       </div>
 
-      {/* Universal Image Carousel for ANY Device */}
+      {/* Universal Media Carousel (Images + Tour Video in same position) */}
       <div className={styles.carouselContainer}>
         <div 
           className={styles.carouselWrapper}
@@ -313,47 +409,136 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Navigation Arrows for desktop/tablet */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                type="button"
+                className={`${styles.carouselArrowBtn} ${styles.carouselArrowPrev}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevMedia();
+                }}
+                aria-label="Previous photo or video"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className={`${styles.carouselArrowBtn} ${styles.carouselArrowNext}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextMedia();
+                }}
+                aria-label="Next photo or video"
+              >
+                ›
+              </button>
+            </>
+          )}
+
           <div 
             className={styles.carouselTrack}
             style={{ transform: `translateX(-${galleryIndex * 100}%)` }}
           >
-            {displayImages.map((img, idx) => (
+            {mediaItems.map((item, idx) => (
               <div key={idx} className={styles.carouselSlide}>
-                <Image
-                  src={img}
-                  alt={`${packageData.title} photo ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-                  className={styles.slideImg}
-                  priority={idx === 0}
-                  unoptimized={isLocalDbImage(img)}
-                />
+                {item.type === 'image' ? (
+                  <Image
+                    src={item.url}
+                    alt={`${packageData.title} photo ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                    className={styles.slideImg}
+                    priority={idx === 0}
+                    unoptimized={isLocalDbImage(item.url)}
+                  />
+                ) : isEmbedVideo(item.url) ? (
+                  <div className={styles.carouselVideoContainer}>
+                    <div className={styles.carouselVideoBadge}>
+                      <span className={styles.videoPlayDot} />
+                      <span>Tour Video</span>
+                    </div>
+                    <iframe
+                      src={galleryIndex === idx ? getEmbedUrl(item.url) : ''}
+                      title={`${packageData.title} video preview`}
+                      className={styles.carouselIframe}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.carouselVideoContainer}>
+                    <div className={styles.carouselVideoBadge}>
+                      <span className={styles.videoPlayDot} />
+                      <span>Tour Video</span>
+                    </div>
+                    <video
+                      ref={videoRef}
+                      src={item.url}
+                      poster={item.poster}
+                      autoPlay={galleryIndex === idx}
+                      muted
+                      loop
+                      playsInline
+                      controls
+                      className={styles.carouselNativeVideo}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
 
         {/* Thumbnail Strip (Interactive for any device) */}
-        {displayImages.length > 1 && (
+        {mediaItems.length > 1 && (
           <div className={styles.thumbnailStrip}>
-            {displayImages.map((img, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`${styles.thumbBtn} ${idx === galleryIndex ? styles.thumbBtnActive : ''}`}
-                onClick={() => setGalleryIndex(idx)}
-                aria-label={`Show photo ${idx + 1}`}
-              >
-                <Image
-                  src={img}
-                  alt={`Thumbnail ${idx + 1}`}
-                  fill
-                  sizes="120px"
-                  className={styles.thumbImg}
-                  unoptimized={isLocalDbImage(img)}
-                />
-              </button>
-            ))}
+            {mediaItems.map((item, idx) => {
+              const isActive = idx === galleryIndex;
+              if (item.type === 'video') {
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`${styles.thumbBtn} ${styles.thumbBtnVideo} ${isActive ? styles.thumbBtnActive : ''}`}
+                    onClick={() => setGalleryIndex(idx)}
+                    aria-label="Play Tour Video"
+                  >
+                    <Image
+                      src={item.poster || packageData.image}
+                      alt="Tour video thumbnail"
+                      fill
+                      sizes="120px"
+                      className={styles.thumbImg}
+                      unoptimized={isLocalDbImage(item.poster || packageData.image)}
+                    />
+                    <div className={styles.thumbVideoOverlay}>
+                      <div className={styles.thumbPlayIcon}>▶</div>
+                      <span className={styles.thumbVideoText}>VIDEO</span>
+                    </div>
+                  </button>
+                );
+              }
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`${styles.thumbBtn} ${isActive ? styles.thumbBtnActive : ''}`}
+                  onClick={() => setGalleryIndex(idx)}
+                  aria-label={`Show photo ${idx + 1}`}
+                >
+                  <Image
+                    src={item.url}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    sizes="120px"
+                    className={styles.thumbImg}
+                    unoptimized={isLocalDbImage(item.url)}
+                  />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -371,6 +556,15 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             >
               Overview
             </button>
+            {availableOptions.length > 0 && (
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'options' ? styles.tabBtnActive : ''}`}
+                onClick={() => handleTabChange('options')}
+                type="button"
+              >
+                {packageData.optionsSectionTitle || 'Available Options'}
+              </button>
+            )}
             <button
               className={`${styles.tabBtn} ${activeTab === 'highlights' ? styles.tabBtnActive : ''}`}
               onClick={() => handleTabChange('highlights')}
@@ -393,6 +587,144 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               Important Information
             </button>
           </div>
+
+          {/* Sub-Category / Available Options Section (Decided from Admin Page) */}
+          {/* Displayed directly ABOVE the overview section */}
+          {availableOptions.length > 0 && (activeTab === 'overview' || activeTab === 'options') && (
+            <div id="available-options" className={styles.optionsSection}>
+              <div className={styles.optionsSectionHeader}>
+                <div className={styles.optionsTitleArea}>
+                  <h2 className={styles.optionsSectionTitle}>
+                    {packageData.optionsSectionTitle || 'Available Options'}
+                  </h2>
+                  <span className={styles.optionsCountBadge}>
+                    {availableOptions.length} {availableOptions.length === 1 ? 'Option' : 'Options'}
+                  </span>
+                </div>
+                <p className={styles.optionsSectionSub}>
+                  Select your preferred package option below to view inclusions, details, and current rates.
+                </p>
+              </div>
+
+              <div className={styles.optionsCardsList}>
+                {availableOptions.map((opt) => {
+                  const isSelected = selectedOptionId === opt.id;
+                  const isExpanded = !!expandedOptionIds[opt.id];
+                  const isAvailable = opt.isAvailable !== false;
+                  const optAdultPrice = (opt.price && parseFloat(opt.price) > 0) ? parseFloat(opt.price) : baseAdultPrice;
+                  const optChildPrice = (opt.childPrice && parseFloat(opt.childPrice) >= 0) ? parseFloat(opt.childPrice) : baseChildPrice;
+
+                  return (
+                    <div
+                      key={opt.id}
+                      className={`${styles.optCard} ${isSelected ? styles.optCardSelected : ''} ${!isAvailable ? styles.optCardUnavailable : ''}`}
+                      onClick={() => {
+                        if (isAvailable) setSelectedOptionId(opt.id);
+                      }}
+                    >
+                      {/* Top-left Badge (e.g. 🔥 Best Value) */}
+                      {opt.badge && (
+                        <div className={styles.optBadge}>
+                          <span className={styles.optBadgeIcon}>🔥</span>
+                          <span>{opt.badge}</span>
+                        </div>
+                      )}
+
+                      {/* Gray Card Header with Title */}
+                      <div className={opt.badge ? styles.optCardHeader : styles.optCardHeaderNoBadge}>
+                        <h3 className={styles.optCardTitle}>{opt.title}</h3>
+                      </div>
+
+                      {/* White Card Body with Inclusions */}
+                      <div className={styles.optCardBody}>
+                        <div className={styles.optInclusionHeader}>Inclusion:</div>
+                        <ul className={styles.optInclusionsList}>
+                          {opt.inclusions && opt.inclusions.length > 0 ? (
+                            opt.inclusions.map((inc, i) => (
+                              <li key={i}>{inc}</li>
+                            ))
+                          ) : (
+                            <li>Admission ticket and standard tour access</li>
+                          )}
+                        </ul>
+
+                        {/* Collapsible Details */}
+                        {opt.moreDetails && (
+                          <div className={styles.optDetailsAccordion}>
+                            <button
+                              type="button"
+                              className={styles.optDetailsToggleBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleOptionDetails(opt.id);
+                              }}
+                              aria-expanded={isExpanded}
+                            >
+                              <span>{isExpanded ? 'Less details' : 'More details'}</span>
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className={`${styles.optChevron} ${isExpanded ? styles.optChevronOpen : ''}`}
+                              >
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </button>
+
+                            {isExpanded && (
+                              <div className={styles.optExpandedContent}>
+                                {opt.moreDetails.split('\n').map((para, pI) => (
+                                  <p key={pI}>{para}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Card Footer */}
+                      <div className={styles.optCardFooter}>
+                        {!isAvailable ? (
+                          <span className={styles.optNotAvailableText}>Not Available</span>
+                        ) : (
+                          <div className={styles.optFooterRow}>
+                            <div className={styles.optPriceCol}>
+                              <div className={styles.optPriceMain}>
+                                <span className={styles.optAed}>AED</span>{' '}
+                                <span className={styles.optPriceAmount}>{optAdultPrice}</span>{' '}
+                                <span className={styles.optPerUnit}>/ adult</span>
+                              </div>
+                              {optChildPrice > 0 && (
+                                <div className={styles.optChildPriceSub}>
+                                  AED {optChildPrice} / child
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              className={`${styles.optSelectBtn} ${isSelected ? styles.optSelectBtnActive : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOptionId(opt.id);
+                              }}
+                            >
+                              {isSelected ? '✓ Selected' : 'Select'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* 1. Overview Card - DYNAMIC FROM ADMIN */}
           {activeTab === 'overview' && (
@@ -721,7 +1053,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
               </div>
             )}
 
-            {/* Package Option Radio Card - DYNAMIC FROM ADMIN INCLUSIONS */}
+            {/* Package Option Radio Card - DYNAMIC FROM ADMIN / SELECTED OPTION */}
             <div className={styles.packageOptionContainer}>
               <div className={styles.optionHeaderLabel}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -736,12 +1068,16 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                     <div className={styles.customRadioInner} />
                   </div>
                   <div className={styles.optionDetail}>
-                    <div className={styles.optionName}>Standard {packageData.title}</div>
-                    {/* Dynamic Inclusions from Admin Page */}
+                    <div className={styles.optionName}>
+                      {selectedOption ? selectedOption.title : `Standard ${packageData.title}`}
+                    </div>
+                    {/* Dynamic Inclusions from Selected Option or Admin Page */}
                     <div className={styles.optionDescription}>
-                      {inclusions.length > 0
-                        ? inclusions.join(', ')
-                        : (packageData.description || 'Full tour experience included.')}
+                      {selectedOption && selectedOption.inclusions && selectedOption.inclusions.length > 0
+                        ? selectedOption.inclusions.join(', ')
+                        : (inclusions.length > 0
+                            ? inclusions.join(', ')
+                            : (packageData.description || 'Full tour experience included.'))}
                     </div>
                     <div className={styles.optionItemPrice}>
                       AED {priceNum} <span className={styles.optionPerUnit}>/ adult</span>

@@ -99,6 +99,23 @@ export function validatePackagePayload(body: any): ValidationResult<any> {
   const childPrice = body.childPrice ? sanitizeString(String(body.childPrice)) : undefined;
   const childAgeLimit = body.childAgeLimit ? sanitizeString(String(body.childAgeLimit)) : undefined;
 
+  const hasOptions = Boolean(body.hasOptions);
+  const optionsSectionTitle = body.optionsSectionTitle ? sanitizeString(String(body.optionsSectionTitle)) : 'Available Options';
+  const options = Array.isArray(body.options)
+    ? body.options.map((opt: any) => ({
+        id: sanitizeString(String(opt.id || Date.now() + Math.random().toString(36).substring(2, 7))),
+        title: sanitizeString(String(opt.title || '')),
+        badge: opt.badge ? sanitizeString(String(opt.badge)) : '',
+        inclusions: sanitizeArrayOfStrings(opt.inclusions),
+        moreDetails: opt.moreDetails ? sanitizeString(String(opt.moreDetails)) : '',
+        price: opt.price ? sanitizeString(String(opt.price)) : '',
+        childPrice: opt.childPrice ? sanitizeString(String(opt.childPrice)) : '',
+        isAvailable: opt.isAvailable !== false,
+      })).filter((opt: any) => opt.title.length > 0)
+    : [];
+
+  const video = body.video ? sanitizeString(String(body.video)) : undefined;
+
   if (errors.length > 0) {
     return { isValid: false, errors };
   }
@@ -125,6 +142,10 @@ export function validatePackagePayload(body: any): ValidationResult<any> {
       originalPrice,
       childPrice,
       childAgeLimit,
+      hasOptions,
+      optionsSectionTitle,
+      options,
+      video,
     }
   };
 }

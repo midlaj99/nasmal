@@ -1535,6 +1535,341 @@
   color: #b91c1c;
 }
 
+/* Sub-categories / Available Options Admin Management */
+.optionsAdminSection {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 22px;
+  margin-top: 10px;
+  margin-bottom: 24px;
+}
+
+.optionsAdminHeader {
+  margin-bottom: 16px;
+}
+
+.optionsAdminTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.optionsAdminHelp {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.optionsToggleBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  margin-bottom: 18px;
+}
+
+.optionsToggleBox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #047857;
+  cursor: pointer;
+}
+
+.optionsToggleLabel {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.optionsListPreview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.optionPreviewCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.optionPreviewHeader {
+  background: #edf2f7;
+  padding: 14px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.optionPreviewBadge {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.optionPreviewTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.optionPreviewBody {
+  padding: 14px;
+  font-size: 0.84rem;
+  color: #334155;
+  flex: 1;
+}
+
+.optionPreviewInclusions {
+  margin: 6px 0 0 18px;
+  padding: 0;
+  line-height: 1.45;
+}
+
+.optionPreviewFooter {
+  padding: 10px 14px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.optionAvailTag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.optionAvailYes {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.optionAvailNo {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
+
+.optionPreviewActions {
+  display: flex;
+  gap: 6px;
+}
+
+.optionMiniBtn {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+
+.optionMiniBtn:hover {
+  background: #e2e8f0;
+}
+
+.optionMiniBtnDanger {
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+
+.optionMiniBtnDanger:hover {
+  background: #fff1f2;
+}
+
+.optionBuilderBox {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.optionBuilderHeader {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badgePillsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.badgePillBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+}
+
+.badgePillBtn:hover {
+  background: #e2e8f0;
+}
+
+.badgePillBtnActive {
+  background: #fff1f2;
+  border-color: #f43f5e;
+  color: #e11d48;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Admin Video Section Styles
+   ========================================================================== */
+.videoAdminCard {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+
+.videoAdminCard:hover {
+  border-color: #94a3b8;
+}
+
+.videoAdminHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.videoUploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #047857;
+  color: #ffffff;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.videoUploadBtn:hover {
+  background-color: #065f46;
+  transform: translateY(-1px);
+}
+
+.videoUrlInputField {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  box-sizing: border-box;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.videoUrlInputField:focus {
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+}
+
+.videoAdminPreviewWrapper {
+  margin-top: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.videoAdminPreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.videoAdminRemoveBtn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.videoAdminRemoveBtn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.videoAdminPreviewContainer {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000000;
+}
+
+.videoAdminIframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  display: block;
+}
+
+.videoAdminNative {
+  width: 100%;
+  max-height: 280px;
+  display: block;
+  object-fit: contain;
+}
+
+
 
 
 

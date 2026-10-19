@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { isEmbedVideo, getEmbedUrl } from '@/lib/videoHelper';
 import styles from './page.module.css';
 
 interface PreferenceOption {
@@ -142,10 +143,54 @@ export default function AdminPage() {
     });
   };
 
+  // Video upload states & handlers for Add Package
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState('');
+
+  const handlePackageVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVideo(true);
+    setVideoUploadError('');
+
+    try {
+      const url = await uploadImage(file);
+      setPackageData(prev => ({ ...prev, video: url }));
+    } catch (err: any) {
+      console.error('Video upload error:', err);
+      setVideoUploadError(err.message || 'Error uploading video');
+    } finally {
+      setIsUploadingVideo(false);
+      e.target.value = '';
+    }
+  };
+
   // Edit package upload & gallery states
   const [editPackageImageFile, setEditPackageImageFile] = useState<File | null>(null);
   const [isEditingGalleryUploading, setIsEditingGalleryUploading] = useState(false);
   const [editGalleryUploadError, setEditGalleryUploadError] = useState('');
+  const [isEditingVideoUploading, setIsEditingVideoUploading] = useState(false);
+  const [editVideoUploadError, setEditVideoUploadError] = useState('');
+
+  const handleEditPackageVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingPackage) return;
+
+    setIsEditingVideoUploading(true);
+    setEditVideoUploadError('');
+
+    try {
+      const url = await uploadImage(file);
+      setEditingPackage((prev: any) => ({ ...prev, video: url }));
+    } catch (err: any) {
+      console.error('Edit video upload error:', err);
+      setEditVideoUploadError(err.message || 'Error uploading video');
+    } finally {
+      setIsEditingVideoUploading(false);
+      e.target.value = '';
+    }
+  };
   const [showEditAddPreference, setShowEditAddPreference] = useState(false);
   const [newEditPrefTitle, setNewEditPrefTitle] = useState('');
   const [newEditPrefIcon, setNewEditPrefIcon] = useState('');
@@ -235,11 +280,25 @@ export default function AdminPage() {
       suitableFor: Array.isArray(pkg.suitableFor) ? [...pkg.suitableFor] : [],
       isPopular: !!pkg.isPopular,
       isBestDeal: !!pkg.isBestDeal,
-      originalPrice: String(pkg.originalPrice ?? '')
+      originalPrice: String(pkg.originalPrice ?? ''),
+      hasOptions: Boolean(pkg.hasOptions),
+      optionsSectionTitle: pkg.optionsSectionTitle || 'Available Options',
+      options: Array.isArray(pkg.options) ? pkg.options : [],
+      video: pkg.video || '',
     });
     setEditPackageImageFile(null);
     setEditGalleryUploadError('');
     setShowEditAddPreference(false);
+    setEditModalEditingOptionIndex(null);
+    setEditModalOptionForm({
+      title: '',
+      badge: 'Best Value',
+      price: '',
+      childPrice: '',
+      inclusions: '',
+      moreDetails: '',
+      isAvailable: true,
+    });
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -497,8 +556,175 @@ export default function AdminPage() {
     quickFacts: '',
     inclusions: '',
     tags: '',
-    isPopular: false
+    isPopular: false,
+    hasOptions: false,
+    optionsSectionTitle: 'Available Options',
+    options: [] as Array<{
+      id: string;
+      title: string;
+      badge: string;
+      inclusions: string[] | string;
+      moreDetails: string;
+      price: string;
+      childPrice: string;
+      isAvailable: boolean;
+    }>,
+    video: '',
   });
+
+  // Option Form State for Package Creation
+  const [newOptionForm, setNewOptionForm] = useState({
+    title: '',
+    badge: 'Best Value',
+    price: '',
+    childPrice: '',
+    inclusions: '',
+    moreDetails: '',
+    isAvailable: true,
+  });
+  const [editingOptionIndex, setEditingOptionIndex] = useState<number | null>(null);
+
+  // Option Form State for Package Editing Modal
+  const [editModalOptionForm, setEditModalOptionForm] = useState({
+    title: '',
+    badge: 'Best Value',
+    price: '',
+    childPrice: '',
+    inclusions: '',
+    moreDetails: '',
+    isAvailable: true,
+  });
+  const [editModalEditingOptionIndex, setEditModalEditingOptionIndex] = useState<number | null>(null);
+
+  const handleSaveOptionToPackage = () => {
+    if (!newOptionForm.title.trim()) {
+      alert('Please enter a title for the option card.');
+      return;
+    }
+    const optObj = {
+      id: Date.now() + Math.random().toString(36).substring(2, 6),
+      title: newOptionForm.title.trim(),
+      badge: newOptionForm.badge.trim(),
+      price: newOptionForm.price.trim(),
+      childPrice: newOptionForm.childPrice.trim(),
+      inclusions: newOptionForm.inclusions.split('\n').map(s => s.trim()).filter(Boolean),
+      moreDetails: newOptionForm.moreDetails.trim(),
+      isAvailable: newOptionForm.isAvailable,
+    };
+
+    if (editingOptionIndex !== null && editingOptionIndex >= 0) {
+      setPackageData(prev => ({
+        ...prev,
+        options: prev.options.map((item, idx) => idx === editingOptionIndex ? { ...item, ...optObj, id: item.id || optObj.id } : item)
+      }));
+      setEditingOptionIndex(null);
+    } else {
+      setPackageData(prev => ({
+        ...prev,
+        options: [...(prev.options || []), optObj]
+      }));
+    }
+
+    setNewOptionForm({
+      title: '',
+      badge: 'Best Value',
+      price: '',
+      childPrice: '',
+      inclusions: '',
+      moreDetails: '',
+      isAvailable: true,
+    });
+  };
+
+  const handleRemoveOptionFromPackage = (idxToRemove: number) => {
+    setPackageData(prev => ({
+      ...prev,
+      options: prev.options.filter((_, idx) => idx !== idxToRemove)
+    }));
+    if (editingOptionIndex === idxToRemove) {
+      setEditingOptionIndex(null);
+    }
+  };
+
+  const handleEditOptionInPackage = (idxToEdit: number) => {
+    const opt = packageData.options[idxToEdit];
+    if (!opt) return;
+    setNewOptionForm({
+      title: opt.title || '',
+      badge: opt.badge || '',
+      price: opt.price || '',
+      childPrice: opt.childPrice || '',
+      inclusions: Array.isArray(opt.inclusions) ? opt.inclusions.join('\n') : (opt.inclusions || ''),
+      moreDetails: opt.moreDetails || '',
+      isAvailable: opt.isAvailable !== false,
+    });
+    setEditingOptionIndex(idxToEdit);
+  };
+
+  const handleSaveOptionToEditModal = () => {
+    if (!editModalOptionForm.title.trim()) {
+      alert('Please enter a title for the option card.');
+      return;
+    }
+    const optObj = {
+      id: Date.now() + Math.random().toString(36).substring(2, 6),
+      title: editModalOptionForm.title.trim(),
+      badge: editModalOptionForm.badge.trim(),
+      price: editModalOptionForm.price.trim(),
+      childPrice: editModalOptionForm.childPrice.trim(),
+      inclusions: editModalOptionForm.inclusions.split('\n').map(s => s.trim()).filter(Boolean),
+      moreDetails: editModalOptionForm.moreDetails.trim(),
+      isAvailable: editModalOptionForm.isAvailable,
+    };
+
+    if (editModalEditingOptionIndex !== null && editModalEditingOptionIndex >= 0) {
+      setEditingPackage((prev: any) => ({
+        ...prev,
+        options: (prev.options || []).map((item: any, idx: number) => idx === editModalEditingOptionIndex ? { ...item, ...optObj, id: item.id || optObj.id } : item)
+      }));
+      setEditModalEditingOptionIndex(null);
+    } else {
+      setEditingPackage((prev: any) => ({
+        ...prev,
+        options: [...(prev.options || []), optObj]
+      }));
+    }
+
+    setEditModalOptionForm({
+      title: '',
+      badge: 'Best Value',
+      price: '',
+      childPrice: '',
+      inclusions: '',
+      moreDetails: '',
+      isAvailable: true,
+    });
+  };
+
+  const handleRemoveOptionFromEditModal = (idxToRemove: number) => {
+    setEditingPackage((prev: any) => ({
+      ...prev,
+      options: (prev.options || []).filter((_: any, idx: number) => idx !== idxToRemove)
+    }));
+    if (editModalEditingOptionIndex === idxToRemove) {
+      setEditModalEditingOptionIndex(null);
+    }
+  };
+
+  const handleEditOptionInEditModal = (idxToEdit: number) => {
+    const opt = editingPackage.options[idxToEdit];
+    if (!opt) return;
+    setEditModalOptionForm({
+      title: opt.title || '',
+      badge: opt.badge || '',
+      price: opt.price || '',
+      childPrice: opt.childPrice || '',
+      inclusions: Array.isArray(opt.inclusions) ? opt.inclusions.join('\n') : (opt.inclusions || ''),
+      moreDetails: opt.moreDetails || '',
+      isAvailable: opt.isAvailable !== false,
+    });
+    setEditModalEditingOptionIndex(idxToEdit);
+  };
 
   const [dealData, setDealData] = useState({
     packageId: '',
@@ -596,6 +822,19 @@ export default function AdminPage() {
         quickFacts: packageData.quickFacts.split('\n').map(s => s.trim()).filter(Boolean),
         inclusions: packageData.inclusions.split('\n').map(s => s.trim()).filter(Boolean),
         tags: packageData.tags.split(',').map(s => s.trim()).filter(Boolean),
+        hasOptions: Boolean(packageData.hasOptions),
+        optionsSectionTitle: packageData.optionsSectionTitle || 'Available Options',
+        options: (packageData.options || []).map((o: any) => ({
+          id: o.id || Date.now() + Math.random().toString(36).substring(2, 6),
+          title: o.title,
+          badge: o.badge || '',
+          inclusions: Array.isArray(o.inclusions) ? o.inclusions : (o.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+          moreDetails: o.moreDetails || '',
+          price: o.price || '',
+          childPrice: o.childPrice || '',
+          isAvailable: o.isAvailable !== false,
+        })),
+        video: packageData.video?.trim() || '',
       };
 
       if (payload.image && payload.images.length === 0) {
@@ -621,8 +860,20 @@ export default function AdminPage() {
       setPackageData({
         title: '', destination: destinations[0]?.title || 'Dubai', price: '', childPrice: '', childAgeLimit: '', rating: '5.0', reviewsCount: '0',
         image: '', images: '', description: '', highlights: '', quickFacts: '',
-        inclusions: '', tags: '', isPopular: false
+        inclusions: '', tags: '', isPopular: false,
+        hasOptions: false, optionsSectionTitle: 'Available Options', options: [],
+        video: '',
       });
+      setNewOptionForm({
+        title: '',
+        badge: 'Best Value',
+        price: '',
+        childPrice: '',
+        inclusions: '',
+        moreDetails: '',
+        isAvailable: true,
+      });
+      setEditingOptionIndex(null);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -775,6 +1026,19 @@ export default function AdminPage() {
         isPopular: !!editingPackage.isPopular,
         isBestDeal: !!editingPackage.isBestDeal,
         originalPrice: editingPackage.originalPrice || '',
+        hasOptions: Boolean(editingPackage.hasOptions),
+        optionsSectionTitle: editingPackage.optionsSectionTitle || 'Available Options',
+        options: (editingPackage.options || []).map((o: any) => ({
+          id: o.id || Date.now() + Math.random().toString(36).substring(2, 6),
+          title: o.title,
+          badge: o.badge || '',
+          inclusions: Array.isArray(o.inclusions) ? o.inclusions : (o.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+          moreDetails: o.moreDetails || '',
+          price: o.price || '',
+          childPrice: o.childPrice || '',
+          isAvailable: o.isAvailable !== false,
+        })),
+        video: typeof editingPackage.video === 'string' ? editingPackage.video.trim() : '',
       };
 
       if (payload.image && payload.images.length === 0) {
@@ -1546,6 +1810,99 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Optional Tour Video Section */}
+                <div className={styles.formGroupFull}>
+                  <label htmlFor="packageVideoInput" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Tour / Promotional Video (Optional)</span>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
+                      Auto-plays muted after images on product page
+                    </span>
+                  </label>
+
+                  <div className={styles.videoAdminCard}>
+                    <div className={styles.videoAdminHeader}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                          Upload Video File or Paste Video URL
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
+                          Supports MP4, WebM, MOV files (up to 60MB) or YouTube / Vimeo / direct video links.
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="file"
+                          id="packageVideoFileInput"
+                          accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                          onChange={handlePackageVideoUpload}
+                          style={{ display: 'none' }}
+                          disabled={isUploadingVideo}
+                        />
+                        <label
+                          htmlFor="packageVideoFileInput"
+                          className={styles.videoUploadBtn}
+                          style={{ opacity: isUploadingVideo ? 0.6 : 1, cursor: isUploadingVideo ? 'wait' : 'pointer' }}
+                        >
+                          {isUploadingVideo ? '⏳ Uploading Video...' : '🎬 Upload Video File'}
+                        </label>
+                      </div>
+                    </div>
+
+                    {videoUploadError && (
+                      <div style={{ color: '#e11d48', fontSize: '0.85rem', marginTop: '8px' }}>
+                        ⚠️ {videoUploadError}
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: '12px' }}>
+                      <input
+                        type="text"
+                        id="packageVideoInput"
+                        name="video"
+                        value={packageData.video || ''}
+                        onChange={handlePackageChange}
+                        placeholder="Paste video URL (YouTube, Vimeo, Cloudinary, or direct MP4 link)"
+                        className={styles.videoUrlInputField}
+                      />
+                    </div>
+
+                    {/* Live Preview if video exists */}
+                    {packageData.video && (
+                      <div className={styles.videoAdminPreviewWrapper}>
+                        <div className={styles.videoAdminPreviewHeader}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                            Live Preview
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPackageData(prev => ({ ...prev, video: '' }))}
+                            className={styles.videoAdminRemoveBtn}
+                          >
+                            ✕ Remove Video
+                          </button>
+                        </div>
+                        <div className={styles.videoAdminPreviewContainer}>
+                          {isEmbedVideo(packageData.video) ? (
+                            <iframe
+                              src={getEmbedUrl(packageData.video)}
+                              title="Video preview"
+                              className={styles.videoAdminIframe}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            />
+                          ) : (
+                            <video
+                              src={packageData.video}
+                              controls
+                              className={styles.videoAdminNative}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className={styles.formGroupFull}>
                   <label htmlFor="description">Description</label>
                   <textarea id="description" name="description" value={packageData.description} onChange={handlePackageChange} rows={4}></textarea>
@@ -1695,6 +2052,278 @@ export default function AdminPage() {
                               className={styles.addPrefCancelBtn}
                             >
                               Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Available Options / Sub-categories Section (Optional) */}
+                <div className={styles.formGroupFull}>
+                  <div className={styles.optionsAdminSection}>
+                    <div className={styles.optionsAdminHeader}>
+                      <div className={styles.optionsAdminTitle}>
+                        <span>🏷️ Sub-Categories / Available Options</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>(Optional)</span>
+                      </div>
+                      <div className={styles.optionsAdminHelp}>
+                        Add variations or sub-packages (e.g. &quot;At The Top + Sunrise + Morning Treat&quot;, VIP access, Prime Hours) that appear in the &quot;Available Options&quot; section above the Overview on the package details page.
+                      </div>
+                    </div>
+
+                    <div className={styles.optionsToggleBox}>
+                      <input
+                        type="checkbox"
+                        id="enableOptions"
+                        name="hasOptions"
+                        checked={!!packageData.hasOptions}
+                        onChange={(e) => setPackageData({ ...packageData, hasOptions: e.target.checked })}
+                      />
+                      <label htmlFor="enableOptions" className={styles.optionsToggleLabel}>
+                        Enable Sub-categories / Available Options section for this package
+                      </label>
+                    </div>
+
+                    {packageData.hasOptions && (
+                      <div>
+                        {/* Section Header Title */}
+                        <div style={{ marginBottom: '16px' }}>
+                          <label htmlFor="optionsSectionTitle" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                            Section Title (as displayed on customer page)
+                          </label>
+                          <input
+                            type="text"
+                            id="optionsSectionTitle"
+                            value={packageData.optionsSectionTitle}
+                            onChange={(e) => setPackageData({ ...packageData, optionsSectionTitle: e.target.value })}
+                            placeholder="Available Options"
+                            style={{ width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                          />
+                        </div>
+
+                        {/* List of Current Options */}
+                        <div style={{ marginBottom: '14px', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
+                          Current Options ({packageData.options.length}):
+                        </div>
+
+                        {packageData.options.length === 0 ? (
+                          <div style={{ padding: '16px', background: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center', marginBottom: '18px' }}>
+                            No options added yet. Fill in the builder form below to add your first option card.
+                          </div>
+                        ) : (
+                          <div className={styles.optionsListPreview}>
+                            {packageData.options.map((opt: any, idx: number) => {
+                              const inclusionsArr = Array.isArray(opt.inclusions)
+                                ? opt.inclusions
+                                : (opt.inclusions || '').split('\n').filter(Boolean);
+                              const isAvail = opt.isAvailable !== false;
+
+                              return (
+                                <div key={opt.id || idx} className={styles.optionPreviewCard}>
+                                  <div className={styles.optionPreviewHeader}>
+                                    {opt.badge && (
+                                      <span className={styles.optionPreviewBadge}>
+                                        🔥 {opt.badge}
+                                      </span>
+                                    )}
+                                    <div className={styles.optionPreviewTitle}>{opt.title}</div>
+                                  </div>
+
+                                  <div className={styles.optionPreviewBody}>
+                                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>Inclusions:</div>
+                                    <ul className={styles.optionPreviewInclusions}>
+                                      {inclusionsArr.length > 0 ? (
+                                        inclusionsArr.slice(0, 3).map((inc: string, iIdx: number) => (
+                                          <li key={iIdx}>{inc}</li>
+                                        ))
+                                      ) : (
+                                        <li>Standard tour package inclusions</li>
+                                      )}
+                                      {inclusionsArr.length > 3 && (
+                                        <li style={{ color: '#047857', fontWeight: 600 }}>+{inclusionsArr.length - 3} more</li>
+                                      )}
+                                    </ul>
+
+                                    <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#475569' }}>
+                                      Price: <strong style={{ color: '#047857' }}>AED {opt.price || packageData.price || '0'}</strong>
+                                      {opt.childPrice && <span> • Child: AED {opt.childPrice}</span>}
+                                    </div>
+                                  </div>
+
+                                  <div className={styles.optionPreviewFooter}>
+                                    <span className={`${styles.optionAvailTag} ${isAvail ? styles.optionAvailYes : styles.optionAvailNo}`}>
+                                      {isAvail ? '✓ Available' : '✕ Not Available'}
+                                    </span>
+
+                                    <div className={styles.optionPreviewActions}>
+                                      <button
+                                        type="button"
+                                        className={styles.optionMiniBtn}
+                                        onClick={() => handleEditOptionInPackage(idx)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`${styles.optionMiniBtn} ${styles.optionMiniBtnDanger}`}
+                                        onClick={() => handleRemoveOptionFromPackage(idx)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Add / Edit Option Card Builder */}
+                        <div className={styles.optionBuilderBox}>
+                          <div className={styles.optionBuilderHeader}>
+                            <span>{editingOptionIndex !== null ? '✏️ Edit Option Card' : '➕ Add Option / Sub-Category Card'}</span>
+                            {editingOptionIndex !== null && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingOptionIndex(null);
+                                  setNewOptionForm({
+                                    title: '',
+                                    badge: 'Best Value',
+                                    price: '',
+                                    childPrice: '',
+                                    inclusions: '',
+                                    moreDetails: '',
+                                    isAvailable: true,
+                                  });
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
+                              >
+                                Cancel Edit
+                              </button>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                Option Title / Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={newOptionForm.title}
+                                onChange={(e) => setNewOptionForm({ ...newOptionForm, title: e.target.value })}
+                                placeholder="e.g. At The Top + Sunrise + Morning Treat"
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                Badge Tag (Optional)
+                              </label>
+                              <input
+                                type="text"
+                                value={newOptionForm.badge}
+                                onChange={(e) => setNewOptionForm({ ...newOptionForm, badge: e.target.value })}
+                                placeholder="e.g. Best Value"
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                              />
+                              <div className={styles.badgePillsRow}>
+                                {['Best Value', 'Popular', 'Prime Hours', 'VIP Pass', 'Instant Confirmation'].map(b => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    className={`${styles.badgePillBtn} ${newOptionForm.badge === b ? styles.badgePillBtnActive : ''}`}
+                                    onClick={() => setNewOptionForm({ ...newOptionForm, badge: newOptionForm.badge === b ? '' : b })}
+                                  >
+                                    {b}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                Adult Price (AED) <span style={{ fontWeight: 'normal', color: '#64748b' }}>(Optional)</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={newOptionForm.price}
+                                onChange={(e) => setNewOptionForm({ ...newOptionForm, price: e.target.value })}
+                                placeholder={`Leave empty for package price (${packageData.price || 'AED'})`}
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                Child Price (AED) <span style={{ fontWeight: 'normal', color: '#64748b' }}>(Optional)</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={newOptionForm.childPrice}
+                                onChange={(e) => setNewOptionForm({ ...newOptionForm, childPrice: e.target.value })}
+                                placeholder="e.g. 100"
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ marginBottom: '14px' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                              Inclusions (One per line)
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={newOptionForm.inclusions}
+                              onChange={(e) => setNewOptionForm({ ...newOptionForm, inclusions: e.target.value })}
+                              placeholder={`Admission tickets to 124 & 125 Floors of the Burj Khalifa.\nAccess to the telescopes on 124th floor`}
+                              style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', resize: 'vertical' }}
+                            />
+                          </div>
+
+                          <div style={{ marginBottom: '14px' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                              More Details / Description (Revealed on clicking &quot;More details ⌄&quot;)
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={newOptionForm.moreDetails}
+                              onChange={(e) => setNewOptionForm({ ...newOptionForm, moreDetails: e.target.value })}
+                              placeholder="Additional terms, meeting instructions, or special details for this option..."
+                              style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', resize: 'vertical' }}
+                            />
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: newOptionForm.isAvailable ? '#047857' : '#e11d48' }}>
+                              <input
+                                type="checkbox"
+                                checked={newOptionForm.isAvailable}
+                                onChange={(e) => setNewOptionForm({ ...newOptionForm, isAvailable: e.target.checked })}
+                                style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }}
+                              />
+                              {newOptionForm.isAvailable ? '✓ Status: Available' : '✕ Status: Not Available (Shows "Not Available" badge)'}
+                            </label>
+
+                            <button
+                              type="button"
+                              onClick={handleSaveOptionToPackage}
+                              style={{
+                                background: '#047857',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '8px 18px',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {editingOptionIndex !== null ? '✓ Update Option' : '+ Add Option Card'}
                             </button>
                           </div>
                         </div>
@@ -2164,6 +2793,98 @@ export default function AdminPage() {
                       </div>
                     </div>
 
+                    {/* Optional Tour Video Section in Edit Modal */}
+                    <div className={styles.formGroupFull}>
+                      <label htmlFor="editPackageVideoInput" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>Tour / Promotional Video (Optional)</span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
+                          Auto-plays muted after images on product page
+                        </span>
+                      </label>
+
+                      <div className={styles.videoAdminCard}>
+                        <div className={styles.videoAdminHeader}>
+                          <div>
+                            <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                              Upload Video File or Paste Video URL
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
+                              Supports MP4, WebM, MOV files (up to 60MB) or YouTube / Vimeo / direct video links.
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="file"
+                              id="editPackageVideoFileInput"
+                              accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                              onChange={handleEditPackageVideoUpload}
+                              style={{ display: 'none' }}
+                              disabled={isEditingVideoUploading}
+                            />
+                            <label
+                              htmlFor="editPackageVideoFileInput"
+                              className={styles.videoUploadBtn}
+                              style={{ opacity: isEditingVideoUploading ? 0.6 : 1, cursor: isEditingVideoUploading ? 'wait' : 'pointer' }}
+                            >
+                              {isEditingVideoUploading ? '⏳ Uploading Video...' : '🎬 Upload Video File'}
+                            </label>
+                          </div>
+                        </div>
+
+                        {editVideoUploadError && (
+                          <div style={{ color: '#e11d48', fontSize: '0.85rem', marginTop: '8px' }}>
+                            ⚠️ {editVideoUploadError}
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '12px' }}>
+                          <input
+                            type="text"
+                            id="editPackageVideoInput"
+                            value={editingPackage.video || ''}
+                            onChange={(e) => setEditingPackage({ ...editingPackage, video: e.target.value })}
+                            placeholder="Paste video URL (YouTube, Vimeo, Cloudinary, or direct MP4 link)"
+                            className={styles.videoUrlInputField}
+                          />
+                        </div>
+
+                        {/* Live Preview if video exists */}
+                        {editingPackage.video && (
+                          <div className={styles.videoAdminPreviewWrapper}>
+                            <div className={styles.videoAdminPreviewHeader}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                                Live Preview
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setEditingPackage({ ...editingPackage, video: '' })}
+                                className={styles.videoAdminRemoveBtn}
+                              >
+                                ✕ Remove Video
+                              </button>
+                            </div>
+                            <div className={styles.videoAdminPreviewContainer}>
+                              {isEmbedVideo(editingPackage.video) ? (
+                                <iframe
+                                  src={getEmbedUrl(editingPackage.video)}
+                                  title="Video preview"
+                                  className={styles.videoAdminIframe}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                />
+                              ) : (
+                                <video
+                                  src={editingPackage.video}
+                                  controls
+                                  className={styles.videoAdminNative}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <div className={styles.formGroupFull}>
                       <label htmlFor="editDescription">Description</label>
                       <textarea 
@@ -2352,6 +3073,277 @@ export default function AdminPage() {
                                   className={styles.addPrefCancelBtn}
                                 >
                                   Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Available Options / Sub-categories Section (Optional) */}
+                    <div className={styles.formGroupFull}>
+                      <div className={styles.optionsAdminSection}>
+                        <div className={styles.optionsAdminHeader}>
+                          <div className={styles.optionsAdminTitle}>
+                            <span>🏷️ Sub-Categories / Available Options</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>(Optional)</span>
+                          </div>
+                          <div className={styles.optionsAdminHelp}>
+                            Add variations or sub-packages (e.g. &quot;At The Top + Sunrise + Morning Treat&quot;, VIP access, Prime Hours) that appear in the &quot;Available Options&quot; section above the Overview on the package details page.
+                          </div>
+                        </div>
+
+                        <div className={styles.optionsToggleBox}>
+                          <input
+                            type="checkbox"
+                            id="editEnableOptions"
+                            checked={!!editingPackage.hasOptions}
+                            onChange={(e) => setEditingPackage({ ...editingPackage, hasOptions: e.target.checked })}
+                          />
+                          <label htmlFor="editEnableOptions" className={styles.optionsToggleLabel}>
+                            Enable Sub-categories / Available Options section for this package
+                          </label>
+                        </div>
+
+                        {editingPackage.hasOptions && (
+                          <div>
+                            {/* Section Header Title */}
+                            <div style={{ marginBottom: '16px' }}>
+                              <label htmlFor="editOptionsSectionTitle" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                                Section Title (as displayed on customer page)
+                              </label>
+                              <input
+                                type="text"
+                                id="editOptionsSectionTitle"
+                                value={editingPackage.optionsSectionTitle || 'Available Options'}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, optionsSectionTitle: e.target.value })}
+                                placeholder="Available Options"
+                                style={{ width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                              />
+                            </div>
+
+                            {/* List of Current Options */}
+                            <div style={{ marginBottom: '14px', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
+                              Current Options ({(editingPackage.options || []).length}):
+                            </div>
+
+                            {(!editingPackage.options || editingPackage.options.length === 0) ? (
+                              <div style={{ padding: '16px', background: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center', marginBottom: '18px' }}>
+                                No options added yet. Fill in the builder form below to add your first option card.
+                              </div>
+                            ) : (
+                              <div className={styles.optionsListPreview}>
+                                {(editingPackage.options || []).map((opt: any, idx: number) => {
+                                  const inclusionsArr = Array.isArray(opt.inclusions)
+                                    ? opt.inclusions
+                                    : (opt.inclusions || '').split('\n').filter(Boolean);
+                                  const isAvail = opt.isAvailable !== false;
+
+                                  return (
+                                    <div key={opt.id || idx} className={styles.optionPreviewCard}>
+                                      <div className={styles.optionPreviewHeader}>
+                                        {opt.badge && (
+                                          <span className={styles.optionPreviewBadge}>
+                                            🔥 {opt.badge}
+                                          </span>
+                                        )}
+                                        <div className={styles.optionPreviewTitle}>{opt.title}</div>
+                                      </div>
+
+                                      <div className={styles.optionPreviewBody}>
+                                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>Inclusions:</div>
+                                        <ul className={styles.optionPreviewInclusions}>
+                                          {inclusionsArr.length > 0 ? (
+                                            inclusionsArr.slice(0, 3).map((inc: string, iIdx: number) => (
+                                              <li key={iIdx}>{inc}</li>
+                                            ))
+                                          ) : (
+                                            <li>Standard tour package inclusions</li>
+                                          )}
+                                          {inclusionsArr.length > 3 && (
+                                            <li style={{ color: '#047857', fontWeight: 600 }}>+{inclusionsArr.length - 3} more</li>
+                                          )}
+                                        </ul>
+
+                                        <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#475569' }}>
+                                          Price: <strong style={{ color: '#047857' }}>AED {opt.price || editingPackage.price || '0'}</strong>
+                                          {opt.childPrice && <span> • Child: AED {opt.childPrice}</span>}
+                                        </div>
+                                      </div>
+
+                                      <div className={styles.optionPreviewFooter}>
+                                        <span className={`${styles.optionAvailTag} ${isAvail ? styles.optionAvailYes : styles.optionAvailNo}`}>
+                                          {isAvail ? '✓ Available' : '✕ Not Available'}
+                                        </span>
+
+                                        <div className={styles.optionPreviewActions}>
+                                          <button
+                                            type="button"
+                                            className={styles.optionMiniBtn}
+                                            onClick={() => handleEditOptionInEditModal(idx)}
+                                          >
+                                            Edit
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`${styles.optionMiniBtn} ${styles.optionMiniBtnDanger}`}
+                                            onClick={() => handleRemoveOptionFromEditModal(idx)}
+                                          >
+                                            Delete
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Add / Edit Option Card Builder */}
+                            <div className={styles.optionBuilderBox}>
+                              <div className={styles.optionBuilderHeader}>
+                                <span>{editModalEditingOptionIndex !== null ? '✏️ Edit Option Card' : '➕ Add Option / Sub-Category Card'}</span>
+                                {editModalEditingOptionIndex !== null && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditModalEditingOptionIndex(null);
+                                      setEditModalOptionForm({
+                                        title: '',
+                                        badge: 'Best Value',
+                                        price: '',
+                                        childPrice: '',
+                                        inclusions: '',
+                                        moreDetails: '',
+                                        isAvailable: true,
+                                      });
+                                    }}
+                                    style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
+                                  >
+                                    Cancel Edit
+                                  </button>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                    Option Title / Name *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editModalOptionForm.title}
+                                    onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, title: e.target.value })}
+                                    placeholder="e.g. At The Top + Sunrise + Morning Treat"
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                    Badge Tag (Optional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editModalOptionForm.badge}
+                                    onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, badge: e.target.value })}
+                                    placeholder="e.g. Best Value"
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                                  />
+                                  <div className={styles.badgePillsRow}>
+                                    {['Best Value', 'Popular', 'Prime Hours', 'VIP Pass', 'Instant Confirmation'].map(b => (
+                                      <button
+                                        key={b}
+                                        type="button"
+                                        className={`${styles.badgePillBtn} ${editModalOptionForm.badge === b ? styles.badgePillBtnActive : ''}`}
+                                        onClick={() => setEditModalOptionForm({ ...editModalOptionForm, badge: editModalOptionForm.badge === b ? '' : b })}
+                                      >
+                                        {b}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                    Adult Price (AED) <span style={{ fontWeight: 'normal', color: '#64748b' }}>(Optional)</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editModalOptionForm.price}
+                                    onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, price: e.target.value })}
+                                    placeholder={`Leave empty for package price (${editingPackage.price || 'AED'})`}
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                    Child Price (AED) <span style={{ fontWeight: 'normal', color: '#64748b' }}>(Optional)</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editModalOptionForm.childPrice}
+                                    onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, childPrice: e.target.value })}
+                                    placeholder="e.g. 100"
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                  Inclusions (One per line)
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={editModalOptionForm.inclusions}
+                                  onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, inclusions: e.target.value })}
+                                  placeholder={`Admission tickets to 124 & 125 Floors of the Burj Khalifa.\nAccess to the telescopes on 124th floor`}
+                                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', resize: 'vertical' }}
+                                />
+                              </div>
+
+                              <div style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                                  More Details / Description (Revealed on clicking &quot;More details ⌄&quot;)
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={editModalOptionForm.moreDetails}
+                                  onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, moreDetails: e.target.value })}
+                                  placeholder="Additional terms, meeting instructions, or special details for this option..."
+                                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', resize: 'vertical' }}
+                                />
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: editModalOptionForm.isAvailable ? '#047857' : '#e11d48' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={editModalOptionForm.isAvailable}
+                                    onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, isAvailable: e.target.checked })}
+                                    style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }}
+                                  />
+                                  {editModalOptionForm.isAvailable ? '✓ Status: Available' : '✕ Status: Not Available (Shows "Not Available" badge)'}
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={handleSaveOptionToEditModal}
+                                  style={{
+                                    background: '#047857',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '8px 18px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {editModalEditingOptionIndex !== null ? '✓ Update Option' : '+ Add Option Card'}
                                 </button>
                               </div>
                             </div>

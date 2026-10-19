@@ -32,13 +32,18 @@ export async function uploadImageBuffer(
 
   if (isNumericKey && apiSecret) {
     try {
+      const isVideo = contentType.startsWith('video/');
+      const uploadOptions: any = {
+        folder,
+        resource_type: 'auto',
+      };
+      if (!isVideo) {
+        uploadOptions.transformation = [{ quality: 'auto', fetch_format: 'auto' }];
+      }
+
       const uploadPromise = new Promise<any>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder,
-            resource_type: 'image',
-            transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-          },
+          uploadOptions,
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
@@ -47,9 +52,10 @@ export async function uploadImageBuffer(
         uploadStream.end(buffer);
       });
 
-      // 3.5s timeout race to guarantee speed
+      // 15s timeout for videos, 4s for images
+      const timeoutLimit = isVideo ? 15000 : 4000;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Cloudinary timeout')), 3500)
+        setTimeout(() => reject(new Error('Cloudinary timeout')), timeoutLimit)
       );
 
       const uploadResult: any = await Promise.race([uploadPromise, timeoutPromise]);

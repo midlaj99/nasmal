@@ -84,6 +84,21 @@ export async function PATCH(
     if (body.originalPrice !== undefined) updates.originalPrice = sanitizeString(String(body.originalPrice));
     if (body.childPrice !== undefined) updates.childPrice = sanitizeString(String(body.childPrice));
     if (body.childAgeLimit !== undefined) updates.childAgeLimit = sanitizeString(String(body.childAgeLimit));
+    if (body.hasOptions !== undefined) updates.hasOptions = Boolean(body.hasOptions);
+    if (body.optionsSectionTitle !== undefined) updates.optionsSectionTitle = sanitizeString(String(body.optionsSectionTitle));
+    if (body.options !== undefined && Array.isArray(body.options)) {
+      updates.options = body.options.map((opt: any) => ({
+        id: sanitizeString(String(opt.id || Date.now() + Math.random().toString(36).substring(2, 7))),
+        title: sanitizeString(String(opt.title || '')),
+        badge: opt.badge ? sanitizeString(String(opt.badge)) : '',
+        inclusions: sanitizeArrayOfStrings(opt.inclusions),
+        moreDetails: opt.moreDetails ? sanitizeString(String(opt.moreDetails)) : '',
+        price: opt.price ? sanitizeString(String(opt.price)) : '',
+        childPrice: opt.childPrice ? sanitizeString(String(opt.childPrice)) : '',
+        isAvailable: opt.isAvailable !== false,
+      })).filter((opt: any) => opt.title.length > 0);
+    }
+    if (body.video !== undefined) updates.video = sanitizeString(String(body.video));
 
     const updated = await updatePackage(resolvedParams.id, updates);
 

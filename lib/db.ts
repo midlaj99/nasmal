@@ -1,7 +1,18 @@
 import { getDb } from './mongodb';
-import { ObjectId } from 'mongodb';
+import { ObjectId, GridFSBucket } from 'mongodb';
 import fs from 'fs/promises';
 import path from 'path';
+
+export interface PackageOption {
+  id: string;
+  title: string;
+  badge?: string;
+  inclusions?: string[];
+  moreDetails?: string;
+  price?: string;
+  childPrice?: string;
+  isAvailable?: boolean;
+}
 
 // Define the Package type
 export interface Package {
@@ -24,6 +35,10 @@ export interface Package {
   childPrice?: string;
   childAgeLimit?: string;
   suitableFor?: string[];
+  hasOptions?: boolean;
+  optionsSectionTitle?: string;
+  options?: PackageOption[];
+  video?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -976,27 +991,50 @@ export async function saveImageToDb(
   const db = await getDb();
 
   const id = `img-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  const base64 = buffer.toString('base64');
 
-  await db.collection('images').insertOne({
-    id,
-    data: base64,
-    contentType,
-    filename,
-    size: buffer.length,
-    createdAt: new Date().toISOString(),
-  });
+  // Use GridFS for media larger than 8MB to prevent BSON 16MB document limit
+  if (buffer.length > 8 * 1024 * 1024) {
+    const bucket = new GridFSBucket(db, { bucketName: 'media_files' });
+    await new Promise<void>((resolve, reject) => {
+      const uploadStream = bucket.openUploadStream(id, {
+        metadata: { contentType, filename, size: buffer.length }
+      });
+      uploadStream.on('finish', () => resolve());
+      uploadStream.on('error', reject);
+      uploadStream.end(buffer);
+    });
 
-  // Populate memory cache immediately for zero-delay instant serving
-  if (imageMemoryCache.size > 100) {
-    const oldestKey = imageMemoryCache.keys().next().value;
-    if (oldestKey) imageMemoryCache.delete(oldestKey);
+    await db.collection('images').insertOne({
+      id,
+      isGridFs: true,
+      contentType,
+      filename,
+      size: buffer.length,
+      createdAt: new Date().toISOString(),
+    });
+  } else {
+    const base64 = buffer.toString('base64');
+    await db.collection('images').insertOne({
+      id,
+      data: base64,
+      isGridFs: false,
+      contentType,
+      filename,
+      size: buffer.length,
+      createdAt: new Date().toISOString(),
+    });
+
+    // Populate memory cache immediately for images under 8MB
+    if (imageMemoryCache.size > 100) {
+      const oldestKey = imageMemoryCache.keys().next().value;
+      if (oldestKey) imageMemoryCache.delete(oldestKey);
+    }
+    imageMemoryCache.set(id, {
+      data: buffer,
+      contentType,
+      expiresAt: Date.now() + 300000, // 5 minutes in-memory cache
+    });
   }
-  imageMemoryCache.set(id, {
-    data: buffer,
-    contentType,
-    expiresAt: Date.now() + 300000, // 5 minutes in-memory cache
-  });
 
   return `/api/images/${id}`;
 }
@@ -1017,8 +1055,23 @@ export async function getImageFromDb(
   const db = await getDb();
 
   const doc = await db.collection('images').findOne({ id: safeId });
-  if (!doc || !doc.data) return null;
+  if (!doc) return null;
 
+  if (doc.isGridFs) {
+    const bucket = new GridFSBucket(db, { bucketName: 'media_files' });
+    const chunks: Buffer[] = [];
+    await new Promise<void>((resolve, reject) => {
+      const downloadStream = bucket.openDownloadStreamByName(safeId);
+      downloadStream.on('data', chunk => chunks.push(chunk));
+      downloadStream.on('end', () => resolve());
+      downloadStream.on('error', reject);
+    });
+    const buffer = Buffer.concat(chunks);
+    const contentType = doc.contentType || 'application/octet-stream';
+    return { data: buffer, contentType };
+  }
+
+  if (!doc.data) return null;
   const buffer = Buffer.from(doc.data, 'base64');
   const contentType = doc.contentType || 'image/jpeg';
 
