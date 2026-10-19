@@ -1,0 +1,146 @@
+.floatingContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Individual circular floating action buttons */
+.floatingBtn {
+  pointer-events: auto;
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+  color: #ffffff;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.floatingBtn:hover {
+  transform: translateY(-3px) scale(1.08);
+}
+
+.floatingBtn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* Call Button (Vibrant Travel Blue) */
+.callBtn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.callBtn:hover {
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.5);
+}
+
+/* WhatsApp Button (Official WhatsApp Green) */
+.whatsappBtn {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.whatsappBtn:hover {
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.55);
+}
+
+/* Precise centering for the SVG */
+.btnIcon {
+  display: block;
+  margin: auto;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Tooltip positioned absolutely to the left of the button */
+.btnTooltip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 6px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Tooltip pointer arrow */
+.btnTooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent rgba(15, 23, 42, 0.94);
+}
+
+.floatingBtn:hover .btnTooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Pulse animation effect on WhatsApp button */
+@keyframes softPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 13px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+.whatsappBtn {
+  animation: softPulse 2.8s infinite;
+}
+
+.whatsappBtn:hover {
+  animation: none;
+}
+
+/* Mobile View adjustments: Always prominent, aligned and accessible on all phones */
+@media (max-width: 768px) {
+  .floatingContainer {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    gap: 12px;
+    z-index: 99999;
+  }
+
+  .floatingBtn {
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.16);
+  }
+
+  .btnTooltip {
+    display: none;
+  }
+}

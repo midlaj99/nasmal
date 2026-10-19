@@ -74,6 +74,18 @@ export interface WishlistItem {
   createdAt: string;
 }
 
+export interface ContactEnquiry {
+  id: string;
+  fullname: string;
+  phone: string;
+  email: string;
+  enquiryType: string;
+  message: string;
+  status: 'New' | 'In Progress' | 'Resolved';
+  createdAt: string;
+}
+
+
 const DEFAULT_DESTINATIONS: Destination[] = [
   {
     id: 'dubai',
@@ -721,6 +733,39 @@ export async function createOrder(
   const { _id, ...cleanOrder } = newOrder as any;
   return cleanOrder as Order;
 }
+
+export async function createEnquiry(
+  data: Omit<ContactEnquiry, 'id' | 'createdAt' | 'status'>
+): Promise<ContactEnquiry> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  const id = `ENQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+
+  const newEnquiry: ContactEnquiry = {
+    ...data,
+    id,
+    status: 'New',
+    createdAt: new Date().toISOString(),
+  };
+
+  await db.collection('enquiries').insertOne(newEnquiry as any);
+
+  const { _id, ...cleanEnquiry } = newEnquiry as any;
+  return cleanEnquiry as ContactEnquiry;
+}
+
+export async function getEnquiries(): Promise<ContactEnquiry[]> {
+  await initializeDatabase();
+  const db = await getDb();
+  const results = await db
+    .collection('enquiries')
+    .find({}, { projection: { _id: 0 } })
+    .sort({ createdAt: -1 })
+    .toArray();
+  return results as unknown as ContactEnquiry[];
+}
+
 
 export async function updateOrderStatus(
   id: string,

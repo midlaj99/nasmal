@@ -1,0 +1,923 @@
+/* ============================================================
+   EXACT REDESIGN MATCH FOR NASMAL TOURISMS CONTACT PAGE
+   ============================================================ */
+
+.pageWrapper {
+  background-color: #f6f8fa;
+  min-height: 100vh;
+  padding-top: 0;
+  padding-bottom: 90px;
+  color: #1e293b;
+  font-family: var(--font-main, 'Inter', sans-serif);
+}
+
+.contentContainer {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: relative;
+  z-index: 5;
+}
+
+/* ============================================================
+   1. HERO SECTION (DESTINATION PAGE STYLE)
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 540px;
+  height: 62vh;
+  max-height: 680px;
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: 92px;
+  background-color: #0b1523;
+  margin-bottom: 24px;
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: center 40%;
+  transform: scale(1.02);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(90deg, rgba(8, 22, 42, 0.85) 0%, rgba(15, 23, 42, 0.55) 55%, rgba(15, 23, 42, 0.25) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 60%, rgba(5, 15, 25, 0.8) 100%);
+  z-index: 1;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 24px 75px;
+}
+
+.heroContent {
+  max-width: 650px;
+}
+
+.breadcrumbWrapper {
+  display: block;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.heroTitle {
+  font-family: var(--font-elegant), 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2.8rem, 5.5vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.highlightText {
+  color: #8ec5fc;
+  background: linear-gradient(135deg, #e0f2fe 0%, #93c5fd 55%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  font-style: normal;
+  filter: drop-shadow(0 2px 10px rgba(96, 165, 250, 0.4));
+}
+
+.heroSubtitle {
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 0;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Fluid Wave Transition to Page Body */
+.waveDivider {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.waveSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+
+/* ============================================================
+   2. CARD 1: "SEND US AN ENQUIRY"
+   ============================================================ */
+.card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  padding: 36px 40px;
+  position: relative;
+}
+
+.cardHeaderWithIcon {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.greenCircleBadge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #047857;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+}
+
+.cardTitle {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.cardSubtitle {
+  color: #64748b;
+  font-size: 13.5px;
+}
+
+/* Two-column form layout */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+  margin-bottom: 26px;
+}
+
+.formCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.requiredStar {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.inputBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.textInput {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 44px;
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.textInput:focus {
+  background-color: #ffffff;
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.12);
+}
+
+.textInput::placeholder {
+  color: #94a3b8;
+}
+
+/* Enquiry Type Selector: 3 chips */
+.enquiryChipsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.enquiryChipBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px 6px;
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.enquiryChipBtn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.enquiryChipActive {
+  background-color: #ecfdf5;
+  border-color: #047857;
+  box-shadow: 0 0 0 2px rgba(4, 120, 87, 0.15);
+}
+
+.chipCheckBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #047857;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.enquiryChipEmoji {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.enquiryChipTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.enquiryChipActive .enquiryChipTitle {
+  color: #047857;
+}
+
+.enquiryChipSub {
+  font-size: 10.5px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+/* Larger Message Textarea (matched height with left column) */
+.messageBoxWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.textareaBox {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.textareaIcon {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.textareaInput {
+  width: 100%;
+  min-height: 172px;
+  height: 100%;
+  padding: 14px 16px 14px 44px;
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  line-height: 1.6;
+  transition: all 0.2s ease;
+}
+
+.textareaInput:focus {
+  background-color: #ffffff;
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.12);
+}
+
+.textareaInput::placeholder {
+  color: #94a3b8;
+}
+
+.messageNote {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* Full Width Submit Button */
+.submitFullBtn {
+  width: 100%;
+  height: 50px;
+  background: #047857;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25);
+}
+
+.submitFullBtn:hover:not(:disabled) {
+  background: #065f46;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.35);
+}
+
+.submitFullBtn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorBanner {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.successCard {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.successIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #047857;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+/* ============================================================
+   3. CARD 2: "NEED IMMEDIATE ASSISTANCE?" BANNER CARD
+   ============================================================ */
+.immediateCard {
+  background: #dff2e7;
+  border-radius: 20px;
+  border: 1px solid #bfe7d1;
+  padding: 30px 36px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 32px;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 4px 20px -2px rgba(4, 120, 87, 0.08);
+}
+
+.immediateLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.immediateHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.immediateTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.immediateDesc {
+  color: #334155;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.immediateActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+}
+
+.callPillBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #ffffff;
+  color: #0f172a;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.callPillBtn:hover {
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.whatsappPillBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #047857;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
+}
+
+.whatsappPillBtn:hover {
+  background-color: #065f46;
+  transform: translateY(-1px);
+}
+
+.immediateRight {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.immediateImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.immediateOverlay {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 2;
+}
+
+.scriptText {
+  font-family: var(--font-elegant, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+  line-height: 1.1;
+}
+
+/* ============================================================
+   4. CARD 3: "CONTACT DETAILS"
+   ============================================================ */
+.detailsHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.detailsHeaderIcon {
+  color: #047857;
+  display: flex;
+  align-items: center;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 36px;
+}
+
+.detailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.detailIconBox {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #d1fae5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailLabel {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.detailValue {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.detailLink {
+  color: #475569;
+  text-decoration: none;
+}
+
+.detailLink:hover {
+  color: #047857;
+  text-decoration: underline;
+}
+
+/* ============================================================
+   5. CARD 4: "OUR DUBAI LOCATION"
+   ============================================================ */
+.locationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.locationTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.locationTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.viewInMapsLink {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #047857;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.viewInMapsLink:hover {
+  text-decoration: underline;
+}
+
+.locationGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+/* Stylized Light Map Container */
+.mapGraphicContainer {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background-color: #f1f5f9;
+}
+
+.mapIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.mapPinBadge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  pointer-events: none;
+}
+
+.mapPinDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #047857;
+}
+
+.locationInfoList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.locationItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.locationItemIcon {
+  color: #047857;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.locationItemText {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ============================================================
+   6. FAQ SECTION
+   ============================================================ */
+.faqSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.faqHeader {
+  margin-bottom: 24px;
+}
+
+.faqCategoryTag {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #047857;
+  margin-bottom: 6px;
+}
+
+.faqMainTitle {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.faqSubTitle {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faqCard {
+  background-color: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.faqCard:hover {
+  border-color: #cbd5e1;
+}
+
+.faqTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.faqTriggerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.faqIconCircle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ecfdf5;
+  color: #047857;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.faqQuestionText {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.faqChevron {
+  color: #64748b;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.faqChevronOpen {
+  transform: rotate(180deg);
+}
+
+.faqBody {
+  padding: 0 22px 18px 66px;
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   RESPONSIVENESS
+   ============================================================ */
+@media (max-width: 900px) {
+  .heroInner {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .heroRight {
+    height: 260px;
+  }
+
+  .heroImageFrame {
+    border-top-left-radius: 60px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .immediateCard {
+    grid-template-columns: 1fr;
+  }
+
+  .immediateRight {
+    height: 180px;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .locationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 26px 20px;
+  }
+}
+
+@media (max-width: 540px) {
+  .enquiryChipsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .trustPillsRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .faqBody {
+    padding-left: 22px;
+  }
+}

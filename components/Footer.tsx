@@ -31,6 +31,7 @@ export default function Footer() {
             <li><Link href="/activities" className={styles.link}>All Activities</Link></li>
             <li><Link href="/booked-packages" className={styles.link}>Booked Packages</Link></li>
             <li><Link href="/wishlist" className={styles.link}>My Wishlist</Link></li>
+            <li><Link href="/contact" className={styles.link}>Contact Us</Link></li>
           </ul>
         </div>
 

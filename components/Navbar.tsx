@@ -483,7 +483,11 @@ export default function Navbar() {
               Activities
             </Link>
 
-            <Link href="/#footer" className={styles.link} onClick={handleContactClick}>
+            <Link 
+              href="/contact" 
+              className={`${styles.link} ${pathname === '/contact' ? styles.activeLink : ''}`} 
+              onClick={closeAllMenus}
+            >
               Contact
             </Link>
             

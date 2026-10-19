@@ -37,7 +37,7 @@ export default function BookedPackagesPage() {
     }
   }, []);
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9633663256';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '971582659321';
 
   return (
     <main className={styles.wrapper}>

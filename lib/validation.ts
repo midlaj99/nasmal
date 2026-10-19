@@ -240,3 +240,59 @@ export function validateOrderPayload(body: any): ValidationResult<any> {
     }
   };
 }
+
+export interface ContactPayload {
+  fullname: string;
+  phone: string;
+  email: string;
+  enquiryType: string;
+  message: string;
+}
+
+export function validateContactPayload(body: any): ValidationResult<ContactPayload> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const fullname = sanitizeString(body.fullname || body.fullName || '');
+  if (!fullname || fullname.length < 2) {
+    errors.push('Full name is required (at least 2 characters)');
+  }
+
+  const email = sanitizeString(body.email);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    errors.push('A valid email address is required');
+  }
+
+  const phone = sanitizeString(body.phone || body.phoneNumber || '');
+  if (!phone || phone.length < 6 || phone.length > 25) {
+    errors.push('A valid phone number is required (6-25 characters)');
+  }
+
+  const enquiryType = sanitizeString(body.enquiryType || 'Booking');
+
+  const message = sanitizeString(body.message);
+  if (!message || message.length < 5) {
+    errors.push('Message is required (at least 5 characters)');
+  }
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      fullname,
+      phone,
+      email,
+      enquiryType,
+      message,
+    },
+  };
+}
+

@@ -89,10 +89,10 @@ export default function CheckoutPage() {
         console.warn('Failed to save booking locally', e);
       }
 
-      // 2. Construct WhatsApp message with correct number 9633663256
-      const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9633663256';
+      // 2. Construct WhatsApp message with correct number +971 58 265 9321
+      const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '971582659321';
       const cleanDigits = rawWa.replace(/[^0-9]/g, '');
-      const targetWa = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+      const targetWa = cleanDigits || '971582659321';
 
       const message = `*New Booking Request*
 *Customer Details:*

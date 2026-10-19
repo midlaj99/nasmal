@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FloatingContact from "@/components/FloatingContact";
 
 import { BookingProvider } from "@/context/BookingContext";
 
@@ -22,6 +23,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
+          <FloatingContact />
         </BookingProvider>
       </body>
     </html>
