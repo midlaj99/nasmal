@@ -84,7 +84,11 @@ export async function PATCH(
     if (body.originalPrice !== undefined) updates.originalPrice = sanitizeString(String(body.originalPrice));
     if (body.childPrice !== undefined) updates.childPrice = sanitizeString(String(body.childPrice));
     if (body.childAgeLimit !== undefined) updates.childAgeLimit = sanitizeString(String(body.childAgeLimit));
-    if (body.hasOptions !== undefined) updates.hasOptions = Boolean(body.hasOptions);
+    if (body.hasOptions !== undefined) {
+      updates.hasOptions = Boolean(body.hasOptions);
+    } else if (body.options && Array.isArray(body.options) && body.options.length > 0) {
+      updates.hasOptions = true;
+    }
     if (body.optionsSectionTitle !== undefined) updates.optionsSectionTitle = sanitizeString(String(body.optionsSectionTitle));
     if (body.options !== undefined && Array.isArray(body.options)) {
       updates.options = body.options.map((opt: any) => ({

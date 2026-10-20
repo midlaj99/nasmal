@@ -12,6 +12,7 @@ export default function CheckoutPage() {
   const { bookingData } = useBooking();
   
   const [loading, setLoading] = useState(false);
+  const [targetWaNumber, setTargetWaNumber] = useState('971582659321');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,6 +22,21 @@ export default function CheckoutPage() {
     promoCode: '',
     specialRequests: ''
   });
+
+  // Fetch the active admin-configured WhatsApp dispatch number
+  useEffect(() => {
+    fetch('/api/settings/whatsapp')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.fullNumber) {
+          const digits = String(data.fullNumber).replace(/[^0-9]/g, '');
+          if (digits) {
+            setTargetWaNumber(digits);
+          }
+        }
+      })
+      .catch((err) => console.warn('Could not fetch dynamic WhatsApp number:', err));
+  }, []);
 
   useEffect(() => {
     // If there is no booking data, redirect back home
@@ -89,10 +105,9 @@ export default function CheckoutPage() {
         console.warn('Failed to save booking locally', e);
       }
 
-      // 2. Construct WhatsApp message with correct number +971 58 265 9321
-      const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '971582659321';
-      const cleanDigits = rawWa.replace(/[^0-9]/g, '');
-      const targetWa = cleanDigits || '971582659321';
+      // 2. Construct WhatsApp message with dynamic admin WhatsApp number
+      const cleanDigits = targetWaNumber.replace(/[^0-9]/g, '');
+      const finalWa = cleanDigits || '971582659321';
 
       const message = `*New Booking Request*
 *Customer Details:*
@@ -110,8 +125,8 @@ Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
 
       const encodedMessage = encodeURIComponent(message);
 
-      // 3. Redirect to WhatsApp
-      window.location.href = `https://wa.me/${targetWa}?text=${encodedMessage}`;
+      // 3. Instant redirect to the active WhatsApp dispatch chat
+      window.location.href = `https://wa.me/${finalWa}?text=${encodedMessage}`;
     } catch (error: any) {
       console.error('Error saving order', error);
       alert(error.message || 'There was a problem processing your order. Please try again.');
@@ -171,12 +186,26 @@ Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
                 <div className={styles.phoneInput}>
                   <select name="countryCode" value={formData.countryCode} onChange={handleChange}>
                     <option value="+971">+971 (UAE)</option>
-                    <option value="+1">+1 (USA/Canada)</option>
-                    <option value="+44">+44 (UK)</option>
-                    <option value="+91">+91 (India)</option>
+                    <option value="+966">+966 (Saudi Arabia)</option>
                     <option value="+968">+968 (Oman)</option>
+                    <option value="+974">+974 (Qatar)</option>
+                    <option value="+965">+965 (Kuwait)</option>
+                    <option value="+973">+973 (Bahrain)</option>
+                    <option value="+91">+91 (India)</option>
+                    <option value="+1">+1 (USA / Canada)</option>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+49">+49 (Germany)</option>
+                    <option value="+33">+33 (France)</option>
+                    <option value="+7">+7 (Russia)</option>
+                    <option value="+86">+86 (China)</option>
+                    <option value="+61">+61 (Australia)</option>
+                    <option value="+65">+65 (Singapore)</option>
+                    <option value="+60">+60 (Malaysia)</option>
+                    <option value="+92">+92 (Pakistan)</option>
+                    <option value="+880">+880 (Bangladesh)</option>
+                    <option value="+20">+20 (Egypt)</option>
                   </select>
-                  <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} />
+                  <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} placeholder="58 265 9321" />
                 </div>
               </div>
             </div>
@@ -184,7 +213,7 @@ Total Price: AED ${bookingData.totalPrice.toFixed(2)}`;
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label>Special Requests (Optional)</label>
-                <textarea name="specialRequests" rows={4} value={formData.specialRequests} onChange={handleChange}></textarea>
+                <textarea name="specialRequests" rows={4} value={formData.specialRequests} onChange={handleChange} placeholder="Dietary restrictions, pickup locations, preferred tour timing..."></textarea>
               </div>
             </div>
           </form>

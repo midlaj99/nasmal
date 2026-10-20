@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useBooking } from '@/context/BookingContext';
 import WishlistButton from '@/components/WishlistButton';
 import Breadcrumb from '@/components/Breadcrumb';
-import { isEmbedVideo, getEmbedUrl } from '@/lib/videoHelper';
+import { isEmbedVideo, getEmbedUrl, getOptimizedVideoUrl } from '@/lib/videoHelper';
 import styles from './PackageDetailClient.module.css';
 
 export interface PackageOption {
@@ -170,6 +170,16 @@ function getFactIcon(label: string) {
   );
 }
 
+function getOptionBadgeIcon(badge: string) {
+  const b = badge.toLowerCase();
+  if (b.includes('prime') || b.includes('hour') || b.includes('time') || b.includes('sunrise') || b.includes('morning')) return '⏰';
+  if (b.includes('vip') || b.includes('pass') || b.includes('exclusive') || b.includes('royal')) return '👑';
+  if (b.includes('instant') || b.includes('confirm') || b.includes('fast') || b.includes('quick')) return '⚡';
+  if (b.includes('popular') || b.includes('trend') || b.includes('hot')) return '⭐';
+  if (b.includes('value') || b.includes('best') || b.includes('deal') || b.includes('saver')) return '🔥';
+  return '🏷️';
+}
+
 export default function PackageDetailClient({ packageData }: PackageDetailClientProps) {
   const router = useRouter();
   const { setBookingData } = useBooking();
@@ -184,7 +194,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const [activePhotoModal, setActivePhotoModal] = useState<boolean>(false);
 
   // Available options from admin
-  const availableOptions: PackageOption[] = (packageData.hasOptions && packageData.options && packageData.options.length > 0)
+  const availableOptions: PackageOption[] = ((packageData.hasOptions || (packageData.options && packageData.options.length > 0)) && packageData.options && packageData.options.length > 0)
     ? packageData.options
     : [];
 
@@ -475,8 +485,9 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                     </div>
                     <video
                       ref={videoRef}
-                      src={item.url}
+                      src={getOptimizedVideoUrl(item.url)}
                       poster={item.poster}
+                      preload="metadata"
                       autoPlay={galleryIndex === idx}
                       muted
                       loop
@@ -622,10 +633,10 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                         if (isAvailable) setSelectedOptionId(opt.id);
                       }}
                     >
-                      {/* Top-left Badge (e.g. 🔥 Best Value) */}
+                      {/* Top-left Badge (e.g. 🔥 Best Value, ⏰ Prime Hours, 👑 VIP Pass) */}
                       {opt.badge && (
                         <div className={styles.optBadge}>
-                          <span className={styles.optBadgeIcon}>🔥</span>
+                          <span className={styles.optBadgeIcon}>{getOptionBadgeIcon(opt.badge)}</span>
                           <span>{opt.badge}</span>
                         </div>
                       )}

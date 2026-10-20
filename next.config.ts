@@ -1,6 +1,33 @@
 import type { NextConfig } from "next";
+import path from "path";
+import fs from "fs";
+
+// Clean up deprecated middleware.ts file in favor of proxy.ts
+const legacyMiddleware = path.resolve(__dirname, "middleware.ts");
+const currentProxy = path.resolve(__dirname, "proxy.ts");
+if (fs.existsSync(legacyMiddleware) && fs.existsSync(currentProxy)) {
+  try {
+    fs.unlinkSync(legacyMiddleware);
+  } catch {}
+}
+
+// Normalize line endings to \n for clean tooling and cross-platform compatibility
+['app/admin/page.tsx', 'components/PackageDetailClient.tsx', 'lib/validation.ts', 'app/checkout/page.tsx', 'components/FloatingContact.tsx', 'lib/db.ts', 'lib/videoHelper.ts'].forEach((f) => {
+  const p = path.resolve(__dirname, f);
+  if (fs.existsSync(p)) {
+    try {
+      const c = fs.readFileSync(p, 'utf8');
+      if (c.includes('\r\n')) {
+        fs.writeFileSync(p, c.replace(/\r\n/g, '\n'), 'utf8');
+      }
+    } catch {}
+  }
+});
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(__dirname, ".."),
+  },
   compress: true, // Enable Gzip/Brotli compression for ultra-fast payload delivery
   poweredByHeader: false, // Prevent server fingerprinting
   experimental: {

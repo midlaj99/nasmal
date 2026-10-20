@@ -20,8 +20,36 @@ const DEFAULT_PREFERENCES: PreferenceOption[] = [
   { id: 'nature', label: 'Nature & Wildlife', icon: '🌲' },
 ];
 
+function getFinalOptionsList(existingOptions: any[] = [], pendingForm: any = null) {
+  const result = [...(existingOptions || [])];
+  if (pendingForm && pendingForm.title && pendingForm.title.trim()) {
+    result.push({
+      id: Date.now() + Math.random().toString(36).substring(2, 6),
+      title: pendingForm.title.trim(),
+      badge: (pendingForm.badge || '').trim(),
+      price: (pendingForm.price || '').trim(),
+      childPrice: (pendingForm.childPrice || '').trim(),
+      inclusions: Array.isArray(pendingForm.inclusions)
+        ? pendingForm.inclusions
+        : (pendingForm.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+      moreDetails: (pendingForm.moreDetails || '').trim(),
+      isAvailable: pendingForm.isAvailable !== false,
+    });
+  }
+  return result.map((o: any) => ({
+    id: o.id || Date.now() + Math.random().toString(36).substring(2, 6),
+    title: o.title,
+    badge: o.badge || '',
+    inclusions: Array.isArray(o.inclusions) ? o.inclusions : (o.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+    moreDetails: o.moreDetails || '',
+    price: o.price || '',
+    childPrice: o.childPrice || '',
+    isAvailable: o.isAvailable !== false,
+  }));
+}
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'allPackages' | 'packages' | 'allDestinations' | 'destinations' | 'bestDeals' | 'orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'allPackages' | 'packages' | 'allDestinations' | 'destinations' | 'bestDeals' | 'orders' | 'changeNumber'>('overview');
 
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking, true/false
@@ -61,6 +89,23 @@ export default function AdminPage() {
   const [packageImageFile, setPackageImageFile] = useState<File | null>(null);
   const [destImageFile, setDestImageFile] = useState<File | null>(null);
   const [editDestImageFile, setEditDestImageFile] = useState<File | null>(null);
+
+  // WhatsApp Settings & Order Dispatch State
+  const [waCountryCode, setWaCountryCode] = useState('+971');
+  const [waPhone, setWaPhone] = useState('582659321');
+  const [currentWaNumber, setCurrentWaNumber] = useState('+971582659321');
+  const [waLoading, setWaLoading] = useState(false);
+  const [waSuccessMsg, setWaSuccessMsg] = useState('');
+  const [waErrorMsg, setWaErrorMsg] = useState('');
+
+  // Cloudinary Settings State
+  const [cldCloudName, setCldCloudName] = useState('woe2kr5p');
+  const [cldApiKey, setCldApiKey] = useState('');
+  const [cldApiSecret, setCldApiSecret] = useState('');
+  const [cldIsConfigured, setCldIsConfigured] = useState(false);
+  const [cldLoading, setCldLoading] = useState(false);
+  const [cldSuccessMsg, setCldSuccessMsg] = useState('');
+  const [cldErrorMsg, setCldErrorMsg] = useState('');
 
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [galleryUploadError, setGalleryUploadError] = useState('');
@@ -281,7 +326,7 @@ export default function AdminPage() {
       isPopular: !!pkg.isPopular,
       isBestDeal: !!pkg.isBestDeal,
       originalPrice: String(pkg.originalPrice ?? ''),
-      hasOptions: Boolean(pkg.hasOptions),
+      hasOptions: Boolean(pkg.hasOptions || (pkg.options && pkg.options.length > 0)),
       optionsSectionTitle: pkg.optionsSectionTitle || 'Available Options',
       options: Array.isArray(pkg.options) ? pkg.options : [],
       video: pkg.video || '',
@@ -292,7 +337,7 @@ export default function AdminPage() {
     setEditModalEditingOptionIndex(null);
     setEditModalOptionForm({
       title: '',
-      badge: 'Best Value',
+      badge: '',
       price: '',
       childPrice: '',
       inclusions: '',
@@ -539,6 +584,25 @@ export default function AdminPage() {
         }
       })
       .catch(console.error);
+
+    fetch('/api/settings/whatsapp')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.fullNumber) {
+          setCurrentWaNumber(data.fullNumber);
+          if (data.countryCode) setWaCountryCode(data.countryCode);
+          if (data.phone) setWaPhone(data.phone);
+        }
+      })
+      .catch(console.error);
+
+    fetch('/api/settings/cloudinary')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.cloudName) setCldCloudName(data.cloudName);
+        if (data?.isConfigured) setCldIsConfigured(true);
+      })
+      .catch(() => {});
   }, [isAuthenticated, success]);
 
   const [packageData, setPackageData] = useState({
@@ -575,7 +639,7 @@ export default function AdminPage() {
   // Option Form State for Package Creation
   const [newOptionForm, setNewOptionForm] = useState({
     title: '',
-    badge: 'Best Value',
+    badge: '',
     price: '',
     childPrice: '',
     inclusions: '',
@@ -587,7 +651,7 @@ export default function AdminPage() {
   // Option Form State for Package Editing Modal
   const [editModalOptionForm, setEditModalOptionForm] = useState({
     title: '',
-    badge: 'Best Value',
+    badge: '',
     price: '',
     childPrice: '',
     inclusions: '',
@@ -627,7 +691,7 @@ export default function AdminPage() {
 
     setNewOptionForm({
       title: '',
-      badge: 'Best Value',
+      badge: '',
       price: '',
       childPrice: '',
       inclusions: '',
@@ -692,7 +756,7 @@ export default function AdminPage() {
 
     setEditModalOptionForm({
       title: '',
-      badge: 'Best Value',
+      badge: '',
       price: '',
       childPrice: '',
       inclusions: '',
@@ -812,6 +876,9 @@ export default function AdminPage() {
         throw new Error('Please select a main image file to upload.');
       }
 
+      const finalPackageOptions = getFinalOptionsList(packageData.options, newOptionForm);
+      const hasAnyOptions = Boolean(packageData.hasOptions || finalPackageOptions.length > 0);
+
       const payload = {
         ...packageData,
         image: finalImageUrl,
@@ -822,18 +889,9 @@ export default function AdminPage() {
         quickFacts: packageData.quickFacts.split('\n').map(s => s.trim()).filter(Boolean),
         inclusions: packageData.inclusions.split('\n').map(s => s.trim()).filter(Boolean),
         tags: packageData.tags.split(',').map(s => s.trim()).filter(Boolean),
-        hasOptions: Boolean(packageData.hasOptions),
-        optionsSectionTitle: packageData.optionsSectionTitle || 'Available Options',
-        options: (packageData.options || []).map((o: any) => ({
-          id: o.id || Date.now() + Math.random().toString(36).substring(2, 6),
-          title: o.title,
-          badge: o.badge || '',
-          inclusions: Array.isArray(o.inclusions) ? o.inclusions : (o.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
-          moreDetails: o.moreDetails || '',
-          price: o.price || '',
-          childPrice: o.childPrice || '',
-          isAvailable: o.isAvailable !== false,
-        })),
+        hasOptions: hasAnyOptions,
+        optionsSectionTitle: packageData.optionsSectionTitle?.trim() || 'Available Options',
+        options: finalPackageOptions,
         video: packageData.video?.trim() || '',
       };
 
@@ -866,7 +924,7 @@ export default function AdminPage() {
       });
       setNewOptionForm({
         title: '',
-        badge: 'Best Value',
+        badge: '',
         price: '',
         childPrice: '',
         inclusions: '',
@@ -899,12 +957,84 @@ export default function AdminPage() {
 
       if (!res.ok) throw new Error('Failed to update package');
 
+      setPackages(prev => prev.map(p => p.id === dealData.packageId ? { ...p, isBestDeal: true, originalPrice: dealData.originalPrice } : p));
       setSuccess(true);
       setDealData({ packageId: '', originalPrice: '' });
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemoveBestDeal = async (packageId: string) => {
+    try {
+      const res = await fetch(`/api/packages/${encodeURIComponent(packageId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isBestDeal: false,
+          originalPrice: ''
+        })
+      });
+      if (!res.ok) throw new Error('Failed to remove deal');
+      setPackages(prev => prev.map(p => p.id === packageId ? { ...p, isBestDeal: false, originalPrice: '' } : p));
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Error removing best deal');
+    }
+  };
+
+  const handleSaveWhatsAppNumber = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWaLoading(true);
+    setWaErrorMsg('');
+    setWaSuccessMsg('');
+    try {
+      const res = await fetch('/api/settings/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          countryCode: waCountryCode,
+          phone: waPhone
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update WhatsApp number');
+      setCurrentWaNumber(data.fullNumber);
+      setWaSuccessMsg(`✓ WhatsApp number updated to ${data.fullNumber}! Customer orders and chat inquiries will now be sent to this number.`);
+    } catch (err: any) {
+      setWaErrorMsg(err.message || 'Error updating WhatsApp number');
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  const handleSaveCloudinaryConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCldLoading(true);
+    setCldErrorMsg('');
+    setCldSuccessMsg('');
+    try {
+      const res = await fetch('/api/settings/cloudinary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cloudName: cldCloudName,
+          apiKey: cldApiKey,
+          apiSecret: cldApiSecret
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save Cloudinary configuration');
+      setCldIsConfigured(data.isConfigured);
+      setCldSuccessMsg('✓ Cloudinary connected! Video and media uploads will now stream via Cloudinary with zero Mongo free tier storage consumed.');
+      setCldApiKey('');
+      setCldApiSecret('');
+    } catch (err: any) {
+      setCldErrorMsg(err.message || 'Error saving Cloudinary settings');
+    } finally {
+      setCldLoading(false);
     }
   };
 
@@ -997,6 +1127,9 @@ export default function AdminPage() {
         finalImageUrl = await uploadImage(editPackageImageFile);
       }
 
+      const finalEditPackageOptions = getFinalOptionsList(editingPackage.options, editModalOptionForm);
+      const hasAnyEditOptions = Boolean(editingPackage.hasOptions || finalEditPackageOptions.length > 0);
+
       const payload = {
         title: editingPackage.title,
         destination: editingPackage.destination,
@@ -1026,18 +1159,9 @@ export default function AdminPage() {
         isPopular: !!editingPackage.isPopular,
         isBestDeal: !!editingPackage.isBestDeal,
         originalPrice: editingPackage.originalPrice || '',
-        hasOptions: Boolean(editingPackage.hasOptions),
-        optionsSectionTitle: editingPackage.optionsSectionTitle || 'Available Options',
-        options: (editingPackage.options || []).map((o: any) => ({
-          id: o.id || Date.now() + Math.random().toString(36).substring(2, 6),
-          title: o.title,
-          badge: o.badge || '',
-          inclusions: Array.isArray(o.inclusions) ? o.inclusions : (o.inclusions || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
-          moreDetails: o.moreDetails || '',
-          price: o.price || '',
-          childPrice: o.childPrice || '',
-          isAvailable: o.isAvailable !== false,
-        })),
+        hasOptions: hasAnyEditOptions,
+        optionsSectionTitle: editingPackage.optionsSectionTitle?.trim() || 'Available Options',
+        options: finalEditPackageOptions,
         video: typeof editingPackage.video === 'string' ? editingPackage.video.trim() : '',
       };
 
@@ -1410,6 +1534,12 @@ export default function AdminPage() {
             onClick={() => setActiveTab('orders')}
           >
             <span>🛒</span> Orders
+          </button>
+          <button
+            className={`${styles.navItem} ${activeTab === 'changeNumber' ? styles.active : ''}`}
+            onClick={() => setActiveTab('changeNumber')}
+          >
+            <span>📞</span> Change Number
           </button>
         </nav>
 
@@ -2191,7 +2321,7 @@ export default function AdminPage() {
                                   setEditingOptionIndex(null);
                                   setNewOptionForm({
                                     title: '',
-                                    badge: 'Best Value',
+                                    badge: '',
                                     price: '',
                                     childPrice: '',
                                     inclusions: '',
@@ -2228,11 +2358,11 @@ export default function AdminPage() {
                                 type="text"
                                 value={newOptionForm.badge}
                                 onChange={(e) => setNewOptionForm({ ...newOptionForm, badge: e.target.value })}
-                                placeholder="e.g. Best Value"
+                                placeholder="e.g. Prime Hours, Best Value, VIP Pass"
                                 style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
                               />
                               <div className={styles.badgePillsRow}>
-                                {['Best Value', 'Popular', 'Prime Hours', 'VIP Pass', 'Instant Confirmation'].map(b => (
+                                {['Prime Hours', 'Best Value', 'Popular', 'VIP Pass', 'Instant Confirmation'].map(b => (
                                   <button
                                     key={b}
                                     type="button"
@@ -2253,7 +2383,7 @@ export default function AdminPage() {
                                 type="text"
                                 value={newOptionForm.price}
                                 onChange={(e) => setNewOptionForm({ ...newOptionForm, price: e.target.value })}
-                                placeholder={`Leave empty for package price (${packageData.price || 'AED'})`}
+                                placeholder="Leave empty for package price (AED)"
                                 style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
                               />
                             </div>
@@ -2511,9 +2641,9 @@ export default function AdminPage() {
                   <select required id="packageId" name="packageId" value={dealData.packageId} onChange={handleDealChange}>
                     <option value="">-- Choose a package --</option>
                     {safePackages
-                      .filter(p => safeDestinations.some(d => d.title?.toLowerCase().trim() === (p.destination || '').toLowerCase().trim()))
+                      .filter(p => !p.isBestDeal && safeDestinations.some(d => d.title?.toLowerCase().trim() === (p.destination || '').toLowerCase().trim()))
                       .map(p => (
-                        <option key={p.id} value={p.id}>{p.title} ({p.destination})</option>
+                        <option key={p.id} value={p.id}>{p.title} ({p.destination}) - AED {p.price}</option>
                       ))}
                   </select>
                 </div>
@@ -2531,6 +2661,53 @@ export default function AdminPage() {
                 </div>
               </div>
             </form>
+
+            {/* Currently Active Best Deals List */}
+            <div style={{ marginTop: '36px' }}>
+              <div className={styles.sectionHeader}>
+                <h3>Currently Active Best Deals ({safePackages.filter(p => p.isBestDeal).length})</h3>
+              </div>
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Package</th>
+                      <th>Destination</th>
+                      <th>Deal Price</th>
+                      <th>Original Price</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {safePackages.filter(p => p.isBestDeal).map((pkg) => (
+                      <tr key={pkg.id}>
+                        <td style={{ fontWeight: 600 }}>{pkg.title}</td>
+                        <td>{pkg.destination}</td>
+                        <td style={{ color: '#047857', fontWeight: 700 }}>AED {pkg.price}</td>
+                        <td style={{ textDecoration: 'line-through', color: '#94a3b8' }}>AED {pkg.originalPrice || '-'}</td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBestDeal(pkg.id)}
+                            className={styles.deleteActionBtn}
+                            title="Remove deal status"
+                          >
+                            ✕ Remove Deal
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {safePackages.filter(p => p.isBestDeal).length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', color: '#64748b' }}>
+                          No active best deals. Select a package above to feature it in the Best Deals carousel!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -2603,6 +2780,241 @@ export default function AdminPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Change Number (WhatsApp & Order Dispatch Number) Section */}
+        {activeTab === 'changeNumber' && (
+          <div className={styles.contentSection}>
+            <div className={styles.sectionHeader}>
+              <h2>📞 WhatsApp Order Dispatch & Contact Number</h2>
+              <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
+                All customer orders from the checkout page and floating chat buttons will be instantly sent to this WhatsApp number. Supports any country worldwide.
+              </p>
+            </div>
+
+            {waSuccessMsg && (
+              <div style={{ padding: '12px 16px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', color: '#047857', fontSize: '0.9rem', fontWeight: 600, marginBottom: '20px' }}>
+                {waSuccessMsg}
+              </div>
+            )}
+
+            {waErrorMsg && (
+              <div style={{ padding: '12px 16px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', color: '#e11d48', fontSize: '0.9rem', fontWeight: 600, marginBottom: '20px' }}>
+                {waErrorMsg}
+              </div>
+            )}
+
+            {/* Current Active Number Card */}
+            <div className={styles.waCurrentCard}>
+              <div className={styles.waCurrentInfo}>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Current Active Order Number
+                </div>
+                <div className={styles.waCurrentDigits}>
+                  <span>💬</span>
+                  <span>{currentWaNumber}</span>
+                  <span className={styles.waActiveBadge}>✓ Live & Dispatched</span>
+                </div>
+              </div>
+              <a
+                href={`https://wa.me/${currentWaNumber.replace(/[^0-9]/g, '')}?text=Test%20order%20dispatch%20check`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.waTestBtn}
+                title="Open test chat in WhatsApp"
+              >
+                <span>💬 Test WhatsApp Link</span>
+                <span style={{ fontSize: '0.75rem' }}>↗</span>
+              </a>
+            </div>
+
+            {/* Change Number Form */}
+            <form onSubmit={handleSaveWhatsAppNumber} className={styles.waFormCard}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>
+                Change to a New Number
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Country Dialing Code *
+                  </label>
+                  <select
+                    value={waCountryCode}
+                    onChange={(e) => setWaCountryCode(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem', background: '#ffffff' }}
+                  >
+                    <option value="+971">🇦🇪 +971 (United Arab Emirates)</option>
+                    <option value="+966">🇸🇦 +966 (Saudi Arabia)</option>
+                    <option value="+968">🇴🇲 +968 (Oman)</option>
+                    <option value="+974">🇶🇦 +974 (Qatar)</option>
+                    <option value="+965">🇰🇼 +965 (Kuwait)</option>
+                    <option value="+973">🇧🇭 +973 (Bahrain)</option>
+                    <option value="+91">🇮🇳 +91 (India)</option>
+                    <option value="+1">🇺🇸 +1 (USA / Canada)</option>
+                    <option value="+44">🇬🇧 +44 (United Kingdom)</option>
+                    <option value="+49">🇩🇪 +49 (Germany)</option>
+                    <option value="+33">🇫🇷 +33 (France)</option>
+                    <option value="+7">🇷🇺 +7 (Russia)</option>
+                    <option value="+86">🇨🇳 +86 (China)</option>
+                    <option value="+61">🇦🇺 +61 (Australia)</option>
+                    <option value="+65">🇸🇬 +65 (Singapore)</option>
+                    <option value="+60">🇲🇾 +60 (Malaysia)</option>
+                    <option value="+92">🇵🇰 +92 (Pakistan)</option>
+                    <option value="+880">🇧🇩 +880 (Bangladesh)</option>
+                    <option value="+20">🇪🇬 +20 (Egypt)</option>
+                    <option value="+962">🇯🇴 +962 (Jordan)</option>
+                    <option value="+961">🇱🇧 +961 (Lebanon)</option>
+                    <option value="+90">🇹🇷 +90 (Turkey)</option>
+                    <option value="+39">🇮🇹 +39 (Italy)</option>
+                    <option value="+34">🇪🇸 +34 (Spain)</option>
+                    <option value="+31">🇳🇱 +31 (Netherlands)</option>
+                    <option value="+41">🇨🇭 +41 (Switzerland)</option>
+                    <option value="+27">🇿🇦 +27 (South Africa)</option>
+                    <option value="+63">🇵🇭 +63 (Philippines)</option>
+                    <option value="+62">🇮🇩 +62 (Indonesia)</option>
+                    <option value="+66">🇹🇭 +66 (Thailand)</option>
+                    <option value="+84">🇻🇳 +84 (Vietnam)</option>
+                    <option value="+81">🇯🇵 +81 (Japan)</option>
+                    <option value="+82">🇰🇷 +82 (South Korea)</option>
+                    <option value="+55">🇧🇷 +55 (Brazil)</option>
+                    <option value="+52">🇲🇽 +52 (Mexico)</option>
+                    <option value="+234">🇳🇬 +234 (Nigeria)</option>
+                    <option value="+254">🇰🇪 +254 (Kenya)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Phone Number (Without country code) *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={waPhone}
+                    onChange={(e) => setWaPhone(e.target.value)}
+                    placeholder="e.g. 582659321"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                  />
+                  <small style={{ color: '#64748b', fontSize: '0.78rem', display: 'block', marginTop: '4px' }}>
+                    Enter digits only or with spaces (e.g. 58 265 9321 or 9876543210).
+                  </small>
+                </div>
+              </div>
+
+              {/* Real-time Preview */}
+              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px dashed #cbd5e1', marginBottom: '18px', fontSize: '0.85rem' }}>
+                <span style={{ color: '#64748b' }}>Resulting International Number: </span>
+                <strong style={{ color: '#047857' }}>
+                  {waCountryCode}{waPhone.replace(/[^0-9]/g, '')}
+                </strong>
+                <span style={{ color: '#94a3b8', marginLeft: '8px' }}>
+                  (Target: https://wa.me/{waCountryCode.replace(/[^0-9]/g, '')}{waPhone.replace(/[^0-9]/g, '')})
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={waLoading || !waPhone.trim()}
+                className={styles.submitBtn}
+                style={{ width: 'auto', padding: '10px 24px' }}
+              >
+                {waLoading ? 'Saving...' : '💾 Save WhatsApp Number'}
+              </button>
+            </form>
+
+            {/* Cloudinary CDN Media Storage Configuration Card */}
+            <div className={styles.cldSettingsSection} style={{ marginTop: '36px' }}>
+              <div className={styles.sectionHeader}>
+                <h2>☁️ Cloudinary Media CDN Configuration (Zero Mongo Space)</h2>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
+                  Connect your Cloudinary account so videos and high-res photos stream at 120-160 FPS worldwide with adaptive compression, taking <strong>ZERO space</strong> from your MongoDB Atlas Free Tier.
+                </p>
+              </div>
+
+              {cldSuccessMsg && (
+                <div style={{ padding: '12px 16px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', color: '#047857', fontSize: '0.9rem', fontWeight: 600, marginBottom: '20px' }}>
+                  {cldSuccessMsg}
+                </div>
+              )}
+
+              {cldErrorMsg && (
+                <div style={{ padding: '12px 16px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', color: '#e11d48', fontSize: '0.9rem', fontWeight: 600, marginBottom: '20px' }}>
+                  {cldErrorMsg}
+                </div>
+              )}
+
+              <div className={styles.waCurrentCard} style={{ marginBottom: '20px' }}>
+                <div className={styles.waCurrentInfo}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                    Cloudinary CDN Status
+                  </div>
+                  <div className={styles.waCurrentDigits}>
+                    <span>☁️</span>
+                    <span>{cldCloudName || 'Not configured'}</span>
+                    <span className={cldIsConfigured ? styles.waActiveBadge : styles.waPendingBadge}>
+                      {cldIsConfigured ? '✓ Cloudinary Active & Streaming' : '○ Standby / Local DB Mode'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveCloudinaryConfig} className={styles.waFormCard}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                      Cloud Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={cldCloudName}
+                      onChange={(e) => setCldCloudName(e.target.value)}
+                      placeholder="e.g. woe2kr5p"
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                      API Key *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={cldApiKey}
+                      onChange={(e) => setCldApiKey(e.target.value)}
+                      placeholder="e.g. 123456789012345"
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                      API Secret *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={cldApiSecret}
+                      onChange={(e) => setCldApiSecret(e.target.value)}
+                      placeholder="Enter your Cloudinary secret"
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={cldLoading || !cldCloudName.trim() || !cldApiKey.trim() || !cldApiSecret.trim()}
+                  className={styles.submitBtn}
+                  style={{ width: 'auto', padding: '10px 24px', background: '#0284c7' }}
+                >
+                  {cldLoading ? 'Connecting...' : '☁️ Save Cloudinary Credentials'}
+                </button>
+              </form>
             </div>
           </div>
         )}
@@ -3211,7 +3623,7 @@ export default function AdminPage() {
                                       setEditModalEditingOptionIndex(null);
                                       setEditModalOptionForm({
                                         title: '',
-                                        badge: 'Best Value',
+                                        badge: '',
                                         price: '',
                                         childPrice: '',
                                         inclusions: '',
@@ -3248,11 +3660,11 @@ export default function AdminPage() {
                                     type="text"
                                     value={editModalOptionForm.badge}
                                     onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, badge: e.target.value })}
-                                    placeholder="e.g. Best Value"
+                                    placeholder="e.g. Prime Hours, Best Value, VIP Pass"
                                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
                                   />
                                   <div className={styles.badgePillsRow}>
-                                    {['Best Value', 'Popular', 'Prime Hours', 'VIP Pass', 'Instant Confirmation'].map(b => (
+                                    {['Prime Hours', 'Best Value', 'Popular', 'VIP Pass', 'Instant Confirmation'].map(b => (
                                       <button
                                         key={b}
                                         type="button"
@@ -3273,7 +3685,7 @@ export default function AdminPage() {
                                     type="text"
                                     value={editModalOptionForm.price}
                                     onChange={(e) => setEditModalOptionForm({ ...editModalOptionForm, price: e.target.value })}
-                                    placeholder={`Leave empty for package price (${editingPackage.price || 'AED'})`}
+                                    placeholder="Leave empty for package price (AED)"
                                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem' }}
                                   />
                                 </div>

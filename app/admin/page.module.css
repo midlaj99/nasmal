@@ -1873,3 +1873,89 @@
 
 
 
+
+/* ==========================================================================
+   WhatsApp Order Dispatch & Cloudinary CDN Settings Styles
+   ========================================================================== */
+.waCurrentCard {
+  background: #ffffff;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.06);
+}
+
+.waCurrentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.waCurrentDigits {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.waActiveBadge {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.waPendingBadge {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.waTestBtn {
+  background: #047857;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+}
+
+.waTestBtn:hover {
+  background: #065f46;
+  transform: translateY(-1px);
+}
+
+.waFormCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}

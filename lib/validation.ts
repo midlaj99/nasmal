@@ -99,7 +99,8 @@ export function validatePackagePayload(body: any): ValidationResult<any> {
   const childPrice = body.childPrice ? sanitizeString(String(body.childPrice)) : undefined;
   const childAgeLimit = body.childAgeLimit ? sanitizeString(String(body.childAgeLimit)) : undefined;
 
-  const hasOptions = Boolean(body.hasOptions);
+
+
   const optionsSectionTitle = body.optionsSectionTitle ? sanitizeString(String(body.optionsSectionTitle)) : 'Available Options';
   const options = Array.isArray(body.options)
     ? body.options.map((opt: any) => ({
@@ -113,6 +114,8 @@ export function validatePackagePayload(body: any): ValidationResult<any> {
         isAvailable: opt.isAvailable !== false,
       })).filter((opt: any) => opt.title.length > 0)
     : [];
+
+  const hasOptions = Boolean(body.hasOptions || options.length > 0);
 
   const video = body.video ? sanitizeString(String(body.video)) : undefined;
 
@@ -317,3 +320,82 @@ export function validateContactPayload(body: any): ValidationResult<ContactPaylo
   };
 }
 
+
+export function validateWhatsAppPayload(body: any): ValidationResult<{ countryCode: string; phone: string; fullNumber: string }> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const rawCountryCode = sanitizeString(body.countryCode || '+971');
+  const rawPhone = sanitizeString(body.phone || '');
+
+  const cleanCountryDigits = rawCountryCode.replace(/[^0-9]/g, '');
+  const cleanPhoneDigits = rawPhone.replace(/[^0-9]/g, '');
+
+  if (!cleanCountryDigits) {
+    errors.push('Country dialing code is required (e.g. +971, +966, +91, +1)');
+  }
+
+  if (!cleanPhoneDigits || cleanPhoneDigits.length < 5 || cleanPhoneDigits.length > 15) {
+    errors.push('Phone number must contain between 5 and 15 digits');
+  }
+
+  const combinedDigits = cleanCountryDigits + cleanPhoneDigits;
+  if (combinedDigits.length < 7 || combinedDigits.length > 16) {
+    errors.push('Combined international phone number must be between 7 and 16 digits');
+  }
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      countryCode: `+${cleanCountryDigits}`,
+      phone: cleanPhoneDigits,
+      fullNumber: `+${combinedDigits}`,
+    },
+  };
+}
+
+export function validateCloudinaryPayload(body: any): ValidationResult<{ cloudName: string; apiKey: string; apiSecret: string }> {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== 'object') {
+    return { isValid: false, errors: ['Request body must be a valid JSON object'] };
+  }
+
+  const cloudName = sanitizeString(body.cloudName || '').toLowerCase();
+  const apiKey = sanitizeString(body.apiKey || '');
+  const apiSecret = sanitizeString(body.apiSecret || '');
+
+  if (!cloudName) {
+    errors.push('Cloudinary Cloud Name is required');
+  }
+
+  if (!apiKey) {
+    errors.push('Cloudinary API Key is required');
+  }
+
+  if (!apiSecret) {
+    errors.push('Cloudinary API Secret is required');
+  }
+
+  if (errors.length > 0) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    data: {
+      cloudName,
+      apiKey,
+      apiSecret,
+    },
+  };
+}

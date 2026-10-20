@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Enterprise Web Application Firewall (WAF) & Global Rate Limiter Middleware
+ * Enterprise Web Application Firewall (WAF) & Global Rate Limiter Proxy
  * Protects Nasmal Tourisms against:
  * 1. SQL Injection (SQLi)
  * 2. NoSQL Injection (NoSQLi)
@@ -52,7 +52,7 @@ const SCANNER_USER_AGENTS = [
   'gobuster',
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Ultra-fast path for database image delivery: zero overhead, maximum streaming speed
@@ -147,6 +147,8 @@ export function middleware(request: NextRequest) {
 
   return response;
 }
+
+export default proxy;
 
 export const config = {
   matcher: [

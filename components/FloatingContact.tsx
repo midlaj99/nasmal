@@ -1,23 +1,44 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import styles from './FloatingContact.module.css';
 
 export default function FloatingContact() {
   const pathname = usePathname();
 
+  const [phoneInfo, setPhoneInfo] = useState({
+    formatted: '+971 58 265 9321',
+    cleanDigits: '971582659321',
+  });
+
+  useEffect(() => {
+    fetch('/api/settings/whatsapp')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.fullNumber) {
+          const raw = String(data.fullNumber);
+          const digits = raw.replace(/[^0-9]/g, '');
+          if (digits) {
+            setPhoneInfo({
+              formatted: raw.startsWith('+') ? raw : `+${raw}`,
+              cleanDigits: digits,
+            });
+          }
+        }
+      })
+      .catch((err) => console.warn('Floating contact number fetch notice:', err));
+  }, []);
+
   // Exclude all admin routes
   if (pathname && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
     return null;
   }
 
-  const phoneNumber = '+971 58 265 9321';
-  const cleanPhone = '971582659321';
-  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+  const waUrl = `https://wa.me/${phoneInfo.cleanDigits}?text=${encodeURIComponent(
     'Hello Nasmal Tourisms, I would like to inquire about tours and bookings.'
   )}`;
-  const callUrl = `tel:+${cleanPhone}`;
+  const callUrl = `tel:+${phoneInfo.cleanDigits}`;
 
   return (
     <aside className={styles.floatingContainer} aria-label="Floating Quick Contact">
@@ -25,9 +46,9 @@ export default function FloatingContact() {
       <a
         href={callUrl}
         className={`${styles.floatingBtn} ${styles.callBtn}`}
-        aria-label={`Call us at ${phoneNumber}`}
+        aria-label={`Call us at ${phoneInfo.formatted}`}
       >
-        <span className={styles.btnTooltip}>Call: {phoneNumber}</span>
+        <span className={styles.btnTooltip}>Call: {phoneInfo.formatted}</span>
         <svg
           className={styles.btnIcon}
           width="23"
@@ -52,7 +73,7 @@ export default function FloatingContact() {
         className={`${styles.floatingBtn} ${styles.whatsappBtn}`}
         aria-label="Chat with us on WhatsApp"
       >
-        <span className={styles.btnTooltip}>Chat on WhatsApp</span>
+        <span className={styles.btnTooltip}>Chat on WhatsApp ({phoneInfo.formatted})</span>
         <svg
           className={styles.btnIcon}
           width="26"

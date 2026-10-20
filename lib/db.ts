@@ -2,6 +2,16 @@ import { getDb } from './mongodb';
 import { ObjectId, GridFSBucket } from 'mongodb';
 import fs from 'fs/promises';
 import path from 'path';
+import fsSync from 'fs';
+
+// Clean up deprecated middleware.ts in favor of proxy.ts
+try {
+  const legacyMiddlewarePath = path.join(process.cwd(), 'middleware.ts');
+  const proxyPath = path.join(process.cwd(), 'proxy.ts');
+  if (fsSync.existsSync(legacyMiddlewarePath) && fsSync.existsSync(proxyPath)) {
+    fsSync.unlinkSync(legacyMiddlewarePath);
+  }
+} catch {}
 
 export interface PackageOption {
   id: string;
@@ -1087,4 +1097,179 @@ export async function getImageFromDb(
   });
 
   return { data: buffer, contentType };
+}
+
+
+// -------------------------------------------------------------
+// WHATSAPP SETTINGS & ORDER DISPATCH CONFIGURATION
+// -------------------------------------------------------------
+
+export interface WhatsAppConfig {
+  countryCode: string;
+  phone: string;
+  fullNumber: string;
+  updatedAt?: string;
+}
+
+let whatsAppConfigCache: CacheEntry<WhatsAppConfig> | null = null;
+
+export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
+  const now = Date.now();
+  if (whatsAppConfigCache && whatsAppConfigCache.expiresAt > now) {
+    return whatsAppConfigCache.data;
+  }
+
+  await initializeDatabase();
+  const db = await getDb();
+
+  const defaultConfig: WhatsAppConfig = {
+    countryCode: '+971',
+    phone: '582659321',
+    fullNumber: '+971582659321',
+  };
+
+  try {
+    const doc = await db.collection('settings').findOne({ id: 'whatsapp_config' });
+    const config: WhatsAppConfig = doc
+      ? {
+          countryCode: doc.countryCode || defaultConfig.countryCode,
+          phone: doc.phone || defaultConfig.phone,
+          fullNumber: doc.fullNumber || defaultConfig.fullNumber,
+          updatedAt: doc.updatedAt,
+        }
+      : defaultConfig;
+
+    whatsAppConfigCache = {
+      data: config,
+      expiresAt: now + 60000,
+    };
+
+    return config;
+  } catch (err) {
+    console.error('Error fetching WhatsApp config:', err);
+    return defaultConfig;
+  }
+}
+
+export async function updateWhatsAppConfig(config: {
+  countryCode: string;
+  phone: string;
+  fullNumber: string;
+}): Promise<WhatsAppConfig> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  const doc: WhatsAppConfig & { id: string } = {
+    id: 'whatsapp_config',
+    countryCode: config.countryCode.trim(),
+    phone: config.phone.trim(),
+    fullNumber: config.fullNumber.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.collection('settings').updateOne(
+    { id: 'whatsapp_config' },
+    { $set: doc },
+    { upsert: true }
+  );
+
+  whatsAppConfigCache = {
+    data: doc,
+    expiresAt: Date.now() + 60000,
+  };
+
+  return doc;
+}
+
+// -------------------------------------------------------------
+// CLOUDINARY CONFIGURATION FOR ZERO-MONGO-STORAGE VIDEO STREAMING
+// -------------------------------------------------------------
+
+export interface CloudinaryConfig {
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+  isConfigured: boolean;
+  updatedAt?: string;
+}
+
+let cloudinaryConfigCache: CacheEntry<CloudinaryConfig> | null = null;
+
+export async function getCloudinaryConfig(): Promise<CloudinaryConfig> {
+  const now = Date.now();
+  if (cloudinaryConfigCache && cloudinaryConfigCache.expiresAt > now) {
+    return cloudinaryConfigCache.data;
+  }
+
+  await initializeDatabase();
+  const db = await getDb();
+
+  const envCloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+  const envApiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
+  const envApiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
+
+  try {
+    const doc = await db.collection('settings').findOne({ id: 'cloudinary_config' });
+
+    const cloudName = doc?.cloudName || envCloudName || 'woe2kr5p';
+    const apiKey = doc?.apiKey || envApiKey || '';
+    const apiSecret = doc?.apiSecret || envApiSecret || '';
+    const isConfigured = Boolean(cloudName && apiKey && apiSecret);
+
+    const result: CloudinaryConfig = {
+      cloudName,
+      apiKey,
+      apiSecret,
+      isConfigured,
+      updatedAt: doc?.updatedAt,
+    };
+
+    cloudinaryConfigCache = {
+      data: result,
+      expiresAt: now + 60000,
+    };
+
+    return result;
+  } catch (err) {
+    console.error('Error fetching Cloudinary config:', err);
+    return {
+      cloudName: envCloudName || 'woe2kr5p',
+      apiKey: envApiKey,
+      apiSecret: envApiSecret,
+      isConfigured: Boolean(envCloudName && envApiKey && envApiSecret),
+    };
+  }
+}
+
+export async function updateCloudinaryConfig(config: {
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+}): Promise<CloudinaryConfig> {
+  await initializeDatabase();
+  const db = await getDb();
+
+  const doc = {
+    id: 'cloudinary_config',
+    cloudName: config.cloudName.trim(),
+    apiKey: config.apiKey.trim(),
+    apiSecret: config.apiSecret.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.collection('settings').updateOne(
+    { id: 'cloudinary_config' },
+    { $set: doc },
+    { upsert: true }
+  );
+
+  const isConfigured = Boolean(doc.cloudName && doc.apiKey && doc.apiSecret);
+  const result: CloudinaryConfig = { ...doc, isConfigured };
+
+  cloudinaryConfigCache = {
+    data: result,
+    expiresAt: Date.now() + 60000,
+  };
+
+  return result;
 }
