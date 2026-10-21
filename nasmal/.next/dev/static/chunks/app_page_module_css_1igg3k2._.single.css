@@ -1,0 +1,27 @@
+/* [project]/app/page.module.css [app-client] (css) */
+.page-module__E0kJGG__main {
+  min-height: 100vh;
+}
+
+.page-module__E0kJGG__section {
+  background-color: var(--secondary-color);
+  padding: 80px 0;
+}
+
+.page-module__E0kJGG__altSection {
+  background-color: var(--white);
+}
+
+.page-module__E0kJGG__grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  display: grid;
+}
+
+@media (max-width: 768px) {
+  .page-module__E0kJGG__grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/*# sourceMappingURL=app_page_module_css_1igg3k2._.single.css.map*/

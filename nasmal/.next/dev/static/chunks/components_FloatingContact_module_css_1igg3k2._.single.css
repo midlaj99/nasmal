@@ -1,0 +1,143 @@
+/* [project]/components/FloatingContact.module.css [app-client] (css) */
+.FloatingContact-module__Vk_pMG__floatingContainer {
+  z-index: 99999;
+  pointer-events: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  display: flex;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+}
+
+.FloatingContact-module__Vk_pMG__floatingBtn {
+  pointer-events: auto;
+  cursor: pointer;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 54px;
+  height: 54px;
+  text-decoration: none;
+  transition: transform .22s cubic-bezier(.34, 1.56, .64, 1), box-shadow .22s;
+  display: flex;
+  position: relative;
+  box-shadow: 0 4px 16px #00000038, 0 2px 6px #0000001f;
+}
+
+.FloatingContact-module__Vk_pMG__floatingBtn:hover {
+  transform: translateY(-3px)scale(1.08);
+}
+
+.FloatingContact-module__Vk_pMG__floatingBtn:active {
+  transform: translateY(0)scale(.96);
+}
+
+.FloatingContact-module__Vk_pMG__callBtn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 2px solid #fff6;
+}
+
+.FloatingContact-module__Vk_pMG__callBtn:hover {
+  box-shadow: 0 8px 24px #0284c780;
+}
+
+.FloatingContact-module__Vk_pMG__whatsappBtn {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  border: 2px solid #ffffff73;
+}
+
+.FloatingContact-module__Vk_pMG__whatsappBtn:hover {
+  box-shadow: 0 8px 24px #25d3668c;
+}
+
+.FloatingContact-module__Vk_pMG__btnIcon {
+  pointer-events: none;
+  flex-shrink: 0;
+  margin: auto;
+  display: block;
+}
+
+.FloatingContact-module__Vk_pMG__btnTooltip {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  background: #0f172af0;
+  border: 1px solid #ffffff1a;
+  border-radius: 8px;
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity .2s, transform .2s;
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 12px);
+  transform: translateY(-50%)translateX(6px);
+  box-shadow: 0 4px 14px #0000003d;
+}
+
+.FloatingContact-module__Vk_pMG__btnTooltip:after {
+  content: "";
+  border: 5px solid #0000;
+  border-left-color: #0f172af0;
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+}
+
+.FloatingContact-module__Vk_pMG__floatingBtn:hover .FloatingContact-module__Vk_pMG__btnTooltip {
+  opacity: 1;
+  transform: translateY(-50%)translateX(0);
+}
+
+@keyframes FloatingContact-module__Vk_pMG__softPulse {
+  0% {
+    box-shadow: 0 0 #25d3668c;
+  }
+
+  70% {
+    box-shadow: 0 0 0 13px #25d36600;
+  }
+
+  100% {
+    box-shadow: 0 0 #25d36600;
+  }
+}
+
+.FloatingContact-module__Vk_pMG__whatsappBtn {
+  animation: 2.8s infinite FloatingContact-module__Vk_pMG__softPulse;
+}
+
+.FloatingContact-module__Vk_pMG__whatsappBtn:hover {
+  animation: none;
+}
+
+@media (max-width: 768px) {
+  .FloatingContact-module__Vk_pMG__floatingContainer {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 99999;
+    gap: 12px;
+    right: 16px;
+  }
+
+  .FloatingContact-module__Vk_pMG__floatingBtn {
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 4px 16px #00000047, 0 2px 6px #00000029;
+  }
+
+  .FloatingContact-module__Vk_pMG__btnTooltip {
+    display: none;
+  }
+}
+
+/*# sourceMappingURL=components_FloatingContact_module_css_1igg3k2._.single.css.map*/

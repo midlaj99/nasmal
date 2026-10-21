@@ -1,0 +1,99 @@
+/* [project]/app/globals.css [app-client] (css) */
+:root {
+  --primary-color: #047857;
+  --primary-hover: #065f46;
+  --secondary-brand: #047857;
+  --secondary-brand-hover: #065f46;
+  --secondary-brand-light: #ecfdf5;
+  --secondary-color: #f5f7fa;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --white: #fff;
+  --border-color: #e5e7eb;
+  --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-elegant: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --font-secondary: "Poppins", var(--font-main);
+  --shadow-sm: 0 1px 2px 0 #0000000d;
+  --shadow-md: 0 4px 6px -1px #0000001a, 0 2px 4px -1px #0000000f;
+  --shadow-lg: 0 10px 15px -3px #0000001a, 0 4px 6px -2px #0000000d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  max-width: 100vw;
+  font-family: var(--font-main);
+  color: var(--text-dark);
+  background-color: var(--secondary-color);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all .2s;
+  display: inline-flex;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
+  background-color: #0000;
+}
+
+.btn-outline:hover {
+  background-color: #f3f4f6;
+}
+
+.section-title {
+  font-family: var(--font-elegant);
+  text-align: center;
+  letter-spacing: -.01em;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+/*# sourceMappingURL=app_globals_css_1igg3k2._.single.css.map*/

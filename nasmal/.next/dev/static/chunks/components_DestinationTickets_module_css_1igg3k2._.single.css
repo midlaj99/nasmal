@@ -1,0 +1,74 @@
+/* [project]/components/DestinationTickets.module.css [app-client] (css) */
+.DestinationTickets-module__m-sDWW__container {
+  width: 100%;
+}
+
+.DestinationTickets-module__m-sDWW__tabsContainer {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  display: flex;
+}
+
+.DestinationTickets-module__m-sDWW__tab {
+  border: 2px solid var(--border-color);
+  color: var(--text-dark);
+  cursor: pointer;
+  background-color: #0000;
+  border-radius: 30px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all .3s;
+}
+
+.DestinationTickets-module__m-sDWW__tab:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.DestinationTickets-module__m-sDWW__activeTab {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.DestinationTickets-module__m-sDWW__activeTab:hover {
+  color: #fff;
+}
+
+.DestinationTickets-module__m-sDWW__grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  display: grid;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreContainer {
+  justify-content: center;
+  margin-top: 40px;
+  display: flex;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreBtn {
+  color: var(--primary-color, #e00b3e);
+  border: 2px solid var(--primary-color, #e00b3e);
+  text-align: center;
+  cursor: pointer;
+  background-color: #0000;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all .2s;
+  display: inline-block;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreBtn:hover {
+  background-color: var(--primary-color, #e00b3e);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px #e00b3e33;
+}
+
+/*# sourceMappingURL=components_DestinationTickets_module_css_1igg3k2._.single.css.map*/

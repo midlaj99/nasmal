@@ -1,0 +1,831 @@
+/* [project]/components/HeroSearchBar.module.css [app-client] (css) */
+.HeroSearchBar-module__F6lXJa__searchWrapper {
+  width: 100%;
+  max-width: 580px;
+  position: relative;
+}
+
+.HeroSearchBar-module__F6lXJa__searchWrapperCenter {
+  margin: 0 auto;
+}
+
+.HeroSearchBar-module__F6lXJa__searchWrapperLeft {
+  margin: 0;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBar {
+  background: #fff;
+  border: 1.5px solid #0000;
+  border-radius: 9999px;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 6px 8px 6px 22px;
+  transition: box-shadow .25s, transform .25s, border-color .2s;
+  display: flex;
+  box-shadow: 0 15px 35px -5px #0000004d, 0 4px 12px #00000026;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBar:focus-within {
+  border-color: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -4px #04785759, 0 0 0 3px #04785733;
+}
+
+.HeroSearchBar-module__F6lXJa__searchInput {
+  color: #0f172a;
+  background: none;
+  border: none;
+  outline: none;
+  flex: 1;
+  width: 100%;
+  font-family: inherit;
+  font-size: 15.5px;
+}
+
+.HeroSearchBar-module__F6lXJa__searchInput::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.HeroSearchBar-module__F6lXJa__clearBtn {
+  color: #94a3b8;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  margin-right: 6px;
+  padding: 6px;
+  transition: all .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__clearBtn:hover {
+  color: #334155;
+  background-color: #f1f5f9;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn {
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: none;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  transition: all .2s;
+  display: flex;
+  box-shadow: 0 4px 12px #0478574d;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: scale(1.04);
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn:active {
+  transform: scale(.96);
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsDropdown {
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  max-height: 420px;
+  animation: .22s cubic-bezier(.16, 1, .3, 1) forwards HeroSearchBar-module__F6lXJa__dropIn;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  overflow: hidden auto;
+  box-shadow: 0 20px 45px -8px #00000038, 0 6px 16px #00000014;
+}
+
+@keyframes HeroSearchBar-module__F6lXJa__dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroup {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 0;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroup:last-of-type {
+  border-bottom: none;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroupTitle {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #94a3b8;
+  text-align: left;
+  padding: 6px 18px 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem {
+  cursor: pointer;
+  text-align: left;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  transition: background-color .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover {
+  background-color: #ecfdf5;
+}
+
+.HeroSearchBar-module__F6lXJa__destIconBubble {
+  color: #047857;
+  background: #ecfdf5;
+  border-radius: 9px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__packageThumb {
+  object-fit: cover;
+  background: #f1f5f9;
+  border-radius: 9px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionTextWrapper {
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionTitle {
+  color: #1e293b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover .HeroSearchBar-module__F6lXJa__suggestionTitle {
+  color: #047857;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionSub {
+  color: #64748b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionArrow {
+  color: #cbd5e1;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: transform .15s, color .15s;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover .HeroSearchBar-module__F6lXJa__suggestionArrow {
+  color: #047857;
+  transform: translateX(3px);
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionFooter {
+  cursor: pointer;
+  text-align: left;
+  background-color: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  transition: background-color .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionFooter:hover {
+  background-color: #ecfdf5;
+}
+
+.HeroSearchBar-module__F6lXJa__footerSearchText {
+  color: #047857;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__footerSearchText strong {
+  font-weight: 700;
+}
+
+.HeroSearchBar-module__F6lXJa__noSuggestions {
+  text-align: center;
+  color: #64748b;
+  padding: 16px;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .HeroSearchBar-module__F6lXJa__searchBar {
+    height: 50px;
+    padding: 4px 6px 4px 18px;
+  }
+
+  .HeroSearchBar-module__F6lXJa__searchInput {
+    font-size: 14px;
+  }
+
+  .HeroSearchBar-module__F6lXJa__searchBtn {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* [project]/components/Hero.module.css [app-client] (css) */
+.Hero-module__Z8hQ_W__hero {
+  height: 80vh;
+  min-height: 700px;
+  color: var(--white);
+  align-items: center;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.Hero-module__Z8hQ_W__bgImage {
+  opacity: 0;
+  z-index: 0;
+  background-position: center;
+  background-size: cover;
+  transition: opacity 1.5s ease-in-out;
+  position: absolute;
+  inset: 0;
+}
+
+.Hero-module__Z8hQ_W__activeBg {
+  opacity: 1;
+}
+
+.Hero-module__Z8hQ_W__overlay {
+  z-index: 1;
+  background: linear-gradient(to right, #0009 0%, #0003 100%);
+  position: absolute;
+  inset: 0;
+}
+
+.Hero-module__Z8hQ_W__heroContent {
+  z-index: 2;
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.Hero-module__Z8hQ_W__title {
+  font-family: var(--font-elegant);
+  letter-spacing: -.01em;
+  margin-bottom: 14px;
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.Hero-module__Z8hQ_W__animatedText {
+  color: #fcd34d;
+  font-family: inherit;
+  font-style: italic;
+  animation: .6s cubic-bezier(.16, 1, .3, 1) forwards Hero-module__Z8hQ_W__slideUpFade;
+  display: inline-block;
+}
+
+@keyframes Hero-module__Z8hQ_W__slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.Hero-module__Z8hQ_W__subtitle {
+  font-family: var(--font-secondary);
+  opacity: .95;
+  letter-spacing: .02em;
+  margin-bottom: 40px;
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.Hero-module__Z8hQ_W__searchBar {
+  font-family: var(--font-secondary);
+  background: var(--white);
+  max-width: 600px;
+  box-shadow: var(--shadow-lg);
+  border-radius: 50px;
+  margin: 0 auto;
+  padding: 8px 8px 8px 24px;
+  display: flex;
+}
+
+.Hero-module__Z8hQ_W__searchInput {
+  font-family: var(--font-secondary);
+  color: var(--text-dark);
+  background: none;
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 1rem;
+}
+
+.Hero-module__Z8hQ_W__searchInput::placeholder {
+  color: var(--text-light);
+}
+
+.Hero-module__Z8hQ_W__searchBtn {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  transition: background-color .2s;
+  display: flex;
+}
+
+.Hero-module__Z8hQ_W__searchBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+/* [project]/components/PackageCard.module.css [app-client] (css) */
+.PackageCard-module__55bUCG__card {
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+  flex-direction: column;
+  height: 100%;
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+  overflow: hidden;
+}
+
+.PackageCard-module__55bUCG__card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.PackageCard-module__55bUCG__imageWrapper {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.PackageCard-module__55bUCG__image {
+  object-fit: cover;
+  transition: transform .4s;
+}
+
+.PackageCard-module__55bUCG__card:hover .PackageCard-module__55bUCG__image {
+  transform: scale(1.05);
+}
+
+.PackageCard-module__55bUCG__badge {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-transform: uppercase;
+  z-index: 2;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: .75rem;
+  font-weight: 600;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.PackageCard-module__55bUCG__favButton {
+  -webkit-backdrop-filter: blur(6px);
+  color: #64748b;
+  cursor: pointer;
+  z-index: 10;
+  background: #ffffffe0;
+  border: 1px solid #fff9;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  transition: all .2s cubic-bezier(.4, 0, .2, 1);
+  display: flex;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  box-shadow: 0 4px 12px #0000001f;
+}
+
+.PackageCard-module__55bUCG__favButton:hover {
+  color: #e11d48;
+  background: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 6px 16px #e11d4840;
+}
+
+.PackageCard-module__55bUCG__favButtonActive {
+  color: #e11d48;
+  background: #fff;
+}
+
+.PackageCard-module__55bUCG__favButtonActive svg {
+  fill: #e11d48;
+  stroke: #e11d48;
+  animation: .3s cubic-bezier(.175, .885, .32, 1.275) PackageCard-module__55bUCG__heartPulse;
+}
+
+@keyframes PackageCard-module__55bUCG__heartPulse {
+  0% {
+    transform: scale(.8);
+  }
+
+  50% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.PackageCard-module__55bUCG__content {
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+  display: flex;
+}
+
+.PackageCard-module__55bUCG__title {
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  display: -webkit-box;
+  overflow: hidden;
+}
+
+.PackageCard-module__55bUCG__ratingBox {
+  align-items: center;
+  gap: 4px;
+  margin-bottom: auto;
+  font-size: .85rem;
+  display: flex;
+}
+
+.PackageCard-module__55bUCG__star {
+  color: #fbbf24;
+}
+
+.PackageCard-module__55bUCG__rating {
+  font-weight: 600;
+}
+
+.PackageCard-module__55bUCG__reviews {
+  color: var(--text-light);
+}
+
+.PackageCard-module__55bUCG__priceBox {
+  border-top: 1px solid var(--border-color);
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 16px;
+  padding-top: 12px;
+  display: flex;
+}
+
+.PackageCard-module__55bUCG__from {
+  color: var(--text-light);
+  font-size: .85rem;
+}
+
+.PackageCard-module__55bUCG__prices {
+  flex-direction: column;
+  align-items: flex-end;
+  display: flex;
+}
+
+.PackageCard-module__55bUCG__originalPrice {
+  color: var(--text-light);
+  font-size: .85rem;
+  text-decoration: line-through;
+}
+
+.PackageCard-module__55bUCG__price {
+  color: var(--primary-color);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* [project]/components/DestinationCard.module.css [app-client] (css) */
+.DestinationCard-module__SmzwjG__card {
+  box-shadow: var(--shadow-sm);
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  flex-direction: column;
+  transition: transform .3s, box-shadow .3s;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.DestinationCard-module__SmzwjG__card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-8px);
+}
+
+.DestinationCard-module__SmzwjG__imageWrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.DestinationCard-module__SmzwjG__image {
+  object-fit: cover;
+  transition: transform .5s;
+}
+
+.DestinationCard-module__SmzwjG__card:hover .DestinationCard-module__SmzwjG__image {
+  transform: scale(1.1);
+}
+
+.DestinationCard-module__SmzwjG__overlay {
+  z-index: 1;
+  background: linear-gradient(to top, #000c 0%, #0000 60%);
+  position: absolute;
+  inset: 0;
+}
+
+.DestinationCard-module__SmzwjG__content {
+  z-index: 2;
+  color: var(--white);
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px;
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.DestinationCard-module__SmzwjG__title {
+  text-shadow: 0 2px 4px #00000080;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.DestinationCard-module__SmzwjG__tours {
+  opacity: .9;
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+/* [project]/components/AutoCarousel.module.css [app-client] (css) */
+.AutoCarousel-module__jQ3Bua__carouselWrapper {
+  width: 100%;
+  margin: 0 -10px;
+  padding: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.AutoCarousel-module__jQ3Bua__carouselTrack {
+  transition: transform .8s cubic-bezier(.25, 1, .5, 1);
+  display: flex;
+}
+
+.AutoCarousel-module__jQ3Bua__carouselItem {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard {
+  aspect-ratio: 16 / 9;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.AutoCarousel-module__jQ3Bua__offerImage {
+  object-fit: cover;
+  transition: transform .6s;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerImage {
+  transform: scale(1.05);
+}
+
+.AutoCarousel-module__jQ3Bua__offerOverlay {
+  background: #0003;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: background .3s;
+  display: flex;
+  position: absolute;
+  inset: 0;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerOverlay {
+  background: #00000080;
+}
+
+.AutoCarousel-module__jQ3Bua__offerTitle {
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 8px #0009;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  transition: transform .3s;
+  transform: translateY(15px);
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerTitle {
+  transform: translateY(0);
+}
+
+.AutoCarousel-module__jQ3Bua__bookNowBtn {
+  background-color: var(--primary-color);
+  color: #fff;
+  opacity: 0;
+  border-radius: 30px;
+  padding: 12px 28px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity .3s, transform .3s;
+  transform: translateY(20px);
+  box-shadow: 0 4px 12px #0478574d;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__bookNowBtn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.AutoCarousel-module__jQ3Bua__dots {
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  display: flex;
+}
+
+.AutoCarousel-module__jQ3Bua__dot {
+  cursor: pointer;
+  background-color: #d1d5db;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  transition: background-color .3s, transform .3s;
+}
+
+.AutoCarousel-module__jQ3Bua__activeDot {
+  background-color: var(--primary-color);
+  transform: scale(1.2);
+}
+
+/* [project]/components/DestinationTickets.module.css [app-client] (css) */
+.DestinationTickets-module__m-sDWW__container {
+  width: 100%;
+}
+
+.DestinationTickets-module__m-sDWW__tabsContainer {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  display: flex;
+}
+
+.DestinationTickets-module__m-sDWW__tab {
+  border: 2px solid var(--border-color);
+  color: var(--text-dark);
+  cursor: pointer;
+  background-color: #0000;
+  border-radius: 30px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all .3s;
+}
+
+.DestinationTickets-module__m-sDWW__tab:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.DestinationTickets-module__m-sDWW__activeTab {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.DestinationTickets-module__m-sDWW__activeTab:hover {
+  color: #fff;
+}
+
+.DestinationTickets-module__m-sDWW__grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  display: grid;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreContainer {
+  justify-content: center;
+  margin-top: 40px;
+  display: flex;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreBtn {
+  color: var(--primary-color, #e00b3e);
+  border: 2px solid var(--primary-color, #e00b3e);
+  text-align: center;
+  cursor: pointer;
+  background-color: #0000;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all .2s;
+  display: inline-block;
+}
+
+.DestinationTickets-module__m-sDWW__viewMoreBtn:hover {
+  background-color: var(--primary-color, #e00b3e);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px #e00b3e33;
+}
+
+/* [project]/app/page.module.css [app-client] (css) */
+.page-module__E0kJGG__main {
+  min-height: 100vh;
+}
+
+.page-module__E0kJGG__section {
+  background-color: var(--secondary-color);
+  padding: 80px 0;
+}
+
+.page-module__E0kJGG__altSection {
+  background-color: var(--white);
+}
+
+.page-module__E0kJGG__grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  display: grid;
+}
+
+@media (max-width: 768px) {
+  .page-module__E0kJGG__grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/*# sourceMappingURL=_04qk9lx._.css.map*/

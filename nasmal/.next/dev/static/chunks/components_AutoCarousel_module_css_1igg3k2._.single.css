@@ -1,0 +1,108 @@
+/* [project]/components/AutoCarousel.module.css [app-client] (css) */
+.AutoCarousel-module__jQ3Bua__carouselWrapper {
+  width: 100%;
+  margin: 0 -10px;
+  padding: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.AutoCarousel-module__jQ3Bua__carouselTrack {
+  transition: transform .8s cubic-bezier(.25, 1, .5, 1);
+  display: flex;
+}
+
+.AutoCarousel-module__jQ3Bua__carouselItem {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard {
+  aspect-ratio: 16 / 9;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.AutoCarousel-module__jQ3Bua__offerImage {
+  object-fit: cover;
+  transition: transform .6s;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerImage {
+  transform: scale(1.05);
+}
+
+.AutoCarousel-module__jQ3Bua__offerOverlay {
+  background: #0003;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: background .3s;
+  display: flex;
+  position: absolute;
+  inset: 0;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerOverlay {
+  background: #00000080;
+}
+
+.AutoCarousel-module__jQ3Bua__offerTitle {
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 8px #0009;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  transition: transform .3s;
+  transform: translateY(15px);
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerTitle {
+  transform: translateY(0);
+}
+
+.AutoCarousel-module__jQ3Bua__bookNowBtn {
+  background-color: var(--primary-color);
+  color: #fff;
+  opacity: 0;
+  border-radius: 30px;
+  padding: 12px 28px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity .3s, transform .3s;
+  transform: translateY(20px);
+  box-shadow: 0 4px 12px #0478574d;
+}
+
+.AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__bookNowBtn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.AutoCarousel-module__jQ3Bua__dots {
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  display: flex;
+}
+
+.AutoCarousel-module__jQ3Bua__dot {
+  cursor: pointer;
+  background-color: #d1d5db;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  transition: background-color .3s, transform .3s;
+}
+
+.AutoCarousel-module__jQ3Bua__activeDot {
+  background-color: var(--primary-color);
+  transform: scale(1.2);
+}
+
+/*# sourceMappingURL=components_AutoCarousel_module_css_1igg3k2._.single.css.map*/

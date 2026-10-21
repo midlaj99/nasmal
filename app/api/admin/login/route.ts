@@ -33,34 +33,37 @@ export async function POST(request: Request) {
     }
 
     const admin = await getOrCreateAdmin();
-    const db = await getDb();
 
-    // Check account lockout status
-    if (admin.lockUntil) {
-      const lockExpiryTime = new Date(admin.lockUntil).getTime();
-      const now = Date.now();
+    // Check account lockout status if DB is active
+    try {
+      const db = await getDb();
+      if (admin.lockUntil) {
+        const lockExpiryTime = new Date(admin.lockUntil).getTime();
+        const now = Date.now();
 
-      if (lockExpiryTime > now) {
-        const remainingSeconds = Math.max(1, Math.ceil((lockExpiryTime - now) / 1000));
-        const mins = Math.floor(remainingSeconds / 60);
-        const secs = remainingSeconds % 60;
-        const timeMessage = mins > 0
-          ? `${mins} minute${mins === 1 ? '' : 's'} and ${secs} second${secs === 1 ? '' : 's'}`
-          : `${secs} second${secs === 1 ? '' : 's'}`;
+        if (lockExpiryTime > now) {
+          const remainingSeconds = Math.max(1, Math.ceil((lockExpiryTime - now) / 1000));
+          const mins = Math.floor(remainingSeconds / 60);
+          const secs = remainingSeconds % 60;
+          const timeMessage = mins > 0
+            ? `${mins} minute${mins === 1 ? '' : 's'} and ${secs} second${secs === 1 ? '' : 's'}`
+            : `${secs} second${secs === 1 ? '' : 's'}`;
 
-        return NextResponse.json(
-          { error: `Account locked due to 3 failed attempts. Please try again in ${timeMessage}.` },
-          { status: 423 }
-        );
-      } else {
-        // 5-minute lockout has expired: automatically reset failed attempts
-        await db.collection('admins').updateOne(
-          { id: admin.id },
-          { $set: { failedAttempts: 0, lockUntil: null } }
-        );
-        admin.failedAttempts = 0;
-        admin.lockUntil = null;
+          return NextResponse.json(
+            { error: `Account locked due to consecutive failed attempts. Please try again in ${timeMessage}.` },
+            { status: 423 }
+          );
+        } else {
+          await db.collection('admins').updateOne(
+            { id: admin.id },
+            { $set: { failedAttempts: 0, lockUntil: null } }
+          );
+          admin.failedAttempts = 0;
+          admin.lockUntil = null;
+        }
       }
+    } catch (e) {
+      // Non-fatal if DB is temporarily unreachable
     }
 
     // Verify username or email match
@@ -68,46 +71,52 @@ export async function POST(request: Request) {
     const isPasswordMatch = isIdentifierMatch && verifyPassword(password, admin.passwordHash);
 
     if (!isPasswordMatch) {
-      const currentFailures = admin.failedAttempts || 0;
-      const newFailedAttempts = currentFailures + 1;
-      const updates: any = { failedAttempts: newFailedAttempts };
+      try {
+        const db = await getDb();
+        const currentFailures = admin.failedAttempts || 0;
+        const newFailedAttempts = currentFailures + 1;
+        const updates: any = { failedAttempts: newFailedAttempts };
 
-      // Requirement: Exactly 3 failed attempts locks for 5 minutes
-      if (newFailedAttempts >= 3) {
-        const lockUntil = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes lockout
-        updates.lockUntil = lockUntil;
-        updates.failedAttempts = 3;
+        if (newFailedAttempts >= 3) {
+          updates.lockUntil = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+          updates.failedAttempts = 3;
+          await db.collection('admins').updateOne({ id: admin.id }, { $set: updates });
+          return NextResponse.json(
+            { error: 'Account locked for 5 minutes due to 3 consecutive failed login attempts.' },
+            { status: 423 }
+          );
+        }
 
         await db.collection('admins').updateOne({ id: admin.id }, { $set: updates });
-
+        const remainingAttempts = 3 - newFailedAttempts;
         return NextResponse.json(
-          { error: 'Account locked for 5 minutes due to 3 consecutive failed login attempts.' },
-          { status: 423 }
+          { error: `Invalid credentials. ${remainingAttempts} attempt${remainingAttempts === 1 ? '' : 's'} remaining before lockout.` },
+          { status: 401 }
+        );
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid admin username or password. Please verify your credentials.' },
+          { status: 401 }
         );
       }
-
-      await db.collection('admins').updateOne({ id: admin.id }, { $set: updates });
-      const remainingAttempts = 3 - newFailedAttempts;
-
-      return NextResponse.json(
-        {
-          error: `Invalid credentials. ${remainingAttempts} attempt${remainingAttempts === 1 ? '' : 's'} remaining before a 5-minute lockout.`
-        },
-        { status: 401 }
-      );
     }
 
-    // Login successful: Reset failed attempts & update last login
-    await db.collection('admins').updateOne(
-      { id: admin.id },
-      {
-        $set: {
-          failedAttempts: 0,
-          lockUntil: null,
-          lastLoginAt: new Date().toISOString(),
+    // Login successful: Update DB if available
+    try {
+      const db = await getDb();
+      await db.collection('admins').updateOne(
+        { id: admin.id },
+        {
+          $set: {
+            failedAttempts: 0,
+            lockUntil: null,
+            lastLoginAt: new Date().toISOString(),
+          }
         }
-      }
-    );
+      );
+    } catch {
+      // Resilient: Login continues even if recording lastLoginAt times out
+    }
 
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const signedSessionToken = await createAdminSession(admin, userAgent, ip);
@@ -121,7 +130,6 @@ export async function POST(request: Request) {
       }
     });
 
-    // Set secure HTTP-Only cookie
     response.cookies.set('nasmal_admin_session', signedSessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -134,7 +142,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Admin login error:', error);
     return NextResponse.json(
-      { error: `Login error: ${error?.message || 'Database connection error'}` },
+      { error: `Authentication error: ${error?.message || 'Login service unavailable'}` },
       { status: 500 }
     );
   }

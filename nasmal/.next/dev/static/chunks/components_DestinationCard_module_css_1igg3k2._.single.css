@@ -1,0 +1,66 @@
+/* [project]/components/DestinationCard.module.css [app-client] (css) */
+.DestinationCard-module__SmzwjG__card {
+  box-shadow: var(--shadow-sm);
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  flex-direction: column;
+  transition: transform .3s, box-shadow .3s;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.DestinationCard-module__SmzwjG__card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-8px);
+}
+
+.DestinationCard-module__SmzwjG__imageWrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.DestinationCard-module__SmzwjG__image {
+  object-fit: cover;
+  transition: transform .5s;
+}
+
+.DestinationCard-module__SmzwjG__card:hover .DestinationCard-module__SmzwjG__image {
+  transform: scale(1.1);
+}
+
+.DestinationCard-module__SmzwjG__overlay {
+  z-index: 1;
+  background: linear-gradient(to top, #000c 0%, #0000 60%);
+  position: absolute;
+  inset: 0;
+}
+
+.DestinationCard-module__SmzwjG__content {
+  z-index: 2;
+  color: var(--white);
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px;
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.DestinationCard-module__SmzwjG__title {
+  text-shadow: 0 2px 4px #00000080;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.DestinationCard-module__SmzwjG__tours {
+  opacity: .9;
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+/*# sourceMappingURL=components_DestinationCard_module_css_1igg3k2._.single.css.map*/

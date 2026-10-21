@@ -1,0 +1,269 @@
+/* [project]/components/HeroSearchBar.module.css [app-client] (css) */
+.HeroSearchBar-module__F6lXJa__searchWrapper {
+  width: 100%;
+  max-width: 580px;
+  position: relative;
+}
+
+.HeroSearchBar-module__F6lXJa__searchWrapperCenter {
+  margin: 0 auto;
+}
+
+.HeroSearchBar-module__F6lXJa__searchWrapperLeft {
+  margin: 0;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBar {
+  background: #fff;
+  border: 1.5px solid #0000;
+  border-radius: 9999px;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 6px 8px 6px 22px;
+  transition: box-shadow .25s, transform .25s, border-color .2s;
+  display: flex;
+  box-shadow: 0 15px 35px -5px #0000004d, 0 4px 12px #00000026;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBar:focus-within {
+  border-color: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -4px #04785759, 0 0 0 3px #04785733;
+}
+
+.HeroSearchBar-module__F6lXJa__searchInput {
+  color: #0f172a;
+  background: none;
+  border: none;
+  outline: none;
+  flex: 1;
+  width: 100%;
+  font-family: inherit;
+  font-size: 15.5px;
+}
+
+.HeroSearchBar-module__F6lXJa__searchInput::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.HeroSearchBar-module__F6lXJa__clearBtn {
+  color: #94a3b8;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  margin-right: 6px;
+  padding: 6px;
+  transition: all .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__clearBtn:hover {
+  color: #334155;
+  background-color: #f1f5f9;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn {
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: none;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  transition: all .2s;
+  display: flex;
+  box-shadow: 0 4px 12px #0478574d;
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: scale(1.04);
+}
+
+.HeroSearchBar-module__F6lXJa__searchBtn:active {
+  transform: scale(.96);
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsDropdown {
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  max-height: 420px;
+  animation: .22s cubic-bezier(.16, 1, .3, 1) forwards HeroSearchBar-module__F6lXJa__dropIn;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  overflow: hidden auto;
+  box-shadow: 0 20px 45px -8px #00000038, 0 6px 16px #00000014;
+}
+
+@keyframes HeroSearchBar-module__F6lXJa__dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroup {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 0;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroup:last-of-type {
+  border-bottom: none;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionsGroupTitle {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #94a3b8;
+  text-align: left;
+  padding: 6px 18px 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem {
+  cursor: pointer;
+  text-align: left;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  transition: background-color .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover {
+  background-color: #ecfdf5;
+}
+
+.HeroSearchBar-module__F6lXJa__destIconBubble {
+  color: #047857;
+  background: #ecfdf5;
+  border-radius: 9px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__packageThumb {
+  object-fit: cover;
+  background: #f1f5f9;
+  border-radius: 9px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionTextWrapper {
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionTitle {
+  color: #1e293b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover .HeroSearchBar-module__F6lXJa__suggestionTitle {
+  color: #047857;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionSub {
+  color: #64748b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionArrow {
+  color: #cbd5e1;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: transform .15s, color .15s;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionItem:hover .HeroSearchBar-module__F6lXJa__suggestionArrow {
+  color: #047857;
+  transform: translateX(3px);
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionFooter {
+  cursor: pointer;
+  text-align: left;
+  background-color: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  transition: background-color .15s;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__suggestionFooter:hover {
+  background-color: #ecfdf5;
+}
+
+.HeroSearchBar-module__F6lXJa__footerSearchText {
+  color: #047857;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+}
+
+.HeroSearchBar-module__F6lXJa__footerSearchText strong {
+  font-weight: 700;
+}
+
+.HeroSearchBar-module__F6lXJa__noSuggestions {
+  text-align: center;
+  color: #64748b;
+  padding: 16px;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .HeroSearchBar-module__F6lXJa__searchBar {
+    height: 50px;
+    padding: 4px 6px 4px 18px;
+  }
+
+  .HeroSearchBar-module__F6lXJa__searchInput {
+    font-size: 14px;
+  }
+
+  .HeroSearchBar-module__F6lXJa__searchBtn {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/*# sourceMappingURL=components_HeroSearchBar_module_css_1igg3k2._.single.css.map*/
