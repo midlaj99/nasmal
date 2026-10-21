@@ -39,11 +39,9 @@ export function sanitizeArrayOfStrings(input: unknown): string[] {
     .filter(Boolean);
 }
 
-export interface ValidationResult<T> {
-  isValid: boolean;
-  errors: string[];
-  data?: T;
-}
+export type ValidationResult<T> =
+  | { isValid: true; errors: string[]; data: T }
+  | { isValid: false; errors: string[]; data?: undefined };
 
 export function validatePackagePayload(body: any): ValidationResult<any> {
   const errors: string[] = [];

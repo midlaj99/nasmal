@@ -55,8 +55,8 @@ export async function POST(request: Request) {
     }
 
     const validation = validateCloudinaryPayload(body);
-    if (!validation.isValid) {
-      return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 });
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json({ error: validation.errors?.join(', ') || 'Invalid Cloudinary configuration' }, { status: 400 });
     }
 
     const updated = await updateCloudinaryConfig(validation.data);

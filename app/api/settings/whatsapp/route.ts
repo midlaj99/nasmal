@@ -57,8 +57,8 @@ export async function POST(request: Request) {
     }
 
     const validation = validateWhatsAppPayload(body);
-    if (!validation.isValid) {
-      return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 });
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json({ error: validation.errors?.join(', ') || 'Invalid WhatsApp payload' }, { status: 400 });
     }
 
     const updated = await updateWhatsAppConfig(validation.data);
