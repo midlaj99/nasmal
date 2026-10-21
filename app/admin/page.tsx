@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isEmbedVideo, isInstagramUrl, getEmbedUrl } from '@/lib/videoHelper';
 import styles from './page.module.css';
 
@@ -77,6 +77,7 @@ export default function AdminPage() {
   const [editingPackage, setEditingPackage] = useState<any | null>(null);
   const [editingDest, setEditingDest] = useState<any | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+  const modalOverlayMouseDown = useRef<EventTarget | null>(null);
 
   // Preferable / Suitable For state
   const [preferences, setPreferences] = useState<PreferenceOption[]>(DEFAULT_PREFERENCES);
@@ -206,8 +207,19 @@ export default function AdminPage() {
     setGalleryUploadError('');
 
     try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file));
-      const newUrls = await Promise.all(uploadPromises);
+      const results = await Promise.allSettled(Array.from(files).map(file => uploadImage(file)));
+      const newUrls: string[] = [];
+      let failCount = 0;
+      let lastErrMsg = '';
+
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value) {
+          newUrls.push(res.value);
+        } else if (res.status === 'rejected') {
+          failCount++;
+          lastErrMsg = res.reason?.message || 'Upload error';
+        }
+      });
 
       if (newUrls.length > 0) {
         setPackageData(prev => {
@@ -222,6 +234,10 @@ export default function AdminPage() {
             image: prev.image || newUrls[0]
           };
         });
+      }
+
+      if (failCount > 0) {
+        setGalleryUploadError(`${newUrls.length} image(s) uploaded, but ${failCount} failed: ${lastErrMsg}`);
       }
     } catch (err: any) {
       console.error('Gallery upload error:', err);
@@ -262,8 +278,19 @@ export default function AdminPage() {
     setEditGalleryUploadError('');
 
     try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file));
-      const newUrls = await Promise.all(uploadPromises);
+      const results = await Promise.allSettled(Array.from(files).map(file => uploadImage(file)));
+      const newUrls: string[] = [];
+      let failCount = 0;
+      let lastErrMsg = '';
+
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value) {
+          newUrls.push(res.value);
+        } else if (res.status === 'rejected') {
+          failCount++;
+          lastErrMsg = res.reason?.message || 'Upload error';
+        }
+      });
 
       if (newUrls.length > 0) {
         setEditingPackage((prev: any) => {
@@ -279,6 +306,10 @@ export default function AdminPage() {
             image: prev.image || newUrls[0]
           };
         });
+      }
+
+      if (failCount > 0) {
+        setEditGalleryUploadError(`${newUrls.length} image(s) uploaded, but ${failCount} failed: ${lastErrMsg}`);
       }
     } catch (err: any) {
       console.error('Edit gallery upload error:', err);
@@ -972,6 +1003,7 @@ export default function AdminPage() {
         isAvailable: true,
       });
       setEditingOptionIndex(null);
+      setPackageImageFile(null);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -1100,7 +1132,10 @@ export default function AdminPage() {
         body: JSON.stringify({ ...destData, image: finalImageUrl })
       });
 
-      if (!res.ok) throw new Error('Failed to add destination');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to add destination');
+      }
       const newDest = await res.json();
 
       // Immediately fetch updated destinations list
@@ -1151,6 +1186,9 @@ export default function AdminPage() {
         throw new Error(data.error || 'Failed to delete package');
       }
       setPackages(prev => prev.filter(p => p.id !== id));
+      if (editingPackage?.id === id) {
+        setEditingPackage(null);
+      }
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Error deleting package');
@@ -1222,6 +1260,7 @@ export default function AdminPage() {
       const updated = await res.json();
       setPackages(prev => prev.map(p => p.id === updated.id ? updated : p));
       setEditingPackage(null);
+      setEditPackageImageFile(null);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Error updating package');
@@ -1242,6 +1281,9 @@ export default function AdminPage() {
       setDestinations(prev => prev.filter(d => d.id !== id));
       if (targetDest) {
         setPackages(prev => prev.filter(p => p.destination?.toLowerCase().trim() !== targetDest.title?.toLowerCase().trim()));
+      }
+      if (editingDest?.id === id) {
+        setEditingDest(null);
       }
       setSuccess(true);
     } catch (err: any) {
@@ -1268,7 +1310,10 @@ export default function AdminPage() {
           image: finalImageUrl
         })
       });
-      if (!res.ok) throw new Error('Failed to update destination');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to update destination');
+      }
       const updated = await res.json();
       setDestinations(prev => prev.map(d => d.id === updated.id ? updated : d));
       setEditingDest(null);
@@ -3073,8 +3118,24 @@ export default function AdminPage() {
 
         {/* Edit Package Modal */}
         {editingPackage && (
-          <div className={styles.modalOverlay} onClick={() => setEditingPackage(null)}>
-            <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '880px' }}>
+          <div
+            className={styles.modalOverlay}
+            onMouseDown={(e) => {
+              modalOverlayMouseDown.current = e.target;
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && modalOverlayMouseDown.current === e.currentTarget) {
+                setEditingPackage(null);
+              }
+              modalOverlayMouseDown.current = null;
+            }}
+          >
+            <div
+              className={styles.modalDialog}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: '880px' }}
+            >
               <div className={styles.modalHeader}>
                 <h3>✏️ Edit Package: {editingPackage.title}</h3>
                 <button 
@@ -3909,8 +3970,24 @@ export default function AdminPage() {
 
         {/* Edit Destination Modal */}
         {editingDest && (
-          <div className={styles.modalOverlay} onClick={() => setEditingDest(null)}>
-            <div className={styles.modalDialog} style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={styles.modalOverlay}
+            onMouseDown={(e) => {
+              modalOverlayMouseDown.current = e.target;
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && modalOverlayMouseDown.current === e.currentTarget) {
+                setEditingDest(null);
+              }
+              modalOverlayMouseDown.current = null;
+            }}
+          >
+            <div
+              className={styles.modalDialog}
+              style={{ maxWidth: '540px' }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className={styles.modalHeader}>
                 <h3>Edit Destination: {editingDest.title}</h3>
                 <button 
