@@ -480,7 +480,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                       src={galleryIndex === idx ? getEmbedUrl(item.url) : ''}
                       title={`${packageData.title} video preview`}
                       className={styles.carouselIframe}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     />
                   </div>
@@ -970,7 +970,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                         title={`${packageData.title} Instagram Video`}
                         style={{ width: '100%', height: '100%', border: 'none' }}
                         loading="lazy"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
                       />
                     </div>
@@ -982,7 +982,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
                       title={`${packageData.title} Tour Video`}
                       className={styles.videoIframe}
                       loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     />
                   </div>

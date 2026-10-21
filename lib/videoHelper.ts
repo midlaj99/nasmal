@@ -46,7 +46,7 @@ export function getEmbedUrl(url?: string): string {
       const parsed = new URL(trimmed);
       const v = parsed.searchParams.get('v');
       if (v) {
-        return `https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}&playsinline=1&enablejsapi=1`;
+        return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}&playsinline=1&enablejsapi=1`;
       }
     } catch {}
   }
@@ -56,7 +56,7 @@ export function getEmbedUrl(url?: string): string {
     const parts = trimmed.split('youtu.be/');
     const id = parts[1]?.split(/[?&#/]/)[0];
     if (id) {
-      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
+      return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
     }
   }
 
@@ -65,26 +65,27 @@ export function getEmbedUrl(url?: string): string {
     const parts = trimmed.split('youtube.com/shorts/');
     const id = parts[1]?.split(/[?&#/]/)[0];
     if (id) {
-      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
+      return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
     }
   }
 
-  // 4. YouTube already embed URL: https://www.youtube.com/embed/VIDEO_ID
-  if (trimmed.includes('youtube.com/embed/')) {
-    const parts = trimmed.split('youtube.com/embed/');
+  // 4. YouTube already embed URL: https://www.youtube.com/embed/VIDEO_ID or youtube-nocookie
+  if (trimmed.includes('youtube.com/embed/') || trimmed.includes('youtube-nocookie.com/embed/')) {
+    const parts = trimmed.includes('youtube-nocookie.com/embed/')
+      ? trimmed.split('youtube-nocookie.com/embed/')
+      : trimmed.split('youtube.com/embed/');
     const id = parts[1]?.split(/[?&#/]/)[0];
     if (id) {
-      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
+      return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
     }
   }
 
   // 5. Instagram Reels / Posts / TV:
-  // e.g. https://www.instagram.com/reel/C-xyz/, https://www.instagram.com/p/C-xyz/
+  // Both Reels and standard posts are cleanly rendered at https://www.instagram.com/p/ID/embed/
   if (trimmed.includes('instagram.com') || trimmed.includes('instagr.am')) {
     const match = trimmed.match(/(?:reel|p|tv)\/([A-Za-z0-9_-]+)/i);
     if (match && match[1]) {
-      const type = trimmed.includes('/reel/') ? 'reel' : 'p';
-      return `https://www.instagram.com/${type}/${match[1]}/embed/`;
+      return `https://www.instagram.com/p/${match[1]}/embed/`;
     }
     if (trimmed.includes('/embed')) {
       return trimmed.split('?')[0].replace(/\/+$/, '') + '/embed/';
@@ -126,6 +127,10 @@ export function getVideoThumbnail(url?: string): string | null {
   }
   if (trimmed.includes('youtube.com/embed/')) {
     const id = trimmed.split('youtube.com/embed/')[1]?.split(/[?&#/]/)[0];
+    if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  }
+  if (trimmed.includes('youtube-nocookie.com/embed/')) {
+    const id = trimmed.split('youtube-nocookie.com/embed/')[1]?.split(/[?&#/]/)[0];
     if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   }
 

@@ -2045,7 +2045,7 @@ export default function AdminPage() {
                               src={getEmbedUrl(packageData.video)}
                               title="Video preview"
                               className={styles.videoAdminIframe}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                               allowFullScreen
                             />
                           ) : (
@@ -3307,7 +3307,7 @@ export default function AdminPage() {
                                   src={getEmbedUrl(editingPackage.video)}
                                   title="Video preview"
                                   className={styles.videoAdminIframe}
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                   allowFullScreen
                                 />
                               ) : (

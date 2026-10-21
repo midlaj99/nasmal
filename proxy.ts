@@ -142,7 +142,7 @@ export function proxy(request: NextRequest) {
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https://www.google.com https://maps.google.com https://*.google.com; child-src 'self' https://www.google.com https://maps.google.com https://*.google.com; frame-ancestors 'self';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; font-src 'self' data: https:; media-src 'self' https: data: blob:; connect-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.youtube.com https://*.youtu.be https://www.instagram.com https://*.instagram.com https://player.vimeo.com https://*.vimeo.com https://www.google.com https://maps.google.com https://*.google.com; child-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.youtube.com https://*.youtu.be https://www.instagram.com https://*.instagram.com https://player.vimeo.com https://*.vimeo.com https://www.google.com https://maps.google.com https://*.google.com; frame-ancestors 'self';"
   );
 
   return response;
