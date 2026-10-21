@@ -132,6 +132,233 @@ const DEFAULT_DESTINATIONS: Destination[] = [
   },
 ];
 
+export const DEFAULT_PACKAGES: Package[] = [
+  {
+    id: 'burj-khalifa-at-the-top',
+    title: 'Burj Khalifa At The Top (Level 124 & 125)',
+    destination: 'Dubai',
+    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
+    price: '179',
+    originalPrice: '220',
+    rating: '4.9',
+    reviewsCount: 1420,
+    tags: ['Attractions', 'Iconic', 'Skyline'],
+    images: [
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80'
+    ],
+    description: "Experience panoramic 360-degree views of Dubai from the world's tallest building. Step onto the open-air terrace of Level 124 and explore Level 125 with state-of-the-art telescopes and immersive displays.",
+    highlights: [
+      'High-speed elevators travelling at 10 meters per second',
+      'Observation decks on Level 124 & 125',
+      'Breathtaking 360-degree panoramic views of Dubai skyline and Arabian Gulf',
+      'State-of-the-art telescopes for close-up city exploration'
+    ],
+    quickFacts: [
+      'Duration: ~1.5 Hours',
+      'Mobile Tickets Accepted',
+      'Instant Confirmation',
+      'Wheelchair Accessible'
+    ],
+    inclusions: [
+      'Burj Khalifa At The Top entry ticket',
+      'Access to Levels 124 and 125',
+      'High-speed elevator ride',
+      'Access to viewing telescopes',
+      'Free high-speed Wi-Fi'
+    ],
+    isPopular: true,
+    isBestDeal: true,
+    hasOptions: true,
+    optionsSectionTitle: 'Available Options',
+    options: [
+      {
+        id: 'opt_std_124_125',
+        title: 'At The Top (Level 124 & 125) - Standard Hours',
+        badge: 'Best Value',
+        price: '179',
+        childPrice: '139',
+        isAvailable: true,
+        inclusions: [
+          'Admission tickets to 124 & 125 Floors of Burj Khalifa',
+          'Access to the telescopes on 124th floor',
+          'Standard non-prime hours admission'
+        ],
+        moreDetails: 'Instant confirmation. Please arrive 15 minutes before your scheduled entry time.'
+      },
+      {
+        id: 'opt_prime_sunset',
+        title: 'At The Top - Sunset Prime Hours',
+        badge: 'Prime Hours',
+        price: '249',
+        childPrice: '179',
+        isAvailable: true,
+        inclusions: [
+          'Admission tickets to 124 & 125 Floors during golden hour',
+          'Access to the outdoor observation terrace',
+          'Witness Dubai transition from golden sunset to sparkling night'
+        ],
+        moreDetails: 'The most popular viewing time in Dubai. Advance booking strongly recommended.'
+      }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'desert-safari-bbq-dinner',
+    title: 'Dubai Red Dune Desert Safari & BBQ Dinner',
+    destination: 'Dubai',
+    image: 'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&q=80',
+    price: '149',
+    originalPrice: '199',
+    rating: '4.8',
+    reviewsCount: 980,
+    tags: ['Adventure', 'Families', 'Culture'],
+    images: [
+      'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&q=80',
+      'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80',
+      'https://images.unsplash.com/photo-1547234935-80c7145ec969?w=800&q=80'
+    ],
+    description: 'Conquer the golden red dunes in a 4x4 Land Cruiser, try sandboarding, ride camels, and enjoy a lavish 5-star BBQ dinner with Tanoura dance and fire show under the Arabian desert stars.',
+    highlights: [
+      'Thrilling 4x4 Dune Bashing in Lahbab Red Dunes',
+      'Camel ride and sandboarding adventure',
+      'Sunset photography stop over the desert horizon',
+      'Lavish BBQ dinner buffet with vegetarian and non-vegetarian selections',
+      'Live Tanoura, belly dance, and mesmerizing fire show'
+    ],
+    quickFacts: [
+      'Duration: ~6 Hours',
+      'Hotel Pick-up & Drop-off Included',
+      'Dinner Included',
+      'Instant Confirmation'
+    ],
+    inclusions: [
+      'Hotel pick-up and drop-off in air-conditioned 4x4',
+      '30-40 minutes Dune Bashing session',
+      'Camel ride experience',
+      'Sandboarding gear and briefing',
+      'International BBQ buffet dinner with unlimited water and soft drinks',
+      'Live cultural performances'
+    ],
+    isPopular: true,
+    isBestDeal: true,
+    hasOptions: true,
+    optionsSectionTitle: 'Available Options',
+    options: [
+      {
+        id: 'opt_safari_standard',
+        title: 'Standard Desert Safari with BBQ Dinner',
+        badge: 'Popular',
+        price: '149',
+        childPrice: '119',
+        isAvailable: true,
+        inclusions: [
+          '4x4 Dune Bashing & Sandboarding',
+          'Camel ride & Henna painting',
+          'International BBQ dinner buffet'
+        ],
+        moreDetails: 'Pick up between 2:30 PM - 3:30 PM from your hotel in Dubai or Sharjah.'
+      },
+      {
+        id: 'opt_safari_vip',
+        title: 'VIP Desert Safari with Table Service',
+        badge: 'VIP Pass',
+        price: '229',
+        childPrice: '169',
+        isAvailable: true,
+        inclusions: [
+          'VIP seating area with dedicated waiter service',
+          'Dune Bashing, Camel ride & Quad bike access',
+          'Premium BBQ dinner served directly at your table'
+        ],
+        moreDetails: 'Enjoy royal treatment with dedicated table service and premium seating.'
+      }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dubai-marina-luxury-yacht',
+    title: 'Dubai Marina Luxury Yacht Cruise & Refreshments',
+    destination: 'Dubai',
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80',
+    price: '199',
+    originalPrice: '280',
+    rating: '4.9',
+    reviewsCount: 650,
+    tags: ['Luxury', 'Couple', 'Sightseeing'],
+    images: [
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80',
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80'
+    ],
+    description: 'Sail through Dubai Marina, Ain Dubai, JBR, and the iconic Atlantis The Palm on an ultra-luxury yacht with refreshing drinks, experienced captain, and onboard sound system.',
+    highlights: [
+      'Scenic cruise through Dubai Marina lagoon and Arabian Gulf',
+      'Close-up views of Ain Dubai, JBR, and Atlantis The Palm',
+      'Spacious sunbathing deck and air-conditioned indoor salon',
+      'Complimentary chilled drinks and fruit platter'
+    ],
+    quickFacts: [
+      'Duration: ~2 Hours',
+      'Boarding at Dubai Marina',
+      'Refreshments Included',
+      'Instant Confirmation'
+    ],
+    inclusions: [
+      '2-hour luxury yacht cruise',
+      'Chilled water, sodas, and juices',
+      'Professional captain and crew',
+      'Life jackets and marine safety equipment'
+    ],
+    isPopular: true,
+    isBestDeal: false,
+    hasOptions: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'abu-dhabi-grand-mosque-tour',
+    title: 'Abu Dhabi City Tour & Sheikh Zayed Grand Mosque',
+    destination: 'Abu Dhabi',
+    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
+    price: '210',
+    originalPrice: '260',
+    rating: '4.9',
+    reviewsCount: 520,
+    tags: ['Culture', 'Sightseeing', 'Attractions'],
+    images: [
+      'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80'
+    ],
+    description: 'Discover the cultural richness and architectural splendor of the UAE capital. Visit the breathtaking Sheikh Zayed Grand Mosque, drive along the Corniche, and glimpse the Emirates Palace.',
+    highlights: [
+      'Guided visit to the magnificent Sheikh Zayed Grand Mosque',
+      'Drive along the picturesque Abu Dhabi Corniche',
+      'Photo stops at Emirates Palace and Etihad Towers',
+      'Visit to the Date Market and Heritage Village'
+    ],
+    quickFacts: [
+      'Duration: ~8 Hours',
+      'Round-trip Transfer from Dubai',
+      'Guided Tour',
+      'Instant Confirmation'
+    ],
+    inclusions: [
+      'Round-trip transfer from Dubai hotels in AC coach',
+      'Professional English-speaking licensed guide',
+      'Sheikh Zayed Grand Mosque entrance ticket',
+      'Bottled drinking water'
+    ],
+    isPopular: true,
+    isBestDeal: true,
+    hasOptions: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
+
 /**
  * ReDoS & NoSQL Injection Protection
  * Safely escapes characters before constructing regular expressions
@@ -245,6 +472,23 @@ async function initializeDatabase() {
           }
         }
 
+        // Seed packages if empty
+        const pkgCount = await db.collection('packages').countDocuments();
+        if (pkgCount === 0) {
+          try {
+            const legacyPkgFile = path.join(process.cwd(), 'data', 'packages.json');
+            const raw = await fs.readFile(legacyPkgFile, 'utf8');
+            const legacyPkgs = JSON.parse(raw);
+            if (Array.isArray(legacyPkgs) && legacyPkgs.length > 0) {
+              await db.collection('packages').insertMany(legacyPkgs);
+            } else {
+              await db.collection('packages').insertMany(DEFAULT_PACKAGES as any);
+            }
+          } catch {
+            await db.collection('packages').insertMany(DEFAULT_PACKAGES as any);
+          }
+        }
+
         isInitialized = true;
       } catch (err) {
         console.error('Database initialization warning:', err);
@@ -264,25 +508,34 @@ export async function getPackages(): Promise<Package[]> {
     return packagesCache.data;
   }
 
-  await initializeDatabase();
-  const db = await getDb();
+  try {
+    await initializeDatabase();
+    const db = await getDb();
 
-  // Fetch all packages cleanly and ensure each document has a valid `id`
-  const docs = await db.collection('packages').find({}).sort({ createdAt: -1 }).toArray();
+    // Fetch all packages cleanly and ensure each document has a valid `id`
+    const docs = await db.collection('packages').find({}).sort({ createdAt: -1 }).toArray();
 
-  const resultPackages: Package[] = docs.map((doc: any) => {
-    const id = String(doc.id || doc._id?.toString() || '').trim();
-    const { _id, ...cleanDoc } = doc;
-    return { ...cleanDoc, id } as Package;
-  });
+    if (!docs || docs.length === 0) {
+      return DEFAULT_PACKAGES;
+    }
 
-  // Cache for 30 seconds (instantly invalidated upon any admin add/update/delete)
-  packagesCache = {
-    data: resultPackages,
-    expiresAt: now + 30000,
-  };
+    const resultPackages: Package[] = docs.map((doc: any) => {
+      const id = String(doc.id || doc._id?.toString() || '').trim();
+      const { _id, ...cleanDoc } = doc;
+      return { ...cleanDoc, id } as Package;
+    });
 
-  return resultPackages;
+    // Cache for 30 seconds (instantly invalidated upon any admin add/update/delete)
+    packagesCache = {
+      data: resultPackages,
+      expiresAt: now + 30000,
+    };
+
+    return resultPackages;
+  } catch (err) {
+    console.error('getPackages DB fetch error, using defaults:', err);
+    return DEFAULT_PACKAGES;
+  }
 }
 
 export async function getPackageById(id: string): Promise<Package | null> {
@@ -298,66 +551,84 @@ export async function getPackageById(id: string): Promise<Package | null> {
     return cached.data;
   }
 
-  await initializeDatabase();
-  const db = await getDb();
+  try {
+    await initializeDatabase();
+    const db = await getDb();
 
-  const queryConditions: any[] = [
-    { id: safeId },
-    { id: decodedId },
-    { id: slugifiedId },
-    { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
-    { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
-    { title: safeId },
-    { title: decodedId },
-    { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
-    { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
-    { _id: safeId },
-    { _id: decodedId },
-  ];
+    const queryConditions: any[] = [
+      { id: safeId },
+      { id: decodedId },
+      { id: slugifiedId },
+      { id: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+      { id: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+      { title: safeId },
+      { title: decodedId },
+      { title: { $regex: new RegExp(`^${escapeRegex(safeId)}$`, 'i') } },
+      { title: { $regex: new RegExp(`^${escapeRegex(decodedId)}$`, 'i') } },
+      { _id: safeId },
+      { _id: decodedId },
+    ];
 
-  if (ObjectId.isValid(safeId)) {
-    try {
-      queryConditions.push({ _id: new ObjectId(safeId) });
-    } catch {}
+    if (ObjectId.isValid(safeId)) {
+      try {
+        queryConditions.push({ _id: new ObjectId(safeId) });
+      } catch {}
+    }
+    if (ObjectId.isValid(decodedId)) {
+      try {
+        queryConditions.push({ _id: new ObjectId(decodedId) });
+      } catch {}
+    }
+
+    const doc = await db.collection('packages').findOne({ $or: queryConditions });
+    
+    if (doc) {
+      const pkgId = String(doc.id || doc._id?.toString() || safeId).trim();
+      const { _id, ...cleanDoc } = doc;
+      const pkg: Package = { ...cleanDoc, id: pkgId } as Package;
+      packageItemCache.set(safeId, { data: pkg, expiresAt: now + 60000 });
+      packageItemCache.set(pkgId, { data: pkg, expiresAt: now + 60000 });
+      return pkg;
+    }
+  } catch (err) {
+    console.error(`getPackageById error for ${safeId}, using fallback:`, err);
   }
-  if (ObjectId.isValid(decodedId)) {
-    try {
-      queryConditions.push({ _id: new ObjectId(decodedId) });
-    } catch {}
-  }
 
-  const doc = await db.collection('packages').findOne({ $or: queryConditions });
-  
-  if (doc) {
-    const pkgId = String(doc.id || doc._id?.toString() || safeId).trim();
-    const { _id, ...cleanDoc } = doc;
-    const pkg: Package = { ...cleanDoc, id: pkgId } as Package;
-    packageItemCache.set(safeId, { data: pkg, expiresAt: now + 60000 });
-    packageItemCache.set(pkgId, { data: pkg, expiresAt: now + 60000 });
-    return pkg;
-  }
-
-  return null;
+  // Fallback match from DEFAULT_PACKAGES
+  const defaultPkg = DEFAULT_PACKAGES.find(
+    p => p.id === safeId || p.id === decodedId || p.id === slugifiedId || p.title.toLowerCase() === safeId.toLowerCase()
+  );
+  return defaultPkg || null;
 }
 
 export async function getPackagesByDestination(destination: string): Promise<Package[]> {
-  await initializeDatabase();
-  const db = await getDb();
   const safeDest = escapeRegex(String(destination || '').trim());
-  
-  const docs = await db
-    .collection('packages')
-    .find(
-      { destination: { $regex: new RegExp(`^${safeDest}$`, 'i') } }
-    )
-    .sort({ createdAt: -1 })
-    .toArray();
+  try {
+    await initializeDatabase();
+    const db = await getDb();
+    
+    const docs = await db
+      .collection('packages')
+      .find(
+        { destination: { $regex: new RegExp(`^${safeDest}$`, 'i') } }
+      )
+      .sort({ createdAt: -1 })
+      .toArray();
 
-  return docs.map((doc: any) => {
-    const id = String(doc.id || doc._id?.toString() || '').trim();
-    const { _id, ...cleanDoc } = doc;
-    return { ...cleanDoc, id } as Package;
-  });
+    if (docs && docs.length > 0) {
+      return docs.map((doc: any) => {
+        const id = String(doc.id || doc._id?.toString() || '').trim();
+        const { _id, ...cleanDoc } = doc;
+        return { ...cleanDoc, id } as Package;
+      });
+    }
+  } catch (err) {
+    console.error('getPackagesByDestination error, using fallback:', err);
+  }
+
+  return DEFAULT_PACKAGES.filter(
+    p => p.destination.toLowerCase() === (destination || '').toLowerCase()
+  );
 }
 
 export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Package> {
@@ -527,25 +798,34 @@ export async function getDestinations(): Promise<Destination[]> {
     return destinationsCache.data;
   }
 
-  await initializeDatabase();
-  const db = await getDb();
-  const docs = await db
-    .collection('destinations')
-    .find({})
-    .toArray();
+  try {
+    await initializeDatabase();
+    const db = await getDb();
+    const docs = await db
+      .collection('destinations')
+      .find({})
+      .toArray();
 
-  const result: Destination[] = docs.map((doc: any) => {
-    const id = String(doc.id || doc._id?.toString() || '').trim();
-    const { _id, ...cleanDoc } = doc;
-    return { ...cleanDoc, id } as Destination;
-  });
+    if (!docs || docs.length === 0) {
+      return DEFAULT_DESTINATIONS;
+    }
 
-  destinationsCache = {
-    data: result,
-    expiresAt: now + 60000,
-  };
+    const result: Destination[] = docs.map((doc: any) => {
+      const id = String(doc.id || doc._id?.toString() || '').trim();
+      const { _id, ...cleanDoc } = doc;
+      return { ...cleanDoc, id } as Destination;
+    });
 
-  return result;
+    destinationsCache = {
+      data: result,
+      expiresAt: now + 60000,
+    };
+
+    return result;
+  } catch (err) {
+    console.error('getDestinations DB error, using fallback:', err);
+    return DEFAULT_DESTINATIONS;
+  }
 }
 
 export async function getDestinationById(id: string): Promise<Destination | null> {
@@ -558,36 +838,43 @@ export async function getDestinationById(id: string): Promise<Destination | null
     return cached.data;
   }
 
-  await initializeDatabase();
-  const db = await getDb();
-  const safeEscaped = escapeRegex(safeId);
-  
-  // 1. Direct match by id or title with escaped regex
-  let doc = await db.collection('destinations').findOne(
-    { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeEscaped}$`, 'i') } }] },
-    { projection: { _id: 0 } }
+  try {
+    await initializeDatabase();
+    const db = await getDb();
+    const safeEscaped = escapeRegex(safeId);
+    
+    // 1. Direct match by id or title with escaped regex
+    let doc = await db.collection('destinations').findOne(
+      { $or: [{ id: safeId }, { title: { $regex: new RegExp(`^${safeEscaped}$`, 'i') } }] },
+      { projection: { _id: 0 } }
+    );
+
+    // 2. Fallback fuzzy match for typos or slug variants
+    if (!doc) {
+      const cleanSlug = safeId.replace(/[^a-z0-9]/g, '');
+      const all = await getDestinations();
+      doc = all.find((d: any) => {
+        const dId = String(d.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const dTitle = String(d.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return dId.startsWith(cleanSlug) || cleanSlug.startsWith(dId) || 
+               dTitle.startsWith(cleanSlug) || cleanSlug.startsWith(dTitle) ||
+               dId.includes(cleanSlug) || cleanSlug.includes(dId);
+      }) as any;
+    }
+
+    if (doc) {
+      const dest = doc as unknown as Destination;
+      destinationItemCache.set(safeId, { data: dest, expiresAt: now + 60000 });
+      return dest;
+    }
+  } catch (err) {
+    console.error(`getDestinationById error for ${safeId}, using fallback:`, err);
+  }
+
+  const defaultDest = DEFAULT_DESTINATIONS.find(
+    d => d.id === safeId || d.title.toLowerCase() === safeId
   );
-
-  // 2. Fallback fuzzy match for typos or slug variants
-  if (!doc) {
-    const cleanSlug = safeId.replace(/[^a-z0-9]/g, '');
-    const all = await getDestinations();
-    doc = all.find((d: any) => {
-      const dId = String(d.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const dTitle = String(d.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return dId.startsWith(cleanSlug) || cleanSlug.startsWith(dId) || 
-             dTitle.startsWith(cleanSlug) || cleanSlug.startsWith(dTitle) ||
-             dId.includes(cleanSlug) || cleanSlug.includes(dId);
-    }) as any;
-  }
-
-  if (doc) {
-    const dest = doc as unknown as Destination;
-    destinationItemCache.set(safeId, { data: dest, expiresAt: now + 60000 });
-    return dest;
-  }
-
-  return null;
+  return defaultDest || null;
 }
 
 export async function addDestination(

@@ -223,9 +223,15 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const touchEndXRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const rawImages = (packageData.images && packageData.images.length > 0)
-    ? packageData.images
-    : [packageData.image];
+  const fallbackCover = (packageData.image && (packageData.image.startsWith('http') || packageData.image.startsWith('/')))
+    ? packageData.image
+    : '/hero-bg.jpg';
+
+  const validImages = (packageData.images && packageData.images.length > 0)
+    ? packageData.images.filter(img => typeof img === 'string' && (img.startsWith('http') || img.startsWith('/')))
+    : [fallbackCover];
+
+  const rawImages = validImages.length > 0 ? validImages : [fallbackCover];
   const displayImages = rawImages;
 
   // Combine cover image, tour video (if added), and gallery images into one carousel

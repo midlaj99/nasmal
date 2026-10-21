@@ -119,16 +119,18 @@ export default function PackageCard({ id, title, image, price, originalPrice, ra
     }
   };
 
+  const safeImage = (image && (image.startsWith('http') || image.startsWith('/'))) ? image : '/hero-bg.jpg';
+
   return (
     <Link href={`/packages/${id}`} className={styles.card}>
       <div className={styles.imageWrapper}>
         <Image 
-          src={image} 
+          src={safeImage} 
           alt={title} 
           fill 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
           className={styles.image} 
-          unoptimized={Boolean(image && (image.startsWith('/api/images') || image.startsWith('data:')))}
+          unoptimized={Boolean(safeImage && (safeImage.startsWith('/api/images') || safeImage.startsWith('data:')))}
         />
         
         {/* Wishlist Love Heart Button */}

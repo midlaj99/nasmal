@@ -66,26 +66,32 @@ export default function AutoCarousel({ deals = [] }: { deals: Deal[] }) {
           transform: `translateX(-${(currentIndex / deals.length) * 100}%)`,
         }}
       >
-        {deals.map(deal => (
-          <div key={deal.id} className={styles.carouselItem}>
-            <div className={styles.offerCard}>
-              <Image
-                src={deal.image}
-                alt={deal.title}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                className={styles.offerImage}
-                unoptimized={Boolean(deal.image && (deal.image.startsWith('/api/images') || deal.image.startsWith('data:')))}
-              />
-              <div className={styles.offerOverlay}>
-                <h3 className={styles.offerTitle}>{deal.title}</h3>
-                <Link href={`/packages/${deal.id}`} className={styles.bookNowBtn}>
-                  Book Now
-                </Link>
+        {deals.map(deal => {
+          const safeImage = (deal.image && (deal.image.startsWith('http') || deal.image.startsWith('/'))) 
+            ? deal.image 
+            : '/hero-bg.jpg';
+
+          return (
+            <div key={deal.id} className={styles.carouselItem}>
+              <div className={styles.offerCard}>
+                <Image
+                  src={safeImage}
+                  alt={deal.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className={styles.offerImage}
+                  unoptimized={Boolean(safeImage && (safeImage.startsWith('/api/images') || safeImage.startsWith('data:')))}
+                />
+                <div className={styles.offerOverlay}>
+                  <h3 className={styles.offerTitle}>{deal.title}</h3>
+                  <Link href={`/packages/${deal.id}`} className={styles.bookNowBtn}>
+                    Book Now
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {deals.length > itemsPerView && (

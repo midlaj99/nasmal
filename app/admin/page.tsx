@@ -366,7 +366,13 @@ export default function AdminPage() {
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/admin/me');
-        const data = await res.json();
+        let data: any = {};
+        try {
+          const text = await res.text();
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          data = {};
+        }
         if (res.ok && data.authenticated) {
           setIsAuthenticated(true);
         } else {
@@ -395,9 +401,22 @@ export default function AdminPage() {
         })
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        if (res.status === 504 || res.status === 502) {
+          throw new Error('Database server connection timed out. In MongoDB Atlas, go to "Network Access" -> click "Add IP Address" -> select "Allow Access from Anywhere (0.0.0.0/0)" and save.');
+        }
+        if (res.status === 500) {
+          throw new Error(data.error || 'Database connection error. Please verify your MONGODB_URI in Vercel settings and ensure 0.0.0.0/0 is whitelisted in Atlas Network Access.');
+        }
+        throw new Error(data.error || 'Authentication failed. Please check your username and password.');
       }
 
       setIsAuthenticated(true);
@@ -437,7 +456,14 @@ export default function AdminPage() {
         body: JSON.stringify({ username: authUsername.trim() })
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to dispatch security OTP');
       }
@@ -467,7 +493,14 @@ export default function AdminPage() {
         })
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Invalid or expired OTP code');
       }
@@ -507,7 +540,14 @@ export default function AdminPage() {
         })
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to reset password');
       }

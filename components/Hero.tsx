@@ -18,6 +18,10 @@ interface HeroProps {
   }>;
 }
 
+const DEFAULT_HERO_DESTINATIONS: HeroDestination[] = [
+  { name: 'Dubai', image: '/hero-bg.jpg' }
+];
+
 export default function Hero({ destinations: propDestinations }: HeroProps) {
   // Format initial destinations from server prop
   const formatDestinations = (list: any[]): HeroDestination[] => {
@@ -34,7 +38,7 @@ export default function Hero({ destinations: propDestinations }: HeroProps) {
       const formatted = formatDestinations(propDestinations);
       if (formatted.length > 0) return formatted;
     }
-    return [];
+    return DEFAULT_HERO_DESTINATIONS;
   });
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -42,7 +46,10 @@ export default function Hero({ destinations: propDestinations }: HeroProps) {
   // Sync with live database via API on client
   useEffect(() => {
     fetch('/api/destinations')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch destinations');
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           const valid = formatDestinations(data);
@@ -70,14 +77,12 @@ export default function Hero({ destinations: propDestinations }: HeroProps) {
     }
   }, [destList.length, activeIndex]);
 
-  const currentDest = destList[activeIndex] || {
-    name: 'Dubai',
-    image: '/hero-bg.jpg',
-  };
+  const activeBgList = destList.length > 0 ? destList : DEFAULT_HERO_DESTINATIONS;
+  const currentDest = activeBgList[activeIndex] || DEFAULT_HERO_DESTINATIONS[0];
 
   return (
     <section className={styles.hero}>
-      {destList.map((dest, idx) => {
+      {activeBgList.map((dest, idx) => {
         const bgUrl = dest.image.startsWith('http') || dest.image.startsWith('data:')
           ? dest.image
           : encodeURI(dest.image);
