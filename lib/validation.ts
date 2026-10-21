@@ -360,7 +360,7 @@ export function validateWhatsAppPayload(body: any): ValidationResult<{ countryCo
   };
 }
 
-export function validateCloudinaryPayload(body: any): ValidationResult<{ cloudName: string; apiKey: string; apiSecret: string }> {
+export function validateCloudinaryPayload(body: any): ValidationResult<{ cloudName: string; apiKey?: string; apiSecret?: string; uploadPreset?: string }> {
   const errors: string[] = [];
 
   if (!body || typeof body !== 'object') {
@@ -370,17 +370,14 @@ export function validateCloudinaryPayload(body: any): ValidationResult<{ cloudNa
   const cloudName = sanitizeString(body.cloudName || '').toLowerCase();
   const apiKey = sanitizeString(body.apiKey || '');
   const apiSecret = sanitizeString(body.apiSecret || '');
+  const uploadPreset = sanitizeString(body.uploadPreset || '');
 
   if (!cloudName) {
     errors.push('Cloudinary Cloud Name is required');
   }
 
-  if (!apiKey) {
-    errors.push('Cloudinary API Key is required');
-  }
-
-  if (!apiSecret) {
-    errors.push('Cloudinary API Secret is required');
+  if ((!apiKey || !apiSecret) && !uploadPreset) {
+    errors.push('Please provide either an API Key + Secret OR an Upload Preset');
   }
 
   if (errors.length > 0) {
@@ -394,6 +391,7 @@ export function validateCloudinaryPayload(body: any): ValidationResult<{ cloudNa
       cloudName,
       apiKey,
       apiSecret,
+      uploadPreset,
     },
   };
 }

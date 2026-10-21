@@ -22,6 +22,7 @@ export async function GET(request: Request) {
       success: true,
       cloudName: config.cloudName,
       apiKeyMasked: maskedKey,
+      uploadPreset: config.uploadPreset || '',
       isConfigured: config.isConfigured,
       updatedAt: config.updatedAt,
     });

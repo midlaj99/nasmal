@@ -1425,6 +1425,7 @@ export interface CloudinaryConfig {
   cloudName: string;
   apiKey: string;
   apiSecret: string;
+  uploadPreset?: string;
   isConfigured: boolean;
   updatedAt?: string;
 }
@@ -1442,6 +1443,7 @@ export async function getCloudinaryConfig(): Promise<CloudinaryConfig> {
   const envCloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
   const envApiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
   const envApiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
+  const envUploadPreset = (process.env.CLOUDINARY_UPLOAD_PRESET || '').trim();
 
   try {
     const doc = await db.collection('settings').findOne({ id: 'cloudinary_config' });
@@ -1449,12 +1451,14 @@ export async function getCloudinaryConfig(): Promise<CloudinaryConfig> {
     const cloudName = doc?.cloudName || envCloudName || 'woe2kr5p';
     const apiKey = doc?.apiKey || envApiKey || '';
     const apiSecret = doc?.apiSecret || envApiSecret || '';
-    const isConfigured = Boolean(cloudName && apiKey && apiSecret);
+    const uploadPreset = doc?.uploadPreset || envUploadPreset || '';
+    const isConfigured = Boolean((cloudName && apiKey && apiSecret) || (cloudName && uploadPreset));
 
     const result: CloudinaryConfig = {
       cloudName,
       apiKey,
       apiSecret,
+      uploadPreset,
       isConfigured,
       updatedAt: doc?.updatedAt,
     };
@@ -1471,23 +1475,26 @@ export async function getCloudinaryConfig(): Promise<CloudinaryConfig> {
       cloudName: envCloudName || 'woe2kr5p',
       apiKey: envApiKey,
       apiSecret: envApiSecret,
-      isConfigured: Boolean(envCloudName && envApiKey && envApiSecret),
+      uploadPreset: envUploadPreset,
+      isConfigured: Boolean((envCloudName && envApiKey && envApiSecret) || (envCloudName && envUploadPreset)),
     };
   }
 }
 
 export async function updateCloudinaryConfig(config: {
   cloudName: string;
-  apiKey: string;
-  apiSecret: string;
+  apiKey?: string;
+  apiSecret?: string;
+  uploadPreset?: string;
 }): Promise<CloudinaryConfig> {
   const db = await getDb();
 
   const doc = {
     id: 'cloudinary_config',
-    cloudName: config.cloudName.trim(),
-    apiKey: config.apiKey.trim(),
-    apiSecret: config.apiSecret.trim(),
+    cloudName: (config.cloudName || '').trim(),
+    apiKey: (config.apiKey || '').trim(),
+    apiSecret: (config.apiSecret || '').trim(),
+    uploadPreset: (config.uploadPreset || '').trim(),
     updatedAt: new Date().toISOString(),
   };
 
@@ -1497,7 +1504,7 @@ export async function updateCloudinaryConfig(config: {
     { upsert: true }
   );
 
-  const isConfigured = Boolean(doc.cloudName && doc.apiKey && doc.apiSecret);
+  const isConfigured = Boolean((doc.cloudName && doc.apiKey && doc.apiSecret) || (doc.cloudName && doc.uploadPreset));
   const result: CloudinaryConfig = { ...doc, isConfigured };
 
   cloudinaryConfigCache = {

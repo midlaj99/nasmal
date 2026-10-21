@@ -102,6 +102,7 @@ export default function AdminPage() {
   const [cldCloudName, setCldCloudName] = useState('woe2kr5p');
   const [cldApiKey, setCldApiKey] = useState('');
   const [cldApiSecret, setCldApiSecret] = useState('');
+  const [cldUploadPreset, setCldUploadPreset] = useState('');
   const [cldIsConfigured, setCldIsConfigured] = useState(false);
   const [cldLoading, setCldLoading] = useState(false);
   const [cldSuccessMsg, setCldSuccessMsg] = useState('');
@@ -110,17 +111,89 @@ export default function AdminPage() {
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [galleryUploadError, setGalleryUploadError] = useState('');
 
-  const uploadImage = async (file: File) => {
+  // Universal Media & Video Uploader: Uses signed direct-to-Cloudinary upload to bypass Vercel's 4.5MB Serverless function limit
+  const uploadImage = async (file: File): Promise<string> => {
+    const isVideo = file.type.startsWith('video/');
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+
+    // 1. Attempt Signed/Direct Cloudinary upload (bypasses Vercel 4.5MB limit completely)
+    try {
+      const signRes = await fetch('/api/upload/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resourceType: isVideo ? 'video' : 'image' })
+      });
+
+      if (signRes.ok) {
+        const signData = await signRes.json();
+        if (signData.isConfigured && signData.cloudName) {
+          const cldFormData = new FormData();
+          cldFormData.append('file', file);
+
+          if (signData.mode === 'signed') {
+            cldFormData.append('api_key', signData.apiKey);
+            cldFormData.append('timestamp', String(signData.timestamp));
+            cldFormData.append('signature', signData.signature);
+            cldFormData.append('folder', signData.folder || 'nasmal_packages');
+          } else if (signData.uploadPreset) {
+            cldFormData.append('upload_preset', signData.uploadPreset);
+            cldFormData.append('folder', signData.folder || 'nasmal_packages');
+          }
+
+          const resourceType = signData.resourceType || (isVideo ? 'video' : 'image');
+          const uploadUrl = `https://api.cloudinary.com/v1_1/${signData.cloudName}/${resourceType}/upload`;
+
+          const cldRes = await fetch(uploadUrl, {
+            method: 'POST',
+            body: cldFormData,
+          });
+
+          const cldData = await cldRes.json();
+          if (!cldRes.ok) {
+            throw new Error(cldData.error?.message || 'Direct Cloudinary upload failed');
+          }
+
+          let secureUrl = cldData.secure_url || cldData.url;
+          if (isVideo && secureUrl.includes('/video/upload/') && !secureUrl.includes('/f_auto')) {
+            secureUrl = secureUrl.replace('/video/upload/', '/video/upload/f_auto,q_auto,vc_auto/');
+          }
+          return secureUrl;
+        }
+      }
+    } catch (directErr: any) {
+      console.warn('Direct upload notice:', directErr?.message || directErr);
+      if (file.size > 4 * 1024 * 1024) {
+        throw new Error(
+          `Cloudinary direct upload failed: ${directErr?.message || 'Upload error'}. (File size: ${fileSizeMB}MB. Please verify Cloudinary credentials in Admin Settings -> Cloudinary CDN).`
+        );
+      }
+    }
+
+    // 2. Vercel 4.5MB Payload Guard: prevent 413 error
+    if (file.size > 4 * 1024 * 1024) {
+      throw new Error(
+        `This file is ${fileSizeMB}MB, which exceeds Vercel's 4.5MB serverless limit. Please configure your Cloudinary API Key & Secret in Admin Settings -> "Cloudinary CDN Configuration" to enable direct uploads up to 100MB!`
+      );
+    }
+
+    // 3. Fallback for files <= 4MB: upload via /api/upload
     const formData = new FormData();
     formData.append('file', file);
     const res = await fetch('/api/upload', {
       method: 'POST',
-      body: formData
+      body: formData,
     });
+
     if (!res.ok) {
+      if (res.status === 413) {
+        throw new Error(
+          `File payload too large (${fileSizeMB}MB) for Vercel Serverless. Please connect Cloudinary in Admin Settings for direct upload.`
+        );
+      }
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'File upload failed');
     }
+
     const data = await res.json();
     return data.url;
   };
@@ -133,23 +206,8 @@ export default function AdminPage() {
     setGalleryUploadError('');
 
     try {
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
-      }
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to upload gallery images to Cloudinary');
-      }
-
-      const data = await res.json();
-      const newUrls: string[] = data.urls || (data.url ? [data.url] : []);
+      const uploadPromises = Array.from(files).map(file => uploadImage(file));
+      const newUrls = await Promise.all(uploadPromises);
 
       if (newUrls.length > 0) {
         setPackageData(prev => {
@@ -248,23 +306,8 @@ export default function AdminPage() {
     setEditGalleryUploadError('');
 
     try {
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
-      }
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to upload gallery images');
-      }
-
-      const data = await res.json();
-      const newUrls: string[] = data.urls || (data.url ? [data.url] : []);
+      const uploadPromises = Array.from(files).map(file => uploadImage(file));
+      const newUrls = await Promise.all(uploadPromises);
 
       if (newUrls.length > 0) {
         setEditingPackage((prev: any) => {
@@ -640,6 +683,7 @@ export default function AdminPage() {
       .then(r => r.json())
       .then(data => {
         if (data?.cloudName) setCldCloudName(data.cloudName);
+        if (data?.uploadPreset) setCldUploadPreset(data.uploadPreset);
         if (data?.isConfigured) setCldIsConfigured(true);
       })
       .catch(() => {});
@@ -1062,7 +1106,8 @@ export default function AdminPage() {
         body: JSON.stringify({
           cloudName: cldCloudName,
           apiKey: cldApiKey,
-          apiSecret: cldApiSecret
+          apiSecret: cldApiSecret,
+          uploadPreset: cldUploadPreset,
         })
       });
       const data = await res.json();
@@ -3019,11 +3064,10 @@ export default function AdminPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                      API Key *
+                      API Key
                     </label>
                     <input
                       type="text"
-                      required
                       value={cldApiKey}
                       onChange={(e) => setCldApiKey(e.target.value)}
                       placeholder="e.g. 123456789012345"
@@ -3033,14 +3077,26 @@ export default function AdminPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                      API Secret *
+                      API Secret
                     </label>
                     <input
                       type="password"
-                      required
                       value={cldApiSecret}
                       onChange={(e) => setCldApiSecret(e.target.value)}
                       placeholder="Enter your Cloudinary secret"
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                      Upload Preset <span style={{ fontWeight: 'normal', color: '#64748b' }}>(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cldUploadPreset}
+                      onChange={(e) => setCldUploadPreset(e.target.value)}
+                      placeholder="e.g. ml_default or nasmal_uploads"
                       style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
                     />
                   </div>
@@ -3048,7 +3104,7 @@ export default function AdminPage() {
 
                 <button
                   type="submit"
-                  disabled={cldLoading || !cldCloudName.trim() || !cldApiKey.trim() || !cldApiSecret.trim()}
+                  disabled={cldLoading || !cldCloudName.trim() || ((!cldApiKey.trim() || !cldApiSecret.trim()) && !cldUploadPreset.trim())}
                   className={styles.submitBtn}
                   style={{ width: 'auto', padding: '10px 24px', background: '#0284c7' }}
                 >
