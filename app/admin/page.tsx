@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { isEmbedVideo, getEmbedUrl } from '@/lib/videoHelper';
+import { isEmbedVideo, isInstagramUrl, getEmbedUrl } from '@/lib/videoHelper';
 import styles from './page.module.css';
 
 interface PreferenceOption {
@@ -2041,13 +2041,26 @@ export default function AdminPage() {
                         </div>
                         <div className={styles.videoAdminPreviewContainer}>
                           {isEmbedVideo(packageData.video) ? (
-                            <iframe
-                              src={getEmbedUrl(packageData.video)}
-                              title="Video preview"
-                              className={styles.videoAdminIframe}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                              allowFullScreen
-                            />
+                            isInstagramUrl(packageData.video) ? (
+                              <div className={styles.videoAdminInstagramContainer}>
+                                <iframe
+                                  src={getEmbedUrl(packageData.video)}
+                                  title="Instagram preview"
+                                  className={styles.videoAdminInstagramIframe}
+                                  scrolling="no"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              </div>
+                            ) : (
+                              <iframe
+                                src={getEmbedUrl(packageData.video)}
+                                title="Video preview"
+                                className={styles.videoAdminIframe}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+                            )
                           ) : (
                             <video
                               src={packageData.video}
@@ -3303,13 +3316,26 @@ export default function AdminPage() {
                             </div>
                             <div className={styles.videoAdminPreviewContainer}>
                               {isEmbedVideo(editingPackage.video) ? (
-                                <iframe
-                                  src={getEmbedUrl(editingPackage.video)}
-                                  title="Video preview"
-                                  className={styles.videoAdminIframe}
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                  allowFullScreen
-                                />
+                                isInstagramUrl(editingPackage.video) ? (
+                                  <div className={styles.videoAdminInstagramContainer}>
+                                    <iframe
+                                      src={getEmbedUrl(editingPackage.video)}
+                                      title="Instagram preview"
+                                      className={styles.videoAdminInstagramIframe}
+                                      scrolling="no"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                ) : (
+                                  <iframe
+                                    src={getEmbedUrl(editingPackage.video)}
+                                    title="Video preview"
+                                    className={styles.videoAdminIframe}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                  />
+                                )
                               ) : (
                                 <video
                                   src={editingPackage.video}
