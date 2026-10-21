@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useBooking } from '@/context/BookingContext';
 import WishlistButton from '@/components/WishlistButton';
 import Breadcrumb from '@/components/Breadcrumb';
-import { isEmbedVideo, getEmbedUrl, getOptimizedVideoUrl } from '@/lib/videoHelper';
+import { isEmbedVideo, isInstagramUrl, getEmbedUrl, getOptimizedVideoUrl, getVideoThumbnail } from '@/lib/videoHelper';
 import styles from './PackageDetailClient.module.css';
 
 export interface PackageOption {
@@ -184,7 +184,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const router = useRouter();
   const { setBookingData } = useBooking();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'options' | 'highlights' | 'inclusions' | 'important'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'options' | 'highlights' | 'inclusions' | 'important' | 'video'>('overview');
   const [selectedDate, setSelectedDate] = useState<string>('');
   
   // Guest counts
@@ -240,10 +240,11 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     mediaItems.push({ type: 'image', url: rawImages[0] });
   }
   if (packageData.video) {
+    const videoPoster = getVideoThumbnail(packageData.video) || rawImages[0] || packageData.image;
     mediaItems.push({
       type: 'video',
       url: packageData.video,
-      poster: rawImages[0] || packageData.image
+      poster: videoPoster
     });
   }
   for (let i = 1; i < rawImages.length; i++) {
@@ -384,7 +385,7 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
     router.push('/checkout');
   };
 
-  const handleTabChange = (tab: 'overview' | 'options' | 'highlights' | 'inclusions' | 'important') => {
+  const handleTabChange = (tab: 'overview' | 'options' | 'highlights' | 'inclusions' | 'important' | 'video') => {
     setActiveTab(tab);
   };
 
@@ -573,6 +574,15 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             >
               Overview
             </button>
+            {packageData.video && (
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'video' ? styles.tabBtnActive : ''}`}
+                onClick={() => handleTabChange('video')}
+                type="button"
+              >
+                🎬 Tour Video
+              </button>
+            )}
             {availableOptions.length > 0 && (
               <button
                 className={`${styles.tabBtn} ${activeTab === 'options' ? styles.tabBtnActive : ''}`}
@@ -939,6 +949,57 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
             </div>
           )}
 
+          {/* 5. Tour Video Section (YouTube or Instagram Embed) */}
+          {packageData.video && (activeTab === 'overview' || activeTab === 'video') && (
+            <div id="tour-video" className={styles.contentCard}>
+              <div className={styles.cardHeader}>
+                <div className={styles.headerIconCircle}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </div>
+                <h2 className={styles.cardTitle}>Tour Video & Preview</h2>
+              </div>
+
+              {isEmbedVideo(packageData.video) ? (
+                isInstagramUrl(packageData.video) ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '10px 0' }}>
+                    <div style={{ width: '100%', maxWidth: '460px', height: '580px', borderRadius: '14px', overflow: 'hidden', background: '#000' }}>
+                      <iframe
+                        src={getEmbedUrl(packageData.video)}
+                        title={`${packageData.title} Instagram Video`}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.videoFrameWrapper}>
+                    <iframe
+                      src={getEmbedUrl(packageData.video)}
+                      title={`${packageData.title} Tour Video`}
+                      className={styles.videoIframe}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )
+              ) : (
+                <div className={styles.videoPlayerWrapper}>
+                  <video
+                    src={getOptimizedVideoUrl(packageData.video)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className={styles.nativeVideo}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 

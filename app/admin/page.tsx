@@ -246,54 +246,10 @@ export default function AdminPage() {
     });
   };
 
-  // Video upload states & handlers for Add Package
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
-  const [videoUploadError, setVideoUploadError] = useState('');
-
-  const handlePackageVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingVideo(true);
-    setVideoUploadError('');
-
-    try {
-      const url = await uploadImage(file);
-      setPackageData(prev => ({ ...prev, video: url }));
-    } catch (err: any) {
-      console.error('Video upload error:', err);
-      setVideoUploadError(err.message || 'Error uploading video');
-    } finally {
-      setIsUploadingVideo(false);
-      e.target.value = '';
-    }
-  };
-
   // Edit package upload & gallery states
   const [editPackageImageFile, setEditPackageImageFile] = useState<File | null>(null);
   const [isEditingGalleryUploading, setIsEditingGalleryUploading] = useState(false);
   const [editGalleryUploadError, setEditGalleryUploadError] = useState('');
-  const [isEditingVideoUploading, setIsEditingVideoUploading] = useState(false);
-  const [editVideoUploadError, setEditVideoUploadError] = useState('');
-
-  const handleEditPackageVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingPackage) return;
-
-    setIsEditingVideoUploading(true);
-    setEditVideoUploadError('');
-
-    try {
-      const url = await uploadImage(file);
-      setEditingPackage((prev: any) => ({ ...prev, video: url }));
-    } catch (err: any) {
-      console.error('Edit video upload error:', err);
-      setEditVideoUploadError(err.message || 'Error uploading video');
-    } finally {
-      setIsEditingVideoUploading(false);
-      e.target.value = '';
-    }
-  };
   const [showEditAddPreference, setShowEditAddPreference] = useState(false);
   const [newEditPrefTitle, setNewEditPrefTitle] = useState('');
   const [newEditPrefIcon, setNewEditPrefIcon] = useState('');
@@ -2025,50 +1981,26 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Optional Tour Video Section */}
+                {/* Tour Video Section (YouTube & Instagram Links) */}
                 <div className={styles.formGroupFull}>
                   <label htmlFor="packageVideoInput" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Tour / Promotional Video (Optional)</span>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
-                      Auto-plays muted after images on product page
+                    <span>Tour / Promotional Video (YouTube or Instagram Link)</span>
+                    <span style={{ fontSize: '0.8rem', color: '#047857', fontWeight: 600 }}>
+                      ✓ Interactive Iframe Player
                     </span>
                   </label>
 
                   <div className={styles.videoAdminCard}>
                     <div className={styles.videoAdminHeader}>
                       <div>
-                        <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
-                          Upload Video File or Paste Video URL
+                        <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>▶ YouTube & 📸 Instagram Video Embed</span>
                         </div>
-                        <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
-                          Supports MP4, WebM, MOV files (up to 60MB) or YouTube / Vimeo / direct video links.
+                        <div style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '4px', lineHeight: '1.4' }}>
+                          Paste any YouTube link (Standard, Shorts, youtu.be) or Instagram link (Reel, Post, TV). It will display directly in an ultra-fast, responsive iframe on the package details page with zero loading lag!
                         </div>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          type="file"
-                          id="packageVideoFileInput"
-                          accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                          onChange={handlePackageVideoUpload}
-                          style={{ display: 'none' }}
-                          disabled={isUploadingVideo}
-                        />
-                        <label
-                          htmlFor="packageVideoFileInput"
-                          className={styles.videoUploadBtn}
-                          style={{ opacity: isUploadingVideo ? 0.6 : 1, cursor: isUploadingVideo ? 'wait' : 'pointer' }}
-                        >
-                          {isUploadingVideo ? '⏳ Uploading Video...' : '🎬 Upload Video File'}
-                        </label>
                       </div>
                     </div>
-
-                    {videoUploadError && (
-                      <div style={{ color: '#e11d48', fontSize: '0.85rem', marginTop: '8px' }}>
-                        ⚠️ {videoUploadError}
-                      </div>
-                    )}
 
                     <div style={{ marginTop: '12px' }}>
                       <input
@@ -2077,9 +2009,19 @@ export default function AdminPage() {
                         name="video"
                         value={packageData.video || ''}
                         onChange={handlePackageChange}
-                        placeholder="Paste video URL (YouTube, Vimeo, Cloudinary, or direct MP4 link)"
+                        placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..."
                         className={styles.videoUrlInputField}
                       />
+                    </div>
+
+                    {/* Quick Format Help Chips */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#475569', padding: '3px 8px', borderRadius: '4px' }}>
+                        ▶ YouTube: watch?v=..., youtu.be/..., shorts/...
+                      </span>
+                      <span style={{ fontSize: '0.78rem', background: '#fdf2f8', color: '#db2777', padding: '3px 8px', borderRadius: '4px' }}>
+                        📸 Instagram: instagram.com/reel/... or /p/...
+                      </span>
                     </div>
 
                     {/* Live Preview if video exists */}
@@ -2087,7 +2029,7 @@ export default function AdminPage() {
                       <div className={styles.videoAdminPreviewWrapper}>
                         <div className={styles.videoAdminPreviewHeader}>
                           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                            Live Preview
+                            Live Iframe Preview
                           </span>
                           <button
                             type="button"
@@ -2104,6 +2046,7 @@ export default function AdminPage() {
                               title="Video preview"
                               className={styles.videoAdminIframe}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
                             />
                           ) : (
                             <video
@@ -3304,47 +3247,23 @@ export default function AdminPage() {
                     {/* Optional Tour Video Section in Edit Modal */}
                     <div className={styles.formGroupFull}>
                       <label htmlFor="editPackageVideoInput" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span>Tour / Promotional Video (Optional)</span>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
-                          Auto-plays muted after images on product page
+                        <span>Tour / Promotional Video (YouTube or Instagram Link)</span>
+                        <span style={{ fontSize: '0.8rem', color: '#047857', fontWeight: 600 }}>
+                          ✓ Interactive Iframe Player
                         </span>
                       </label>
 
                       <div className={styles.videoAdminCard}>
                         <div className={styles.videoAdminHeader}>
                           <div>
-                            <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
-                              Upload Video File or Paste Video URL
+                            <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>▶ YouTube & 📸 Instagram Video Embed</span>
                             </div>
-                            <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '2px' }}>
-                              Supports MP4, WebM, MOV files (up to 60MB) or YouTube / Vimeo / direct video links.
+                            <div style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '4px', lineHeight: '1.4' }}>
+                              Paste any YouTube link (Standard, Shorts, youtu.be) or Instagram link (Reel, Post, TV). It will display directly in an ultra-fast, responsive iframe on the package details page with zero loading lag!
                             </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <input
-                              type="file"
-                              id="editPackageVideoFileInput"
-                              accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                              onChange={handleEditPackageVideoUpload}
-                              style={{ display: 'none' }}
-                              disabled={isEditingVideoUploading}
-                            />
-                            <label
-                              htmlFor="editPackageVideoFileInput"
-                              className={styles.videoUploadBtn}
-                              style={{ opacity: isEditingVideoUploading ? 0.6 : 1, cursor: isEditingVideoUploading ? 'wait' : 'pointer' }}
-                            >
-                              {isEditingVideoUploading ? '⏳ Uploading Video...' : '🎬 Upload Video File'}
-                            </label>
                           </div>
                         </div>
-
-                        {editVideoUploadError && (
-                          <div style={{ color: '#e11d48', fontSize: '0.85rem', marginTop: '8px' }}>
-                            ⚠️ {editVideoUploadError}
-                          </div>
-                        )}
 
                         <div style={{ marginTop: '12px' }}>
                           <input
@@ -3352,9 +3271,19 @@ export default function AdminPage() {
                             id="editPackageVideoInput"
                             value={editingPackage.video || ''}
                             onChange={(e) => setEditingPackage({ ...editingPackage, video: e.target.value })}
-                            placeholder="Paste video URL (YouTube, Vimeo, Cloudinary, or direct MP4 link)"
+                            placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..."
                             className={styles.videoUrlInputField}
                           />
+                        </div>
+
+                        {/* Quick Format Help Chips */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                          <span style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#475569', padding: '3px 8px', borderRadius: '4px' }}>
+                            ▶ YouTube: watch?v=..., youtu.be/..., shorts/...
+                          </span>
+                          <span style={{ fontSize: '0.78rem', background: '#fdf2f8', color: '#db2777', padding: '3px 8px', borderRadius: '4px' }}>
+                            📸 Instagram: instagram.com/reel/... or /p/...
+                          </span>
                         </div>
 
                         {/* Live Preview if video exists */}
@@ -3362,7 +3291,7 @@ export default function AdminPage() {
                           <div className={styles.videoAdminPreviewWrapper}>
                             <div className={styles.videoAdminPreviewHeader}>
                               <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                                Live Preview
+                                Live Iframe Preview
                               </span>
                               <button
                                 type="button"
@@ -3379,6 +3308,7 @@ export default function AdminPage() {
                                   title="Video preview"
                                   className={styles.videoAdminIframe}
                                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
                                 />
                               ) : (
                                 <video
