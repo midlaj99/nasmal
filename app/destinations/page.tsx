@@ -3,13 +3,23 @@ import Link from 'next/link';
 import Breadcrumb from '@/components/Breadcrumb';
 import HeroSearchBar from '@/components/HeroSearchBar';
 import WhyChooseNasmal from '@/components/WhyChooseNasmal';
-import { getDestinations } from '@/lib/db';
+import { getDestinations, DEFAULT_DESTINATIONS } from '@/lib/db';
 import styles from './destinations.module.css';
 
 export const revalidate = 30;
 
 export default async function DestinationsPage() {
-  const destinations = await getDestinations();
+  let destinations: any[] = [];
+  try {
+    destinations = await getDestinations();
+  } catch (err) {
+    console.error('DestinationsPage fetch error:', err);
+    destinations = DEFAULT_DESTINATIONS;
+  }
+
+  if (!destinations || destinations.length === 0) {
+    destinations = DEFAULT_DESTINATIONS;
+  }
 
   return (
     <main className={styles.pageWrapper}>

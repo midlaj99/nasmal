@@ -133,6 +133,9 @@ export async function POST(request: Request) {
     return response;
   } catch (error: any) {
     console.error('Admin login error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: `Login error: ${error?.message || 'Database connection error'}` },
+      { status: 500 }
+    );
   }
 }

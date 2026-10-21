@@ -1,5 +1,5 @@
 import ActivitiesCatalog from '@/components/ActivitiesCatalog';
-import { getPackages, getPackagesByDestination } from '@/lib/db';
+import { getPackages, getPackagesByDestination, DEFAULT_PACKAGES } from '@/lib/db';
 
 export const revalidate = 30;
 
@@ -16,14 +16,21 @@ export default async function ActivitiesPage({
     ? resolvedSearchParams.q 
     : '';
   
-  let packages = [];
+  let packages: any[] = [];
   let formattedLocation = 'All Destinations';
 
-  if (location) {
-    formattedLocation = location.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    packages = await getPackagesByDestination(formattedLocation);
-  } else {
-    packages = await getPackages();
+  try {
+    if (location) {
+      formattedLocation = location.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      packages = await getPackagesByDestination(formattedLocation);
+    } else {
+      packages = await getPackages();
+    }
+  } catch (err) {
+    console.error('ActivitiesPage data load error:', err);
+    packages = location 
+      ? DEFAULT_PACKAGES.filter(p => p.destination.toLowerCase() === formattedLocation.toLowerCase())
+      : DEFAULT_PACKAGES;
   }
 
   return (

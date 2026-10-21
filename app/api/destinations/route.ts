@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDestinations, addDestination } from '@/lib/db';
+import { getDestinations, addDestination, DEFAULT_DESTINATIONS } from '@/lib/db';
 import { validateDestinationPayload } from '@/lib/validation';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAdminAuth } from '@/lib/auth';
@@ -25,8 +25,8 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching destinations:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error fetching destinations, falling back to defaults:', error);
+    return NextResponse.json(DEFAULT_DESTINATIONS, { status: 200 });
   }
 }
 

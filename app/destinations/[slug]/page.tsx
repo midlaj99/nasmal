@@ -5,7 +5,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import HeroSearchBar from '@/components/HeroSearchBar';
 import WhyChooseNasmal from '@/components/WhyChooseNasmal';
 import styles from './page.module.css';
-import { getPackagesByDestination, getDestinationById } from '@/lib/db';
+import { getPackagesByDestination, getDestinationById, DEFAULT_PACKAGES } from '@/lib/db';
 
 export const revalidate = 30;
 
@@ -14,13 +14,26 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   const slug = resolvedParams.slug;
   const decodedSlug = decodeURIComponent(slug);
   
-  // Fetch real destination from database with fallback fuzzy matching
-  const destination = await getDestinationById(decodedSlug);
-  
-  const name = destination?.title || decodedSlug
+  const defaultName = decodedSlug
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+
+  let destination: any = null;
+  let packages: any[] = [];
+
+  try {
+    destination = await getDestinationById(decodedSlug);
+    const targetName = destination?.title || defaultName;
+    packages = await getPackagesByDestination(targetName);
+  } catch (err) {
+    console.error('Error fetching destination page data:', err);
+    packages = DEFAULT_PACKAGES.filter(
+      p => p.destination.toLowerCase() === defaultName.toLowerCase()
+    );
+  }
+
+  const name = destination?.title || defaultName;
 
   // High resolution imagery per destination
   let image = destination?.image;
@@ -38,8 +51,6 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   } else if (image.includes('images.unsplash.com')) {
     image = image.replace(/w=\d+/, 'w=2400').replace(/q=\d+/, 'q=85');
   }
-
-  const packages = await getPackagesByDestination(name);
 
   return (
     <main className={styles.pageWrapper}>

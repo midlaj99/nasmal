@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getPackages, addPackage } from '@/lib/db';
+import { getPackages, addPackage, DEFAULT_PACKAGES } from '@/lib/db';
 import { validatePackagePayload } from '@/lib/validation';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAdminAuth } from '@/lib/auth';
@@ -44,8 +44,8 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching packages:', error);
-    return NextResponse.json({ error: 'Failed to fetch packages' }, { status: 500 });
+    console.error('Error fetching packages, falling back to defaults:', error);
+    return NextResponse.json(DEFAULT_PACKAGES, { status: 200 });
   }
 }
 

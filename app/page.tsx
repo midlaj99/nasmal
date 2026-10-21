@@ -4,7 +4,7 @@ import DestinationCard from '@/components/DestinationCard';
 import AutoCarousel from '@/components/AutoCarousel';
 import DestinationTickets from '@/components/DestinationTickets';
 import styles from './page.module.css';
-import { getPackages, getDestinations } from '@/lib/db';
+import { getPackages, getDestinations, DEFAULT_PACKAGES, DEFAULT_DESTINATIONS } from '@/lib/db';
 
 export const revalidate = 15;
 
@@ -17,13 +17,23 @@ export default async function Home() {
       getPackages(),
       getDestinations()
     ]);
-    allPackages = packagesRes || [];
-    destinations = destinationsRes || [];
+    allPackages = (packagesRes && packagesRes.length > 0) ? packagesRes : DEFAULT_PACKAGES;
+    destinations = (destinationsRes && destinationsRes.length > 0) ? destinationsRes : DEFAULT_DESTINATIONS;
   } catch (e) {
     console.error('Home page data fetch error:', e);
+    allPackages = DEFAULT_PACKAGES;
+    destinations = DEFAULT_DESTINATIONS;
   }
 
-  // ONLY dynamic packages from admin database
+  // Fallback check to ensure content is always visible
+  if (!allPackages || allPackages.length === 0) {
+    allPackages = DEFAULT_PACKAGES;
+  }
+  if (!destinations || destinations.length === 0) {
+    destinations = DEFAULT_DESTINATIONS;
+  }
+
+  // Dynamic packages from database with defaults fallback
   const popularPackages = allPackages.filter(p => p.isPopular);
   const bestDeals = allPackages.filter(p => p.isBestDeal);
   const bestPlacesDubai = allPackages.filter(p => p.destination?.toLowerCase() === 'dubai');

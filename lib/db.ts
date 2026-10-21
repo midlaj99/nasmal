@@ -111,7 +111,7 @@ export interface ContactEnquiry {
 }
 
 
-const DEFAULT_DESTINATIONS: Destination[] = [
+export const DEFAULT_DESTINATIONS: Destination[] = [
   {
     id: 'dubai',
     title: 'Dubai',
@@ -1401,21 +1401,20 @@ export interface WhatsAppConfig {
 let whatsAppConfigCache: CacheEntry<WhatsAppConfig> | null = null;
 
 export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
-  const now = Date.now();
-  if (whatsAppConfigCache && whatsAppConfigCache.expiresAt > now) {
-    return whatsAppConfigCache.data;
-  }
-
-  await initializeDatabase();
-  const db = await getDb();
-
   const defaultConfig: WhatsAppConfig = {
     countryCode: '+971',
     phone: '582659321',
     fullNumber: '+971582659321',
   };
 
+  const now = Date.now();
+  if (whatsAppConfigCache && whatsAppConfigCache.expiresAt > now) {
+    return whatsAppConfigCache.data;
+  }
+
   try {
+    await initializeDatabase();
+    const db = await getDb();
     const doc = await db.collection('settings').findOne({ id: 'whatsapp_config' });
     const config: WhatsAppConfig = doc
       ? {
@@ -1433,7 +1432,7 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
 
     return config;
   } catch (err) {
-    console.error('Error fetching WhatsApp config:', err);
+    console.warn('Error fetching WhatsApp config from DB, using defaults:', err);
     return defaultConfig;
   }
 }

@@ -29,7 +29,12 @@ export async function GET(request: Request) {
     );
   } catch (error: any) {
     console.error('Error fetching WhatsApp configuration:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      countryCode: '+971',
+      phone: '582659321',
+      fullNumber: '+971582659321',
+    });
   }
 }
 
