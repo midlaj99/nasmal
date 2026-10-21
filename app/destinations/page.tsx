@@ -11,13 +11,10 @@ export const revalidate = 30;
 export default async function DestinationsPage() {
   let destinations: any[] = [];
   try {
-    destinations = await getDestinations();
+    const fetched = await getDestinations();
+    destinations = Array.isArray(fetched) ? fetched : DEFAULT_DESTINATIONS;
   } catch (err) {
     console.error('DestinationsPage fetch error:', err);
-    destinations = DEFAULT_DESTINATIONS;
-  }
-
-  if (!destinations || destinations.length === 0) {
     destinations = DEFAULT_DESTINATIONS;
   }
 

@@ -402,9 +402,10 @@ export function invalidatePreferencesCache() {
 
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
+const SEED_MARKER = 'nasmal_db_seeded_v1';
 
 /**
- * Initializes database indexes and seed data if collections are empty
+ * Initializes database indexes and seed data if collections are empty (ONLY ONCE)
  */
 async function initializeDatabase() {
   if (isInitialized) return;
@@ -413,85 +414,46 @@ async function initializeDatabase() {
       try {
         const db = await getDb();
 
-        // Ensure indexes for blazing fast query performance & high concurrency
-        await Promise.allSettled([
-          db.collection('packages').createIndex({ id: 1 }, { unique: true }),
-          db.collection('packages').createIndex({ destination: 1, createdAt: -1 }),
-          db.collection('packages').createIndex({ createdAt: -1 }),
-          db.collection('packages').createIndex({ isPopular: 1 }),
-          db.collection('packages').createIndex({ isBestDeal: 1 }),
-          db.collection('destinations').createIndex({ id: 1 }, { unique: true }),
-          db.collection('destinations').createIndex({ title: 1 }),
-          db.collection('orders').createIndex({ id: 1 }, { unique: true }),
-          db.collection('orders').createIndex({ createdAt: -1 }),
-          db.collection('preferences').createIndex({ id: 1 }, { unique: true }),
-          db.collection('wishlist').createIndex({ userId: 1, packageId: 1 }, { unique: true }),
-          db.collection('wishlist').createIndex({ userId: 1 }),
-          db.collection('images').createIndex({ id: 1 }, { unique: true }),
-          db.collection('admins').createIndex({ id: 1 }, { unique: true }),
-          db.collection('admins').createIndex({ username: 1 }),
-          db.collection('admins').createIndex({ email: 1 }),
-          db.collection('sessions').createIndex({ id: 1 }, { unique: true }),
-          db.collection('sessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-          db.collection('otps').createIndex({ id: 1 }, { unique: true }),
-          db.collection('otps').createIndex({ email: 1 }),
-          db.collection('otps').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-        ]);
+        // Check if database was already seeded. If seeded, NEVER re-seed!
+        const marker = await db.collection('settings').findOne({ id: SEED_MARKER });
+        if (!marker) {
+          const [destCount, pkgCount, prefCount] = await Promise.all([
+            db.collection('destinations').countDocuments(),
+            db.collection('packages').countDocuments(),
+            db.collection('preferences').countDocuments(),
+          ]);
 
-        // Seed destinations if empty
-        const destCount = await db.collection('destinations').countDocuments();
-        if (destCount === 0) {
-          try {
-            const legacyFile = path.join(process.cwd(), 'data', 'destinations.json');
-            const raw = await fs.readFile(legacyFile, 'utf8');
-            const legacyDests = JSON.parse(raw);
-            if (Array.isArray(legacyDests) && legacyDests.length > 0) {
-              await db.collection('destinations').insertMany(legacyDests);
-            } else {
-              await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
-            }
-          } catch {
-            await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS);
+          if (destCount === 0) {
+            await db.collection('destinations').insertMany(DEFAULT_DESTINATIONS as any);
           }
-        }
-
-        // Seed preferences if empty
-        const prefCount = await db.collection('preferences').countDocuments();
-        if (prefCount === 0) {
-          try {
-            const legacyPrefFile = path.join(process.cwd(), 'data', 'preferences.json');
-            const raw = await fs.readFile(legacyPrefFile, 'utf8');
-            const legacyPrefs = JSON.parse(raw);
-            if (Array.isArray(legacyPrefs) && legacyPrefs.length > 0) {
-              await db.collection('preferences').insertMany(legacyPrefs);
-            } else {
-              await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
-            }
-          } catch {
-            await db.collection('preferences').insertMany(DEFAULT_PREFERENCES);
-          }
-        }
-
-        // Seed packages if empty
-        const pkgCount = await db.collection('packages').countDocuments();
-        if (pkgCount === 0) {
-          try {
-            const legacyPkgFile = path.join(process.cwd(), 'data', 'packages.json');
-            const raw = await fs.readFile(legacyPkgFile, 'utf8');
-            const legacyPkgs = JSON.parse(raw);
-            if (Array.isArray(legacyPkgs) && legacyPkgs.length > 0) {
-              await db.collection('packages').insertMany(legacyPkgs);
-            } else {
-              await db.collection('packages').insertMany(DEFAULT_PACKAGES as any);
-            }
-          } catch {
+          if (pkgCount === 0) {
             await db.collection('packages').insertMany(DEFAULT_PACKAGES as any);
           }
+          if (prefCount === 0) {
+            await db.collection('preferences').insertMany(DEFAULT_PREFERENCES as any);
+          }
+
+          await db.collection('settings').insertOne({ id: SEED_MARKER, seededAt: new Date().toISOString() });
         }
+
+        // Fire-and-forget indexes in the background (NEVER block user actions)
+        Promise.resolve().then(async () => {
+          try {
+            await Promise.allSettled([
+              db.collection('packages').createIndex({ id: 1 }, { unique: true }),
+              db.collection('packages').createIndex({ destination: 1 }),
+              db.collection('packages').createIndex({ createdAt: -1 }),
+              db.collection('destinations').createIndex({ id: 1 }, { unique: true }),
+              db.collection('orders').createIndex({ id: 1 }, { unique: true }),
+              db.collection('admins').createIndex({ id: 1 }, { unique: true }),
+              db.collection('sessions').createIndex({ id: 1 }, { unique: true }),
+            ]);
+          } catch {}
+        });
 
         isInitialized = true;
       } catch (err) {
-        console.error('Database initialization warning:', err);
+        console.error('Database initialization note:', err);
       }
     })();
   }
@@ -509,15 +471,11 @@ export async function getPackages(): Promise<Package[]> {
   }
 
   try {
-    await initializeDatabase();
+    initializeDatabase().catch(() => {});
     const db = await getDb();
 
     // Fetch all packages cleanly and ensure each document has a valid `id`
     const docs = await db.collection('packages').find({}).sort({ createdAt: -1 }).toArray();
-
-    if (!docs || docs.length === 0) {
-      return DEFAULT_PACKAGES;
-    }
 
     const resultPackages: Package[] = docs.map((doc: any) => {
       const id = String(doc.id || doc._id?.toString() || '').trim();
@@ -525,10 +483,10 @@ export async function getPackages(): Promise<Package[]> {
       return { ...cleanDoc, id } as Package;
     });
 
-    // Cache for 30 seconds (instantly invalidated upon any admin add/update/delete)
+    // Cache for 5 seconds (instantly invalidated upon any admin add/update/delete)
     packagesCache = {
       data: resultPackages,
-      expiresAt: now + 30000,
+      expiresAt: now + 5000,
     };
 
     return resultPackages;
@@ -552,7 +510,6 @@ export async function getPackageById(id: string): Promise<Package | null> {
   }
 
   try {
-    await initializeDatabase();
     const db = await getDb();
 
     const queryConditions: any[] = [
@@ -604,7 +561,6 @@ export async function getPackageById(id: string): Promise<Package | null> {
 export async function getPackagesByDestination(destination: string): Promise<Package[]> {
   const safeDest = escapeRegex(String(destination || '').trim());
   try {
-    await initializeDatabase();
     const db = await getDb();
     
     const docs = await db
@@ -632,7 +588,6 @@ export async function getPackagesByDestination(destination: string): Promise<Pac
 }
 
 export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Package> {
-  await initializeDatabase();
   const db = await getDb();
 
   // Generate clean slug ID from title
@@ -675,7 +630,6 @@ export async function addPackage(newPackage: Omit<Package, 'id'>): Promise<Packa
 }
 
 export async function updatePackage(id: string, updates: Partial<Package>): Promise<Package | null> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return null;
@@ -731,7 +685,6 @@ export async function updatePackage(id: string, updates: Partial<Package>): Prom
 }
 
 export async function deletePackage(id: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return true;
@@ -768,8 +721,16 @@ export async function deletePackage(id: string): Promise<boolean> {
   // 1. Find existing record to clean up associations
   const existing = await db.collection('packages').findOne({ $or: queryConditions });
 
-  // 2. Perform deletion
-  const result = await db.collection('packages').deleteOne({ $or: queryConditions });
+  // 2. Perform deletion in MongoDB
+  await db.collection('packages').deleteOne({ $or: queryConditions });
+
+  // 3. Purge from in-memory DEFAULT_PACKAGES so it never reappears
+  const defaultIdx = DEFAULT_PACKAGES.findIndex(
+    p => p.id === safeId || p.id === decodedId || p.id === slugifiedId || p.title.toLowerCase() === safeId.toLowerCase()
+  );
+  if (defaultIdx !== -1) {
+    DEFAULT_PACKAGES.splice(defaultIdx, 1);
+  }
 
   if (existing?.destination) {
     const safeDestTitle = escapeRegex(existing.destination);
@@ -799,16 +760,11 @@ export async function getDestinations(): Promise<Destination[]> {
   }
 
   try {
-    await initializeDatabase();
     const db = await getDb();
     const docs = await db
       .collection('destinations')
       .find({})
       .toArray();
-
-    if (!docs || docs.length === 0) {
-      return DEFAULT_DESTINATIONS;
-    }
 
     const result: Destination[] = docs.map((doc: any) => {
       const id = String(doc.id || doc._id?.toString() || '').trim();
@@ -818,7 +774,7 @@ export async function getDestinations(): Promise<Destination[]> {
 
     destinationsCache = {
       data: result,
-      expiresAt: now + 60000,
+      expiresAt: now + 15000,
     };
 
     return result;
@@ -839,7 +795,6 @@ export async function getDestinationById(id: string): Promise<Destination | null
   }
 
   try {
-    await initializeDatabase();
     const db = await getDb();
     const safeEscaped = escapeRegex(safeId);
     
@@ -880,7 +835,6 @@ export async function getDestinationById(id: string): Promise<Destination | null
 export async function addDestination(
   newDest: Omit<Destination, 'id' | 'toursCount'>
 ): Promise<Destination> {
-  await initializeDatabase();
   const db = await getDb();
 
   let id = newDest.title
@@ -918,7 +872,6 @@ export async function updateDestination(
   id: string,
   updates: Partial<Destination>
 ): Promise<Destination | null> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return null;
@@ -962,7 +915,6 @@ export async function updateDestination(
 }
 
 export async function deleteDestination(id: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return true;
@@ -998,11 +950,25 @@ export async function deleteDestination(id: string): Promise<boolean> {
   const dest = await db.collection('destinations').findOne({ $or: queryConditions });
   await db.collection('destinations').deleteOne({ $or: queryConditions });
 
+  // 1. Purge from in-memory DEFAULT_DESTINATIONS so it never reappears on fallback
+  const defaultIdx = DEFAULT_DESTINATIONS.findIndex(
+    d => d.id === safeId || d.id === decodedId || d.id === slugifiedId || d.title.toLowerCase() === safeId.toLowerCase()
+  );
+  if (defaultIdx !== -1) {
+    DEFAULT_DESTINATIONS.splice(defaultIdx, 1);
+  }
+
+  // 2. Cascade delete matching packages from both MongoDB and in-memory defaults
   if (dest?.title) {
     const safeTitle = escapeRegex(dest.title);
     await db.collection('packages').deleteMany({
       destination: { $regex: new RegExp(`^${safeTitle}$`, 'i') }
     });
+    for (let i = DEFAULT_PACKAGES.length - 1; i >= 0; i--) {
+      if (DEFAULT_PACKAGES[i].destination.toLowerCase() === dest.title.toLowerCase()) {
+        DEFAULT_PACKAGES.splice(i, 1);
+      }
+    }
     invalidatePackagesCache();
   }
 
@@ -1015,7 +981,6 @@ export async function deleteDestination(id: string): Promise<boolean> {
 // -------------------------------------------------------------
 
 export async function getOrders(): Promise<Order[]> {
-  await initializeDatabase();
   const db = await getDb();
   const docs = await db
     .collection('orders')
@@ -1028,7 +993,6 @@ export async function getOrders(): Promise<Order[]> {
 export async function createOrder(
   orderData: Omit<Order, 'id' | 'createdAt' | 'status'>
 ): Promise<Order> {
-  await initializeDatabase();
   const db = await getDb();
 
   const id = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -1049,7 +1013,6 @@ export async function createOrder(
 export async function createEnquiry(
   data: Omit<ContactEnquiry, 'id' | 'createdAt' | 'status'>
 ): Promise<ContactEnquiry> {
-  await initializeDatabase();
   const db = await getDb();
 
   const id = `ENQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -1068,7 +1031,6 @@ export async function createEnquiry(
 }
 
 export async function getEnquiries(): Promise<ContactEnquiry[]> {
-  await initializeDatabase();
   const db = await getDb();
   const results = await db
     .collection('enquiries')
@@ -1083,7 +1045,6 @@ export async function updateOrderStatus(
   id: string,
   status: Order['status']
 ): Promise<Order | null> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return null;
@@ -1120,7 +1081,6 @@ export async function updateOrderStatus(
 }
 
 export async function deleteOrder(id: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeId = String(id || '').trim();
   if (!safeId) return true;
@@ -1161,7 +1121,6 @@ export async function getPreferences(): Promise<PreferenceOption[]> {
     return preferencesCache.data;
   }
 
-  await initializeDatabase();
   const db = await getDb();
   const docs = await db
     .collection('preferences')
@@ -1180,7 +1139,6 @@ export async function getPreferences(): Promise<PreferenceOption[]> {
 export async function addPreference(
   newPref: Omit<PreferenceOption, 'id'>
 ): Promise<PreferenceOption> {
-  await initializeDatabase();
   const db = await getDb();
 
   const id = newPref.label
@@ -1211,7 +1169,6 @@ export async function addPreference(
 // -------------------------------------------------------------
 
 export async function getWishlist(userId: string): Promise<Package[]> {
-  await initializeDatabase();
   const db = await getDb();
   const safeUser = String(userId).trim();
 
@@ -1237,7 +1194,6 @@ export async function getWishlist(userId: string): Promise<Package[]> {
 }
 
 export async function addToWishlist(userId: string, packageId: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeUser = String(userId).trim();
   const safePkg = String(packageId).trim();
@@ -1256,7 +1212,6 @@ export async function addToWishlist(userId: string, packageId: string): Promise<
 }
 
 export async function removeFromWishlist(userId: string, packageId: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeUser = String(userId).trim();
   const safePkg = String(packageId).trim();
@@ -1266,7 +1221,6 @@ export async function removeFromWishlist(userId: string, packageId: string): Pro
 }
 
 export async function isWishlisted(userId: string, packageId: string): Promise<boolean> {
-  await initializeDatabase();
   const db = await getDb();
   const safeUser = String(userId).trim();
   const safePkg = String(packageId).trim();
@@ -1284,7 +1238,6 @@ export async function saveImageToDb(
   contentType = 'image/jpeg',
   filename = 'image.jpg'
 ): Promise<string> {
-  await initializeDatabase();
   const db = await getDb();
 
   const id = `img-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1348,7 +1301,6 @@ export async function getImageFromDb(
     return { data: cached.data, contentType: cached.contentType };
   }
 
-  await initializeDatabase();
   const db = await getDb();
 
   const doc = await db.collection('images').findOne({ id: safeId });
@@ -1413,7 +1365,6 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
   }
 
   try {
-    await initializeDatabase();
     const db = await getDb();
     const doc = await db.collection('settings').findOne({ id: 'whatsapp_config' });
     const config: WhatsAppConfig = doc
@@ -1442,7 +1393,6 @@ export async function updateWhatsAppConfig(config: {
   phone: string;
   fullNumber: string;
 }): Promise<WhatsAppConfig> {
-  await initializeDatabase();
   const db = await getDb();
 
   const doc: WhatsAppConfig & { id: string } = {
@@ -1487,7 +1437,6 @@ export async function getCloudinaryConfig(): Promise<CloudinaryConfig> {
     return cloudinaryConfigCache.data;
   }
 
-  await initializeDatabase();
   const db = await getDb();
 
   const envCloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
@@ -1532,7 +1481,6 @@ export async function updateCloudinaryConfig(config: {
   apiKey: string;
   apiSecret: string;
 }): Promise<CloudinaryConfig> {
-  await initializeDatabase();
   const db = await getDb();
 
   const doc = {

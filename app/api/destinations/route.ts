@@ -18,10 +18,16 @@ export async function GET(request: Request) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const hasNoCache = searchParams.has('nocache') || request.headers.get('cache-control')?.includes('no-cache');
+    const cacheHeader = hasNoCache
+      ? 'no-store, no-cache, must-revalidate, max-age=0'
+      : 'public, s-maxage=2, stale-while-revalidate=5';
+
     const destinations = await getDestinations();
     return NextResponse.json(destinations, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60',
+        'Cache-Control': cacheHeader,
       },
     });
   } catch (error: any) {
@@ -60,14 +66,16 @@ export async function POST(request: Request) {
 
     const newDestination = await addDestination(validation.data);
 
-    // Fast revalidation
-    try {
-      revalidatePath('/');
-      revalidatePath('/destinations');
-      revalidatePath(`/destinations/${newDestination.id}`);
-    } catch (e) {
-      console.warn('Revalidation notice:', e);
-    }
+    // Fast non-blocking revalidation
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/');
+        revalidatePath('/destinations');
+        revalidatePath(`/destinations/${newDestination.id}`);
+      } catch (e) {
+        console.warn('Revalidation notice:', e);
+      }
+    });
 
     return NextResponse.json(newDestination, { status: 201 });
   } catch (error: any) {

@@ -41,16 +41,9 @@ async function connectToMongo(uriString: string): Promise<MongoClient> {
  * Returns the active MongoDB Database instance with automatic reconnect and fallback
  */
 export async function getDb(): Promise<Db> {
-  // 1. If we already have a connected client in this container, verify it's responsive
+  // 1. Fast path: return existing connected client immediately without extra network roundtrips
   if (global._mongoClient) {
-    try {
-      await global._mongoClient.db(dbName).command({ ping: 1 });
-      return global._mongoClient.db(dbName);
-    } catch {
-      // Socket was closed or timed out in frozen serverless container; reset and reconnect
-      global._mongoClient = undefined;
-      global._mongoClientPromise = undefined;
-    }
+    return global._mongoClient.db(dbName);
   }
 
   // 2. Attempt connection with primary URI (configured in Vercel)

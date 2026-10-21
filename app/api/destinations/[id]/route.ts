@@ -75,12 +75,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
     }
 
-    try {
-      revalidatePath('/');
-      revalidatePath('/destinations');
-    } catch (e) {
-      console.warn('Revalidation notice:', e);
-    }
+    // Fast non-blocking revalidation
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/');
+        revalidatePath('/destinations');
+      } catch (e) {
+        console.warn('Revalidation notice:', e);
+      }
+    });
 
     return NextResponse.json(updated);
   } catch (error: any) {
@@ -116,14 +119,17 @@ export async function DELETE(
 
     await deleteDestination(rawId);
 
-    try {
-      revalidatePath('/');
-      revalidatePath('/destinations');
-      revalidatePath(`/destinations/${rawId}`);
-      revalidatePath('/activities');
-    } catch (e) {
-      console.warn('Revalidation notice:', e);
-    }
+    // Fast non-blocking revalidation
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/');
+        revalidatePath('/destinations');
+        revalidatePath(`/destinations/${rawId}`);
+        revalidatePath('/activities');
+      } catch (e) {
+        console.warn('Revalidation notice:', e);
+      }
+    });
 
     return NextResponse.json({ success: true, message: 'Destination deleted successfully' });
   } catch (error: any) {

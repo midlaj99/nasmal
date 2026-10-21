@@ -17,23 +17,15 @@ export default async function Home() {
       getPackages(),
       getDestinations()
     ]);
-    allPackages = (packagesRes && packagesRes.length > 0) ? packagesRes : DEFAULT_PACKAGES;
-    destinations = (destinationsRes && destinationsRes.length > 0) ? destinationsRes : DEFAULT_DESTINATIONS;
+    allPackages = Array.isArray(packagesRes) ? packagesRes : DEFAULT_PACKAGES;
+    destinations = Array.isArray(destinationsRes) ? destinationsRes : DEFAULT_DESTINATIONS;
   } catch (e) {
     console.error('Home page data fetch error:', e);
     allPackages = DEFAULT_PACKAGES;
     destinations = DEFAULT_DESTINATIONS;
   }
 
-  // Fallback check to ensure content is always visible
-  if (!allPackages || allPackages.length === 0) {
-    allPackages = DEFAULT_PACKAGES;
-  }
-  if (!destinations || destinations.length === 0) {
-    destinations = DEFAULT_DESTINATIONS;
-  }
-
-  // Dynamic packages from database with defaults fallback
+  // Dynamic packages from database
   const popularPackages = allPackages.filter(p => p.isPopular);
   const bestDeals = allPackages.filter(p => p.isBestDeal);
   const bestPlacesDubai = allPackages.filter(p => p.destination?.toLowerCase() === 'dubai');
@@ -43,9 +35,22 @@ export default async function Home() {
     <main className={styles.main}>
       <Hero destinations={destinations} />
       
-      {/* Popular Packages */}
+      {/* 1. Explore Destinations - Directly Under Hero */}
+      <section className={styles.section}>
+        <div className="container">
+          <h2 className="section-title">Explore Destinations</h2>
+          
+          <div className={styles.grid}>
+            {destinations.map(dest => (
+              <DestinationCard key={dest.id || dest.title} {...dest} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Popular Dubai Packages - Directly Under Explore Destinations */}
       {popularPackages.length > 0 && (
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.altSection}`}>
           <div className="container">
             <h2 className="section-title">Popular Dubai Packages</h2>
             
@@ -58,20 +63,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Explore Destinations - Completely Dynamic */}
-      <section className={`${styles.section} ${styles.altSection}`}>
-        <div className="container">
-          <h2 className="section-title">Explore Destinations</h2>
-          
-          <div className={styles.grid}>
-            {destinations.map(dest => (
-              <DestinationCard key={dest.id || dest.title} {...dest} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* The Best Part of Dubai - Dynamically from Database */}
+      {/* 3. The Best Part of Dubai - Dynamically from Database */}
       {bestPlacesDubai.length > 0 && (
         <section className={styles.section}>
           <div className="container">
@@ -86,7 +78,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Best Deals For You - Dynamic from DB */}
+      {/* 4. Best Deals For You - Dynamic from DB */}
       {bestDeals.length > 0 && (
         <section className={`${styles.section} ${styles.altSection}`}>
           <div className="container">
@@ -96,7 +88,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Choose your fav place - Completely Dynamic Destinations and Packages from DB */}
+      {/* 5. Choose your fav place - Completely Dynamic Destinations and Packages from DB */}
       <section className={styles.section}>
         <div className="container">
           <h2 className="section-title">Choose your fav place</h2>

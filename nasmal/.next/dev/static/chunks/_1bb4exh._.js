@@ -320,7 +320,7 @@ function Navbar() {
                 "Navbar.useEffect": (res)=>res.json()
             }["Navbar.useEffect"]).then({
                 "Navbar.useEffect": (data)=>{
-                    if (Array.isArray(data) && data.length > 0) {
+                    if (Array.isArray(data)) {
                         setDestinations(data);
                     }
                 }

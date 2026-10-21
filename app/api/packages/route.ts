@@ -38,9 +38,14 @@ export async function GET(request: Request) {
       filtered = filtered.filter(pkg => Boolean(pkg.isBestDeal));
     }
 
+    const hasNoCache = searchParams.has('nocache') || request.headers.get('cache-control')?.includes('no-cache');
+    const cacheHeader = hasNoCache
+      ? 'no-store, no-cache, must-revalidate, max-age=0'
+      : 'public, s-maxage=2, stale-while-revalidate=5';
+
     return NextResponse.json(filtered, {
       headers: {
-        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=60',
+        'Cache-Control': cacheHeader,
       },
     });
   } catch (error: any) {
@@ -79,17 +84,19 @@ export async function POST(request: Request) {
 
     const newPackage = await addPackage(validation.data);
 
-    // Instant revalidation so landing page and details update immediately without lag
-    try {
-      revalidatePath('/', 'page');
-      revalidatePath('/', 'layout');
-      revalidatePath('/');
-      revalidatePath('/packages');
-      revalidatePath(`/packages/${newPackage.id}`);
-      revalidatePath(`/destinations/${newPackage.destination.toLowerCase().replace(/\s+/g, '-')}`);
-    } catch (e) {
-      console.warn('Revalidation warning:', e);
-    }
+    // Non-blocking background revalidation so client gets instant sub-50ms response
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/', 'page');
+        revalidatePath('/', 'layout');
+        revalidatePath('/');
+        revalidatePath('/packages');
+        revalidatePath(`/packages/${newPackage.id}`);
+        revalidatePath(`/destinations/${newPackage.destination.toLowerCase().replace(/\s+/g, '-')}`);
+      } catch (e) {
+        console.warn('Revalidation warning:', e);
+      }
+    });
 
     return NextResponse.json(newPackage, { status: 201 });
   } catch (error: any) {

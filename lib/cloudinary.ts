@@ -35,7 +35,7 @@ export async function uploadImageBuffer(
         uploadOptions.eager = [
           { quality: 'auto', fetch_format: 'auto' }
         ];
-        uploadOptions.eager_async = false;
+        uploadOptions.eager_async = true;
       } else {
         uploadOptions.transformation = [{ quality: 'auto', fetch_format: 'auto' }];
       }

@@ -110,16 +110,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
-    // Revalidate landing page & package details for instant sync
-    try {
-      revalidatePath('/', 'page');
-      revalidatePath('/', 'layout');
-      revalidatePath('/');
-      revalidatePath(`/packages/${updated.id}`);
-      revalidatePath('/packages');
-    } catch (e) {
-      console.warn('Revalidation notice:', e);
-    }
+    // Non-blocking background revalidation for maximum API responsiveness
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/', 'page');
+        revalidatePath('/', 'layout');
+        revalidatePath('/');
+        revalidatePath(`/packages/${updated.id}`);
+        revalidatePath('/packages');
+      } catch (e) {
+        console.warn('Revalidation notice:', e);
+      }
+    });
 
     return NextResponse.json(updated);
   } catch (error: any) {
@@ -155,14 +157,17 @@ export async function DELETE(
 
     await deletePackage(rawId);
 
-    try {
-      revalidatePath('/');
-      revalidatePath(`/packages/${rawId}`);
-      revalidatePath('/packages');
-      revalidatePath('/activities');
-    } catch (e) {
-      console.warn('Revalidation notice:', e);
-    }
+    // Non-blocking background revalidation
+    Promise.resolve().then(() => {
+      try {
+        revalidatePath('/');
+        revalidatePath(`/packages/${rawId}`);
+        revalidatePath('/packages');
+        revalidatePath('/activities');
+      } catch (e) {
+        console.warn('Revalidation notice:', e);
+      }
+    });
 
     return NextResponse.json({ success: true, message: 'Package deleted successfully' });
   } catch (error: any) {

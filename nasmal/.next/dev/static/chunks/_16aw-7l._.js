@@ -709,7 +709,9 @@ function AdminPage() {
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "AdminPage.useEffect": ()=>{
             if (!isAuthenticated) return;
-            fetch('/api/packages').then({
+            fetch('/api/packages?nocache=' + Date.now(), {
+                cache: 'no-store'
+            }).then({
                 "AdminPage.useEffect": (r)=>r.json()
             }["AdminPage.useEffect"]).then({
                 "AdminPage.useEffect": (data)=>{
@@ -726,7 +728,9 @@ function AdminPage() {
                     setPackages([]);
                 }
             }["AdminPage.useEffect"]);
-            fetch('/api/destinations').then({
+            fetch('/api/destinations?nocache=' + Date.now(), {
+                cache: 'no-store'
+            }).then({
                 "AdminPage.useEffect": (r)=>r.json()
             }["AdminPage.useEffect"]).then({
                 "AdminPage.useEffect": (data)=>{
@@ -748,7 +752,9 @@ function AdminPage() {
                     setDestinations([]);
                 }
             }["AdminPage.useEffect"]);
-            fetch('/api/orders').then({
+            fetch('/api/orders?nocache=' + Date.now(), {
+                cache: 'no-store'
+            }).then({
                 "AdminPage.useEffect": (r)=>r.json()
             }["AdminPage.useEffect"]).then({
                 "AdminPage.useEffect": (data)=>{
@@ -796,8 +802,7 @@ function AdminPage() {
             }["AdminPage.useEffect"]);
         }
     }["AdminPage.useEffect"], [
-        isAuthenticated,
-        success
+        isAuthenticated
     ]);
     const [packageData, setPackageData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         title: '',
@@ -1283,7 +1288,9 @@ function AdminPage() {
             if (!res.ok) throw new Error('Failed to add destination');
             const newDest = await res.json();
             // Immediately fetch updated destinations list
-            const updatedDestinations = await fetch('/api/destinations').then((r)=>r.json());
+            const updatedDestinations = await fetch('/api/destinations?nocache=' + Date.now(), {
+                cache: 'no-store'
+            }).then((r)=>r.json());
             if (Array.isArray(updatedDestinations)) {
                 setDestinations(updatedDestinations);
             }
@@ -1317,7 +1324,9 @@ function AdminPage() {
             });
             if (res.ok) {
                 // Refresh orders
-                const updatedOrders = await fetch('/api/orders').then((r)=>r.json());
+                const updatedOrders = await fetch('/api/orders?nocache=' + Date.now(), {
+                    cache: 'no-store'
+                }).then((r)=>r.json());
                 setOrders(updatedOrders);
             }
         } catch (err) {

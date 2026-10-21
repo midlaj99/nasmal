@@ -569,7 +569,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    fetch('/api/packages')
+    fetch('/api/packages?nocache=' + Date.now(), { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -584,7 +584,7 @@ export default function AdminPage() {
         setPackages([]);
       });
 
-    fetch('/api/destinations')
+    fetch('/api/destinations?nocache=' + Date.now(), { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -602,7 +602,7 @@ export default function AdminPage() {
         setDestinations([]);
       });
 
-    fetch('/api/orders')
+    fetch('/api/orders?nocache=' + Date.now(), { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -643,7 +643,7 @@ export default function AdminPage() {
         if (data?.isConfigured) setCldIsConfigured(true);
       })
       .catch(() => {});
-  }, [isAuthenticated, success]);
+  }, [isAuthenticated]);
 
   const [packageData, setPackageData] = useState({
     title: '',
@@ -1103,7 +1103,7 @@ export default function AdminPage() {
       const newDest = await res.json();
 
       // Immediately fetch updated destinations list
-      const updatedDestinations = await fetch('/api/destinations').then(r => r.json());
+      const updatedDestinations = await fetch('/api/destinations?nocache=' + Date.now(), { cache: 'no-store' }).then(r => r.json());
       if (Array.isArray(updatedDestinations)) {
         setDestinations(updatedDestinations);
       }
@@ -1133,7 +1133,7 @@ export default function AdminPage() {
       });
       if (res.ok) {
         // Refresh orders
-        const updatedOrders = await fetch('/api/orders').then(r => r.json());
+        const updatedOrders = await fetch('/api/orders?nocache=' + Date.now(), { cache: 'no-store' }).then(r => r.json());
         setOrders(updatedOrders);
       }
     } catch (err) {
