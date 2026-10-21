@@ -22,11 +22,17 @@
 }
 
 .image {
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
 
 .card:hover .image {
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   transform: scale(1.1);
 }
 

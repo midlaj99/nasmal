@@ -28,12 +28,17 @@
 }
 
 .AutoCarousel-module__jQ3Bua__offerImage {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform .6s;
+  transform: translateZ(0);
 }
 
 .AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerImage {
-  transform: scale(1.05);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  transform: scale(1.05)translateZ(0);
 }
 
 .AutoCarousel-module__jQ3Bua__offerOverlay {

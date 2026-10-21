@@ -9,6 +9,9 @@
 }
 
 .bgImage {
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   position: absolute;
   inset: 0;
   background-size: cover;

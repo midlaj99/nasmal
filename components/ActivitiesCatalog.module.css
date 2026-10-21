@@ -534,6 +534,9 @@
 .cardImg {
   object-fit: cover;
   transition: transform 0.4s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
 }
 
 .activityCard:hover .cardImg {

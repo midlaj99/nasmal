@@ -278,6 +278,8 @@
 }
 
 .Hero-module__Z8hQ_W__bgImage {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   opacity: 0;
   z-index: 0;
   background-position: center;
@@ -285,6 +287,7 @@
   transition: opacity 1.5s ease-in-out;
   position: absolute;
   inset: 0;
+  transform: translateZ(0);
 }
 
 .Hero-module__Z8hQ_W__activeBg {
@@ -412,12 +415,17 @@
 }
 
 .PackageCard-module__55bUCG__image {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform .4s;
+  transform: translateZ(0);
 }
 
 .PackageCard-module__55bUCG__card:hover .PackageCard-module__55bUCG__image {
-  transform: scale(1.05);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  transform: scale(1.05)translateZ(0);
 }
 
 .PackageCard-module__55bUCG__badge {
@@ -582,11 +590,16 @@
 }
 
 .DestinationCard-module__SmzwjG__image {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform .5s;
+  transform: translateZ(0);
 }
 
 .DestinationCard-module__SmzwjG__card:hover .DestinationCard-module__SmzwjG__image {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   transform: scale(1.1);
 }
 
@@ -652,12 +665,17 @@
 }
 
 .AutoCarousel-module__jQ3Bua__offerImage {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform .6s;
+  transform: translateZ(0);
 }
 
 .AutoCarousel-module__jQ3Bua__offerCard:hover .AutoCarousel-module__jQ3Bua__offerImage {
-  transform: scale(1.05);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  transform: scale(1.05)translateZ(0);
 }
 
 .AutoCarousel-module__jQ3Bua__offerOverlay {

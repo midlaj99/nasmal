@@ -75,6 +75,7 @@ __turbopack_context__.v({
   "optionAvailYes": "page-module__Z-3nqa__optionAvailYes",
   "optionBuilderBox": "page-module__Z-3nqa__optionBuilderBox",
   "optionBuilderHeader": "page-module__Z-3nqa__optionBuilderHeader",
+  "optionFieldsGrid": "page-module__Z-3nqa__optionFieldsGrid",
   "optionMiniBtn": "page-module__Z-3nqa__optionMiniBtn",
   "optionMiniBtnDanger": "page-module__Z-3nqa__optionMiniBtnDanger",
   "optionPreviewActions": "page-module__Z-3nqa__optionPreviewActions",
@@ -4622,12 +4623,7 @@ function AdminPage() {
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        style: {
-                                                                            display: 'grid',
-                                                                            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                                                                            gap: '14px',
-                                                                            marginBottom: '14px'
-                                                                        },
+                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$admin$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].optionFieldsGrid,
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                 children: [
@@ -6389,12 +6385,7 @@ function AdminPage() {
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        style: {
-                                            display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                                            gap: '16px',
-                                            marginBottom: '16px'
-                                        },
+                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$admin$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].optionFieldsGrid,
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
@@ -6798,7 +6789,9 @@ function AdminPage() {
                                             borderRadius: '8px',
                                             border: '1px dashed #cbd5e1',
                                             marginBottom: '18px',
-                                            fontSize: '0.85rem'
+                                            fontSize: '0.85rem',
+                                            wordBreak: 'break-all',
+                                            overflowWrap: 'anywhere'
                                         },
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6827,7 +6820,9 @@ function AdminPage() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 style: {
                                                     color: '#94a3b8',
-                                                    marginLeft: '8px'
+                                                    marginLeft: '8px',
+                                                    wordBreak: 'break-all',
+                                                    display: 'inline-block'
                                                 },
                                                 children: [
                                                     "(Target: https://wa.me/",
@@ -7012,12 +7007,7 @@ function AdminPage() {
                                         className: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$admin$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].waFormCard,
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                style: {
-                                                    display: 'grid',
-                                                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                                                    gap: '16px',
-                                                    marginBottom: '16px'
-                                                },
+                                                className: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$admin$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].optionFieldsGrid,
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         children: [
@@ -8913,12 +8903,7 @@ function AdminPage() {
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                    style: {
-                                                                                        display: 'grid',
-                                                                                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                                                                                        gap: '14px',
-                                                                                        marginBottom: '14px'
-                                                                                    },
+                                                                                    className: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$admin$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].optionFieldsGrid,
                                                                                     children: [
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                             children: [

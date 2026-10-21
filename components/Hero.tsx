@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import HeroSearchBar from './HeroSearchBar';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 import styles from './Hero.module.css';
 
 export interface HeroDestination {
@@ -83,9 +84,10 @@ export default function Hero({ destinations: propDestinations }: HeroProps) {
   return (
     <section className={styles.hero}>
       {activeBgList.map((dest, idx) => {
-        const bgUrl = dest.image.startsWith('http') || dest.image.startsWith('data:')
-          ? dest.image
-          : encodeURI(dest.image);
+        const enhancedImage = getHighResImageUrl(dest.image, 'hero');
+        const bgUrl = enhancedImage.startsWith('http') || enhancedImage.startsWith('data:')
+          ? enhancedImage
+          : encodeURI(enhancedImage);
 
         return (
           <div 

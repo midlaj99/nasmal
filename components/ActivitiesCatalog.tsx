@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Breadcrumb from '@/components/Breadcrumb';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 import styles from './ActivitiesCatalog.module.css';
 
 export interface PackageItem {
@@ -547,7 +548,7 @@ export default function ActivitiesCatalog({ initialPackages, destinationName, in
                   {/* Card Image */}
                   <div className={styles.cardImgWrapper}>
                     <Image
-                      src={pkg.image || '/hero-bg.jpg'}
+                      src={getHighResImageUrl(pkg.image || '/hero-bg.jpg', 'card')}
                       alt={pkg.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

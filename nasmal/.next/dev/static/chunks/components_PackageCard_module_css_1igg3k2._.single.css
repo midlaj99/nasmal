@@ -23,12 +23,17 @@
 }
 
 .PackageCard-module__55bUCG__image {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform .4s;
+  transform: translateZ(0);
 }
 
 .PackageCard-module__55bUCG__card:hover .PackageCard-module__55bUCG__image {
-  transform: scale(1.05);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  transform: scale(1.05)translateZ(0);
 }
 
 .PackageCard-module__55bUCG__badge {

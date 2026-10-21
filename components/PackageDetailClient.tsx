@@ -7,6 +7,7 @@ import { useBooking } from '@/context/BookingContext';
 import WishlistButton from '@/components/WishlistButton';
 import Breadcrumb from '@/components/Breadcrumb';
 import { isEmbedVideo, isInstagramUrl, getEmbedUrl, getOptimizedVideoUrl, getVideoThumbnail } from '@/lib/videoHelper';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 import styles from './PackageDetailClient.module.css';
 
 export interface PackageOption {
@@ -224,11 +225,13 @@ export default function PackageDetailClient({ packageData }: PackageDetailClient
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const fallbackCover = (packageData.image && (packageData.image.startsWith('http') || packageData.image.startsWith('/')))
-    ? packageData.image
+    ? getHighResImageUrl(packageData.image, 'gallery')
     : '/hero-bg.jpg';
 
   const validImages = (packageData.images && packageData.images.length > 0)
-    ? packageData.images.filter(img => typeof img === 'string' && (img.startsWith('http') || img.startsWith('/')))
+    ? packageData.images
+        .filter(img => typeof img === 'string' && (img.startsWith('http') || img.startsWith('/')))
+        .map(img => getHighResImageUrl(img, 'gallery'))
     : [fallbackCover];
 
   const rawImages = validImages.length > 0 ? validImages : [fallbackCover];

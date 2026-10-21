@@ -10,6 +10,8 @@
 }
 
 .Hero-module__Z8hQ_W__bgImage {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
   opacity: 0;
   z-index: 0;
   background-position: center;
@@ -17,6 +19,7 @@
   transition: opacity 1.5s ease-in-out;
   position: absolute;
   inset: 0;
+  transform: translateZ(0);
 }
 
 .Hero-module__Z8hQ_W__activeBg {

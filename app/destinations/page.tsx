@@ -4,6 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import HeroSearchBar from '@/components/HeroSearchBar';
 import WhyChooseNasmal from '@/components/WhyChooseNasmal';
 import { getDestinations, DEFAULT_DESTINATIONS } from '@/lib/db';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 import styles from './destinations.module.css';
 
 export const revalidate = 30;
@@ -23,7 +24,7 @@ export default async function DestinationsPage() {
       {/* ================= HERO SECTION ================= */}
       <div className={styles.hero}>
         <Image
-          src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80"
+          src={getHighResImageUrl("https://images.unsplash.com/photo-1512453979798-5ea266f8880c", "hero")}
           alt="UAE Destinations"
           fill
           sizes="100vw"
@@ -99,7 +100,7 @@ export default async function DestinationsPage() {
               return (
                 <Link key={dest.id} href={`/destination/${destSlug}`} className={styles.destCard}>
                   <Image
-                    src={dest.image || 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80'}
+                    src={getHighResImageUrl(dest.image || 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c', 'card')}
                     alt={dest.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

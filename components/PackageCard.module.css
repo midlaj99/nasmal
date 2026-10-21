@@ -22,12 +22,18 @@
 }
 
 .image {
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
 
 .card:hover .image {
-  transform: scale(1.05);
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transform: scale(1.05) translateZ(0);
 }
 
 .badge {

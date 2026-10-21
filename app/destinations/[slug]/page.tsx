@@ -6,6 +6,7 @@ import HeroSearchBar from '@/components/HeroSearchBar';
 import WhyChooseNasmal from '@/components/WhyChooseNasmal';
 import styles from './page.module.css';
 import { getPackagesByDestination, getDestinationById, DEFAULT_PACKAGES } from '@/lib/db';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 
 export const revalidate = 30;
 
@@ -36,21 +37,20 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   const name = destination?.title || defaultName;
 
   // High resolution imagery per destination
-  let image = destination?.image;
-  if (!image || image === '/hero-bg.jpg') {
+  let rawImage = destination?.image;
+  if (!rawImage || rawImage === '/hero-bg.jpg') {
     const lowerName = name.toLowerCase();
     if (lowerName.includes('dubai')) {
-      image = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=2400&q=85';
+      rawImage = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c';
     } else if (lowerName.includes('sharjah')) {
-      image = '/sharjah.jpg';
+      rawImage = '/sharjah.jpg';
     } else if (lowerName.includes('abu dhabi')) {
-      image = 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=2400&q=85';
+      rawImage = 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33';
     } else {
-      image = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=2400&q=85';
+      rawImage = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c';
     }
-  } else if (image.includes('images.unsplash.com')) {
-    image = image.replace(/w=\d+/, 'w=2400').replace(/q=\d+/, 'q=85');
   }
+  const image = getHighResImageUrl(rawImage, 'hero');
 
   return (
     <main className={styles.pageWrapper}>

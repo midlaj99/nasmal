@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getHighResImageUrl } from '@/lib/imageHelper';
 import styles from './AutoCarousel.module.css';
 
 interface Deal {
@@ -70,17 +71,18 @@ export default function AutoCarousel({ deals = [] }: { deals: Deal[] }) {
           const safeImage = (deal.image && (deal.image.startsWith('http') || deal.image.startsWith('/'))) 
             ? deal.image 
             : '/hero-bg.jpg';
+          const highResImage = getHighResImageUrl(safeImage, 'card');
 
           return (
             <div key={deal.id} className={styles.carouselItem}>
               <div className={styles.offerCard}>
                 <Image
-                  src={safeImage}
+                  src={highResImage}
                   alt={deal.title}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className={styles.offerImage}
-                  unoptimized={Boolean(safeImage && (safeImage.startsWith('/api/images') || safeImage.startsWith('data:')))}
+                  unoptimized={Boolean(highResImage && (highResImage.startsWith('/api/images') || highResImage.startsWith('data:')))}
                 />
                 <div className={styles.offerOverlay}>
                   <h3 className={styles.offerTitle}>{deal.title}</h3>

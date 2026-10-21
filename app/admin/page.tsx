@@ -2377,7 +2377,7 @@ export default function AdminPage() {
                             )}
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                          <div className={styles.optionFieldsGrid}>
                             <div>
                               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
                                 Option Title / Name *
@@ -2877,7 +2877,7 @@ export default function AdminPage() {
                 Change to a New Number
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+              <div className={styles.optionFieldsGrid}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
                     Country Dialing Code *
@@ -2946,12 +2946,12 @@ export default function AdminPage() {
               </div>
 
               {/* Real-time Preview */}
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px dashed #cbd5e1', marginBottom: '18px', fontSize: '0.85rem' }}>
+              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px dashed #cbd5e1', marginBottom: '18px', fontSize: '0.85rem', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 <span style={{ color: '#64748b' }}>Resulting International Number: </span>
                 <strong style={{ color: '#047857' }}>
                   {waCountryCode}{waPhone.replace(/[^0-9]/g, '')}
                 </strong>
-                <span style={{ color: '#94a3b8', marginLeft: '8px' }}>
+                <span style={{ color: '#94a3b8', marginLeft: '8px', wordBreak: 'break-all', display: 'inline-block' }}>
                   (Target: https://wa.me/{waCountryCode.replace(/[^0-9]/g, '')}{waPhone.replace(/[^0-9]/g, '')})
                 </span>
               </div>
@@ -3003,7 +3003,7 @@ export default function AdminPage() {
               </div>
 
               <form onSubmit={handleSaveCloudinaryConfig} className={styles.waFormCard}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                <div className={styles.optionFieldsGrid}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
                       Cloud Name *
@@ -3690,7 +3690,7 @@ export default function AdminPage() {
                                 )}
                               </div>
 
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                              <div className={styles.optionFieldsGrid}>
                                 <div>
                                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
                                     Option Title / Name *

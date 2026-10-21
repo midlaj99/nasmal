@@ -115,19 +115,19 @@ export const DEFAULT_DESTINATIONS: Destination[] = [
   {
     id: 'dubai',
     title: 'Dubai',
-    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=2560&q=95&auto=format',
     toursCount: 154,
   },
   {
     id: 'abu-dhabi',
     title: 'Abu Dhabi',
-    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1600&q=90&auto=format',
     toursCount: 86,
   },
   {
     id: 'sharjah',
     title: 'Sharjah',
-    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=1600&q=90&auto=format',
     toursCount: 42,
   },
 ];
@@ -137,16 +137,16 @@ export const DEFAULT_PACKAGES: Package[] = [
     id: 'burj-khalifa-at-the-top',
     title: 'Burj Khalifa At The Top (Level 124 & 125)',
     destination: 'Dubai',
-    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=1600&q=90&auto=format',
     price: '179',
     originalPrice: '220',
     rating: '4.9',
     reviewsCount: 1420,
     tags: ['Attractions', 'Iconic', 'Skyline'],
     images: [
-      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80',
-      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
-      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80'
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=90&auto=format'
     ],
     description: "Experience panoramic 360-degree views of Dubai from the world's tallest building. Step onto the open-air terrace of Level 124 and explore Level 125 with state-of-the-art telescopes and immersive displays.",
     highlights: [
@@ -209,16 +209,16 @@ export const DEFAULT_PACKAGES: Package[] = [
     id: 'desert-safari-bbq-dinner',
     title: 'Dubai Red Dune Desert Safari & BBQ Dinner',
     destination: 'Dubai',
-    image: 'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=1600&q=90&auto=format',
     price: '149',
     originalPrice: '199',
     rating: '4.8',
     reviewsCount: 980,
     tags: ['Adventure', 'Families', 'Culture'],
     images: [
-      'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&q=80',
-      'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80',
-      'https://images.unsplash.com/photo-1547234935-80c7145ec969?w=800&q=80'
+      'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1547234935-80c7145ec969?w=1600&q=90&auto=format'
     ],
     description: 'Conquer the golden red dunes in a 4x4 Land Cruiser, try sandboarding, ride camels, and enjoy a lavish 5-star BBQ dinner with Tanoura dance and fire show under the Arabian desert stars.',
     highlights: [
@@ -283,15 +283,15 @@ export const DEFAULT_PACKAGES: Package[] = [
     id: 'dubai-marina-luxury-yacht',
     title: 'Dubai Marina Luxury Yacht Cruise & Refreshments',
     destination: 'Dubai',
-    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=90&auto=format',
     price: '199',
     originalPrice: '280',
     rating: '4.9',
     reviewsCount: 650,
     tags: ['Luxury', 'Couple', 'Sightseeing'],
     images: [
-      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80',
-      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80'
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=90&auto=format'
     ],
     description: 'Sail through Dubai Marina, Ain Dubai, JBR, and the iconic Atlantis The Palm on an ultra-luxury yacht with refreshing drinks, experienced captain, and onboard sound system.',
     highlights: [
@@ -322,15 +322,15 @@ export const DEFAULT_PACKAGES: Package[] = [
     id: 'abu-dhabi-grand-mosque-tour',
     title: 'Abu Dhabi City Tour & Sheikh Zayed Grand Mosque',
     destination: 'Abu Dhabi',
-    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1600&q=90&auto=format',
     price: '210',
     originalPrice: '260',
     rating: '4.9',
     reviewsCount: 520,
     tags: ['Culture', 'Sightseeing', 'Attractions'],
     images: [
-      'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80',
-      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&q=80'
+      'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=1600&q=90&auto=format',
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=1600&q=90&auto=format'
     ],
     description: 'Discover the cultural richness and architectural splendor of the UAE capital. Visit the breathtaking Sheikh Zayed Grand Mosque, drive along the Corniche, and glimpse the Emirates Palace.',
     highlights: [
